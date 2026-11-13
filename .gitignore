@@ -1,0 +1,35 @@
+# --- Game content and player files: NEVER in this repository ---
+/data/
+*.apk
+*.so
+*.unity3d
+*.obb
+*.mpt
+*.dat
+*.dqs
+*.pkl
+il2cpp/
+saves/
+cache/
+captures/
+
+# --- Older layouts of the data folder (French names), kept out as well ---
+donnees/
+jeux/
+sauvegardes/
+reglages.json
+historique_messages.json*
+historique_favoris.json*
+
+# --- Python / local environment ---
+__pycache__/
+*.pyc
+.venv/
+modules_ok.txt
+
+# --- Local archives and logs ---
+*.zip
+*.log
+
+# --- Temporary extractions (game data) ---
+/dq4_pc/*.json

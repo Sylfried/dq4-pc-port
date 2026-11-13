@@ -1,0 +1,12 @@
+# Python modules of the port, at exact versions (Python 3.12 to 3.14).
+#
+# Exact versions on purpose: the engine hooks rewrite ARM code that Unicorn has already translated and depend on `ctl_flush_tb`; a silent upgrade of Unicorn, pyglet or UnityPy
+# could break a new installation without breaking an existing one. The launcher (`launch_dq4.bat`) and the CI read this same file.
+# To upgrade a module: change it here, run the test suite (`tools/run_tests.sh`) and play the game on Windows.
+numpy==2.5.4
+pillow==13.0.0
+unicorn==2.1.4
+pyglet==2.1.19
+UnityPy==1.25.4
+capstone==5.0.9
+soundfile==0.14.0
