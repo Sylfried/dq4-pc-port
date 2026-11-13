@@ -54,7 +54,6 @@ The engine expects these from the Unity layer of the original game, which the po
 - **A1** Return to the title screen (settings menu > "Return to title screen", after confirmation): `profile::SaveLoad::killbank(4, 0)` (erases the autosave bank, as the game's own button does), `PlayerManager::setLock(1)`, `Global::startTitle()`.
 - **A2** Loading of an adventure log (`SaveLoad::loadbank`) and re-reading of the catalog after an import (`getCatalogView`, `getCatalogRecent`, `getCatalogStatus`).
 - **A3** Initialization (`DevInit`, `MenuPortInit`, `GameInit`) and `GameUpdate` at each frame with the key mask.
-- **A4** Test shortcut to the ending (Modifiers page, off by default; `Engine.start_ending`): `StoryStatus::setChapter`, `PartyStatus::clear` / `add`, `HaveStatusInfo::setup`, `cmd_set_flag`, `cmd_save_last_party`, `Global::startTown('ckout')`, then `TownPlayerManager::setPosition`. It changes the playthrough in memory only when the shortcut is used; nothing is saved unless the game's own save box is accepted.
 
 ## Read-only hooks
 

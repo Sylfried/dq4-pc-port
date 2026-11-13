@@ -87,8 +87,6 @@ DEFAULT = {
     'accel_speed': 1.5,         # "Accelerator multiplier" (1 to 4; 8 before): walking multiplier (running) as long as the "Accelerator key" is held (formerly "vitesse_course"); NEVER applies to battles (see battle_speed)
     'battle_speed': 1.0,        # "Battle speed": 0 Manual (normal speed, each message is advanced by hand), 1 Normal, 2 Fast, 3 Very fast (BATTLE_SPEEDS): the engine runs 1, 2 or 3 times as many steps per second during a battle (monster and hit animations, movements, delays, message scrolling, fades); the music and sound effects keep their speed (see battle_speed.py)
     'history_favorites_only': False,   # "History" window: "Favorites only" checkbox checked? (state saved at each change, restored from one session to the next; no line in the Esc menu: it is changed in the window itself, see ui_history.py)
-    'test_ending': False,           # test shortcut, "Cheats": talking to the King of Bastione (throne room caf2a) starts the end screen instead of his speech; disabled = like the game
-    'test_ending_which': 5,         # chapter whose ending the shortcut above plays: 5 (Psaro defeated) or 6 (Aamon defeated, Psaro joins)
     'level_up_heal': False,         # "HP and MP restored on level up": when a character gains a level, it recovers all its HP and all its MP (the original game does not do this); disabled = like the game
     'damage_size': 1.6,         # size of the damage numbers on the monsters (1 = size of the original layout, very small on a large screen)
     'editor_grid': True,       # interface editor: placement grid displayed (32 x 18 cells)
@@ -202,7 +200,7 @@ def valid_window_mode(v):
 BOUNDS = {'accel_speed': (1.0, 4.0), 'vignette': (0.0, 1.0), 'edge_blur': (0.0, 1.0), 'contrast': (0.0, 1.0), 'motion_blur': (0.0, 1.0), 'dpad_size': (0.5, 2.0)}      # limits of the Esc menu sliders
 BOUNDS.update({'render_scale': (1.0, 2.0), 'sharpness': (0.0, 1.0), 'brightness': (0.5, 1.5)})
 BOUNDS.update({'music_volume': (0.0, 1.0), 'sfx_volume': (0.0, 1.0), 'master_volume': (0.0, 1.0), 'jingle_volume': (0.0, 1.0), 'interface_volume': (0.0, 1.0), 'text_speed': (0.25, 4000.0)})
-SOUND_TEXT_BOOLEANS = ('music_enabled', 'jingles_enabled', 'sfx_enabled', 'interface_enabled', 'level_up_heal', 'test_ending', 'camera_invert_lr', 'history_favorites_only')      # (Yes / No settings: any value that is not a boolean reverts to the default)
+SOUND_TEXT_BOOLEANS = ('music_enabled', 'jingles_enabled', 'sfx_enabled', 'interface_enabled', 'level_up_heal', 'camera_invert_lr', 'history_favorites_only')      # (Yes / No settings: any value that is not a boolean reverts to the default)
 TEXT_SPEEDS = (0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 4000.0)     # text speed notches (letters per frame); 4 = the game, 4000 = all at once
 BATTLE_SPEEDS = (0.0, 1.0, 2.0, 3.0)                       # notches of "Battle speed": Manual (normal speed + messages advanced by hand), Normal (= the game), Fast, Very fast
 BATTLE_SPEED_NAMES = {0.0: N_('settings.manual'), 1.0: N_('settings.normal'), 2.0: N_('settings.fast'), 3.0: N_('settings.very_fast')}      # labels shown to the player ("Texte" page, battle screen button, key message): never "x1", "x2", "x3"
@@ -317,7 +315,6 @@ class Settings:
                 for k, (mi, ma) in BOUNDS.items(): self.v[k] = min(ma, max(mi, self.v[k])) if isinstance(self.v[k], (int, float)) and not isinstance(self.v[k], bool) else DEFAULT[k]       # values from old versions brought back to the sliders
                 for k in SOUND_TEXT_BOOLEANS:
                     if not isinstance(self.v[k], bool): self.v[k] = DEFAULT[k]
-                if self.v['test_ending_which'] not in (5, 6) or isinstance(self.v['test_ending_which'], bool): self.v['test_ending_which'] = DEFAULT['test_ending_which']
                 self.v['battle_speed'] = battle_notch(self.v['battle_speed'], DEFAULT['battle_speed'])
                 self.v['text_speed'] = min(TEXT_SPEEDS, key=lambda x: max(x, self.v['text_speed']) / min(x, self.v['text_speed']))        # one of the menu's notches
                 fw = self.v['interface_windows']; self.v['interface_windows'] = {n: x for n, x in fw.items() if n not in REMOVED_WINDOWS and isinstance(x, list) and len(x) == 3} if isinstance(fw, dict) else {}      # interface editor: windows removed from the editor

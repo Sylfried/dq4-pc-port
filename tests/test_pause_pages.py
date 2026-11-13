@@ -224,7 +224,7 @@ class ChangesPage(unittest.TestCase):
     def test_three_categories_and_entry_of_the_root(self):
         """three categories (subheadings) in the order Difficulty, Modifier, Cheats; the existing option is in "Difficulty", the other two have no line yet."""
         J, p = menu('changes'); e = p._entries()
-        self.assertEqual([(x['t'], x['l']) for x in e], [('sep', 'settings.difficulty'), ('choice', self.LIB), ('sep', 'settings.modifier'), ('sep', 'settings.cheats'), ('choice', 'settings.game_ending_talking_king_bastione'), ('choice', 'settings.ending_played_shortcut')])          # (the test shortcut, in "Cheats"; and the ending it plays)
+        self.assertEqual([(x['t'], x['l']) for x in e], [('sep', 'settings.difficulty'), ('choice', self.LIB), ('sep', 'settings.modifier'), ('sep', 'settings.cheats')])
         p.stack = ['root']; e = next(e for e in p._entries() if e['l'] == 'settings.modifiers'); e['ok'](); self.assertEqual(p.screen_page, 'changes')
         self.assertFalse(hasattr(p, '_e_jeu')); self.assertNotIn('Jeu', [e['l'] for e in p._entries()])
         with open(PA.__file__, encoding='utf-8') as f: src = f.read()

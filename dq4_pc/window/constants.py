@@ -70,8 +70,6 @@ HD_GUTTER, HD_LEVELS = 4, 2      # HD sprites (x8 enlargement, see hd.py): 4 px 
 FONTS = ('Segoe UI', 'Arial', 'DejaVu Sans', 'Liberation Sans')
 EDGE_ACTIONS = ('menu', 'chat', 'map', 'L', 'R')       # actions whose press is detected (rising edge)
 BTN_TALK, BTN_MENU, BTN_CHAT, BTN_MAP = 0x100, 0x800, 0x400, 0x1000     # arg2 of GameUpdate: talk / examine (exactly 0x100), command menu, party chat, map
-ENDING_KING = ('caf2a', 36, 1.6)     # test shortcut: map of Bastione's throne room, sprite of its king (character 36), distance (town units) within which a talk is his
-ENDING_OF_CHAPTER = {5: 1, 6: 2}     # the setting `test_ending_which` (chapter whose ending the shortcut plays: 5 = Psaro defeated, 6 = Aamon defeated, Psaro joins) -> argument of Engine.start_ending
 GROUP_SLOTS = 10      # world map: slots 0 to 9 = party members (hero in 0); 10 to 12 = vehicles (boat, balloon...)
 
 def button_sfx(pad):

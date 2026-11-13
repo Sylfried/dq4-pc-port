@@ -297,7 +297,7 @@ class ChangesCaption(unittest.TestCase):
         J, p = menu('root'); libs = labels(p._entries())
         self.assertIn('settings.modifiers', libs); self.assertNotIn('Modifications', libs); self.assertNotIn('settings.cheats', libs); self.assertEqual(libs.index('settings.modifiers'), libs.index('settings.controls') + 1)           # ("Cheats" is a category of the page, not a root line)
         e = next(x for x in p._entries() if x['l'] == 'settings.modifiers'); e['ok'](); self.assertEqual(p.screen_page, 'changes')
-        self.assertEqual([x['l'] for x in p._entries()], ['settings.difficulty', 'settings.hp_mp_restored_level_up', 'settings.modifier', 'settings.cheats', 'settings.game_ending_talking_king_bastione', 'settings.ending_played_shortcut'])           # (trois categories)
+        self.assertEqual([x['l'] for x in p._entries()], ['settings.difficulty', 'settings.hp_mp_restored_level_up', 'settings.modifier', 'settings.cheats'])           # (trois categories)
 
 
 if __name__ == '__main__':

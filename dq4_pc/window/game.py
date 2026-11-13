@@ -31,7 +31,7 @@ from dq4_pc.core import load_tracking as SV
 from dq4_pc.persistence import settings as RG
 from dq4_pc.render import postfx as PF
 from dq4_pc.window.constants import (EDGE_ACTIONS, EXTENDED_SKIES, FAST_STEP_BUDGET, CAM_JUMP_ROT, CAM_JUMP_TOWN, TITLE_MAP, CB_MIRROR_X, CH_PX, MODE_PP, ENGINE_STEP,
-    COMMON_SFX, SPRITE_SCALE, SPRITE_H, SPRITE_L, BTN_TALK, ENDING_KING, ENDING_OF_CHAPTER)
+    COMMON_SFX, SPRITE_SCALE, SPRITE_H, SPRITE_L, BTN_TALK)
 from dq4_pc.window.shaders import FRAG, FRAG_EFFECT, VERTEX, VERTEX_EFFECT
 from dq4_pc.window.helpers import adjust_size, camera_free, background_gradient, field_depth_rank, shadow_offset, transitions_dwm, whole_pixels
 from dq4_pc.window.menu_display import MenusMixin
@@ -448,14 +448,6 @@ class Game(FullScreenMixin, CameraMixin, FieldMixin, BattleMixin, TitleMixin, St
         if eng.msg_visible or eng.active_menu() is not None: return False
         return not (eng.flags() & ENGINE.PLAYER_LOCKED_FLAG)
 
-    def _talks_to_ending_king(self):
-        """Is this talk the King of Bastione's? Throne room of Bastione (caf2a), his sprite (character 36) within reach of the hero (the talk goes to the character the hero faces, across the step of the throne)."""
-        e = self.engine.state; name_str, ident, reach = ENDING_KING
-        if e.part != ENGINE.PART_TOWN or e.game_map != name_str: return False
-        hero = e.sprites.get(0); king = next((s for k, s in e.sprites.items() if k != 0 and s.get('id') == ident and s.get('pos') is not None), None)
-        if not hero or hero.get('pos') is None or king is None: return False
-        return math.hypot(king['pos'][0] - hero['pos'][0], king['pos'][2] - hero['pos'][2]) <= reach
-
     def history_possible(self):
         """The history (H key, "History" line of the Settings menu) and the Esc key's Esc menu are only accessible when the player has control of their character: not during a battle, nor when the game
         takes control (dialogue, scene, event, exit fade, game menu), nor on the title screen."""
@@ -712,7 +704,6 @@ class Game(FullScreenMixin, CameraMixin, FieldMixin, BattleMixin, TitleMixin, St
         if self.args.force_field and self.n == self.args.force_field: self.engine.start_field()
         if os.environ.get('DQ_SPR') and self.n == 100: print('SPRITES', {k: (sp['id'], tuple(round(float(x), 2) for x in sp['pos']) if sp['pos'] is not None else None, sp.get('pose'), sp.get('dir'), sp.get('visible', True)) for k, sp in self.engine.state.sprites.items()}, 'icons', self.engine.state.icons, flush=True)
         if os.environ.get('DQ_TOWN') and self.n == 30: self.engine.start_town(os.environ['DQ_TOWN'])        # (test) loads this town or dungeon
-        if os.environ.get('DQ_ENDING') and self.n == int(os.environ['DQ_ENDING'].split(':')[0]): self.engine.start_ending(int(os.environ['DQ_ENDING'].split(':')[1]))        # (test) the whole ending 1 or 2 at this loop frame
         if os.environ.get('DQ_THE_END') and self.n == int(os.environ['DQ_THE_END']): self.engine.start_the_end()        # (test) the end of the game (credits, then "The End", then the title) at this loop frame
         if self.args.clicks:                                                # (test) simulated clicks: frame:x:y[:d] (d = right click), x and y in pixels from the top left; press at the frame, release 3 frames later
             for c in self.args.clicks:
@@ -728,7 +719,6 @@ class Game(FullScreenMixin, CameraMixin, FieldMixin, BattleMixin, TitleMixin, St
         if (p or decl) and eng.hold_messages and eng.msg_visible and eng.active_menu() is None: p &= ~(ENGINE.A | ENGINE.B); decl &= ~(ENGINE.A | ENGINE.B | BTN_TALK)
         if os.environ.get('DQ_CAMV') and self.n % int(os.environ['DQ_CAMV']) == 0: self._camv(eng)
         if os.environ.get('DQ_DEBUG') and (p or decl): print('n=%d p=%#x decl=%#x msg=%s active=%s' % (self.n, p, decl, eng.msg_visible, eng.active_menu()), flush=True)
-        if decl & BTN_TALK and self.reg['test_ending'] and self._talks_to_ending_king(): eng.start_ending(ENDING_OF_CHAPTER[self.reg['test_ending_which']]); decl &= ~BTN_TALK          # (test shortcut of "Modifiers": the whole ending of chapter 5 or 6)
         t0 = time.time(); eng.step(p, decl); self.dt_engine = time.time() - t0
         self._camera_after_step(eng)          # camera rotation requested at this step: extra notches according to the set speed or the drag (camera.py)
         if len(eng.missing_hooks) > self._reported_hooks: self._report_missing_hooks(eng)

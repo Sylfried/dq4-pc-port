@@ -1003,47 +1003,6 @@ class Engine:
         c.call(c.export('_ZN18TownEndrollManager5setupEv'), tem, label='setup end roll')
         self.end_roll = 'credits'
 
-    # the two endings: global flags (kind 0) of the ending's scripts, originalPlayer_ slots of the characters (names read in the game's command menu, see tools/research/engine/make_test_save3.py)
-    ENDING_FLAG_PSARO, ENDING_FLAG_WAGON, ENDING_FLAG_BLOCK = 0x1af, 388, 0x1c0
-    ENDING_TRIGGER_FLAGS = ((0x182, 1), (0x1a4, 0))        # the other conditions of the trigger of `ckout` (the flag ENDING_FLAG_BLOCK picks the block of the script: 0 = chapter 5's ending, 1 = chapter 6's)
-    ENDING_TRIGGER_POS = (-3.0, 0.0, 10.3)                 # a point of the trigger's area in `ckout` (cmd_is_trigger of its script: x -4 .. -2, y -1 .. 1.25, z 10.1 .. 10.5, in the map's own coordinates)
-    ENDING_ALLIES = (1, 4, 5, 6, 3, 7, 8, 9)               # the hero, Alina, Kiryl, Borya, Ragnar, Torneko, Mina, Maya
-    PSARO = 25
-    ending_wait = None                                     # frame until which the shortcut still has to put the hero in the trigger's area (the map takes a few frames to appear), None = nothing to do
-
-    def start_ending(self, which):
-        """(test shortcut) Plays a whole ending with the engine's own scripts, from the very place where the original starts it: `which` = 1: end of chapter 5 (Psaro defeated: he does not join), 2: end of chapter 6 (Aamon defeated:
-        Psaro is in the party, the scene of his return is added). -> false when the game is not in a town or on the world map.
-        What the original does (established by playing it with the real engine): the player walks into the trigger of the map `ckout` (flags 0x182 = 1, 0x1a4 = 0, 0x1c0 = 0 or 1 for the ending, the whole party present), whose script
-        fades out, plays SE 305, starts BGM 34 (the ending's music, 655 s, which then goes on through every map: each one forbids its normal music) and goes to `ev09` (a black screen, silent, for about 40 s), then `fk01` (the party,
-        chapter 9, the balloon is placed on the world map at (2201, 2200)), the flight of the balloon that takes each character home (`cbf1` ... `mhout`, between them the world map), the hero's village `ev08`, and the ending script
-        of `mlb1a` (credits, "The End", the engine's own save box, back to the title). The global flag 0x1af (0 / 1) chooses between the two versions of these scenes.
-        What the port forces to get there (it is a shortcut, the fights and the walk before it are not played): the chapter (5 or 6), the party (the hero and the seven allies, plus Psaro for the second ending, with the wagon:
-        flag 388), the flags of the trigger and 0x1af, the party kept for the save (`cmd_save_last_party`, which the save box of the ending writes into the journal "Chapitre 6": without it the box would save an empty party), and
-        the hero's position: once `ckout` is loaded he is put in the trigger's area (`_ending_trigger_after`); everything after that is the original's own script."""
-        if self.state.part not in (PART_TOWN, PART_FIELD) or which not in (1, 2): return False
-        c = self.core; X = c.export; party = X('_ZN6status7g_PartyE'); orig = X('_ZN6status9PartyData15originalPlayer_E')
-        who = self.ENDING_ALLIES + ((self.PSARO,) if which == 2 else ())
-        if which == 2 and not c.mem(orig + 0x530 * self.PSARO + 0x67, 1)[0]:          # (Psaro is not set up before he joins)
-            c.call(X('_ZN6status14HaveStatusInfo5setupEib'), orig + 0x530 * self.PSARO + 0x10, self.PSARO, 0, label='setup Psaro'); c.mem_w(orig + 0x530 * self.PSARO + 0x67, b'\x01')
-        c.call(X('_ZN6status11StoryStatus10setChapterEi'), X('_ZN6status7g_StoryE'), 4 + which, label='setChapter')
-        c.mem_w(party + 8, b'\x01')                                                       # the wagon (BasePartyStatus + 8, with global flag 388 below): without it the party stops at four members
-        c.call(X('_ZN6status11PartyStatus5clearEv'), party, label='party clear')
-        for k in who: c.call(X('_ZN6status11PartyStatus3addEi'), party, k, label='party add')
-        for ident, value in ((self.ENDING_FLAG_WAGON, 1), (self.ENDING_FLAG_PSARO, which - 1), (self.ENDING_FLAG_BLOCK, which - 1)) + self.ENDING_TRIGGER_FLAGS:
-            p = c.malloc(32); c.mem_w(p, struct.pack('<HBBIIII', 0x17, 0, 0, 0, ident, value, 0)); c.call(X('_Z12cmd_set_flagP16CommandParameter'), p, label='set flag')
-        c.call(X('_Z19cmd_save_last_partyP16CommandParameter'), c.malloc(32), label='save last party')
-        self.start_town('ckout'); self.ending_wait = self.frames + 600; return True
-
-    def _ending_trigger_after(self):
-        """After GameUpdate: once the hero stands in `ckout` (the map of the ending's trigger) the shortcut puts him in the trigger's area (TownPlayerManager::setPosition): the script, which tests his position at every frame, then starts the ending."""
-        if self.ending_wait is None: return
-        if self.frames > self.ending_wait: self.ending_wait = None; return
-        st = self.state
-        if st.game_map != 'ckout' or st.sprites.get(0, {}).get('pos') is None: return
-        c = self.core; v = c.malloc(16); c.mem_w(v, struct.pack('<3i', *[int(q * 4096) for q in self.ENDING_TRIGGER_POS]))
-        c.call(c.export('_ZN17TownPlayerManager11setPositionERN3dss12Fix32Vector3E'), c.export('_ZN17TownPlayerManager11m_singletonE'), v, label='ending trigger'); self.ending_wait = None
-
     def story_chapter(self):
         """Current chapter of the story (StoryStatus +4): 1 to 6, 9 during the ending (set by `ev09`)."""
         c = self.core; return struct.unpack('<I', c.mem(c.export('_ZN6status7g_StoryE') + 4, 4))[0]
@@ -1211,7 +1170,7 @@ class Engine:
         self._return_to_title_before()
         r = c.call(self.E('GameUpdate'), held, decl, label='GameUpdate')
         if self._messages_sent: c.mem_w(c.inp, struct.pack('<i', -1)); self._messages_sent = False          # Unity rewrites the list every frame: a message is only valid for the frame in which it is sent
-        self._return_to_title_after(); self._end_roll_after(); self._ending_trigger_after()
+        self._return_to_title_after(); self._end_roll_after()
         if MSGDBG: self._log_message()
         if r is None: raise RuntimeError('the engine stopped:\n' + '\n'.join(self.log.lines[-12:]))
         pkt = self.pk.packets()

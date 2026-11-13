@@ -20,7 +20,6 @@ OUTSIDE_INTERFACE = {'sprite_mode', 'window_mode', 'msaa', 'render_scale', 'shar
                   'keys_version', 'keys', 'level_up_heal'}
 OUTSIDE_INTERFACE |= {'camera_invert_lr', 'interface_version', 'gamepads'}          # direction of the camera moved with the mouse; version of the default window sizes
 OUTSIDE_INTERFACE |= {'history_favorites_only', 'language'}                                          # history's "Favorites only" checkbox: a window state, not an editor interface
-OUTSIDE_INTERFACE |= {'test_ending', 'test_ending_which'}                                                              # test shortcut of "Modifiers"
 
 # values different from DEFAULT for each interface setting
 OTHER = {'buttons': False, 'dpad': False, 'dpad_size': 1.7, 'rotation_bar': False, 'buttons_size': 1.4, 'buttons_pos': {'map': [10, 5], 'menu': [3, 2.5], 'chat': [0, 9], 'dpad': [20, 9]},

@@ -356,7 +356,6 @@ class Pause:
         'settings.action': {'create': N_('settings.create_save_state'), 'load': N_('settings.load_save_state'), 'delete': N_('settings.delete_a_save_state')},
     }
     names['settings.text_speed'] = {0.5: N_('settings.very_slow'), 1.0: N_('settings.slow'), 2.0: N_('settings.fairly_slow'), 4.0: N_('settings.normal'), 8.0: N_('settings.fast'), 16.0: N_('settings.very_fast'), 4000.0: N_('settings.instant')}      # (French names, translated as they are drawn: `_value_name` returns data)
-    names['settings.ending_played_shortcut'] = {5: N_('settings.end_chapter_5'), 6: N_('settings.end_chapter_6')}
     names['settings.filter'] = {'none': N_('settings.none'), 'sepia': N_('settings.sepia'), 'gray': N_('settings.black_white'), 'vivid': N_('settings.vivid_colors'), 'soft': N_('settings.soft_colors'), 'warm': N_('settings.warm'), 'cool': N_('settings.cool')}
     names['settings.battle_speed'] = RG.BATTLE_SPEED_NAMES                                                    # "Manual", "Normal", "Fast", "Very fast" (never x1, x2, x3)
 
@@ -522,11 +521,7 @@ class Pause:
         J, R = self.J, self.J.reg
         sn = self._choice('settings.hp_mp_restored_level_up', [True, False], lambda: R['level_up_heal'], lambda v: (R.__setitem__('level_up_heal', v), J.apply_game()), default=RG.DEFAULT['level_up_heal'])
         sn['hint'] = 'settings.when_character_gains_level_they   settings.no_as_original_game_leveling'
-        end = self._choice('settings.game_ending_talking_king_bastione', [False, True], lambda: R['test_ending'], lambda v: R.__setitem__('test_ending', v), default=RG.DEFAULT['test_ending'])
-        end['hint'] = 'settings.test_shortcut_talking_king_bastione   settings.no_as_original_game'
-        which = self._choice('settings.ending_played_shortcut', [5, 6], lambda: R['test_ending_which'], lambda v: R.__setitem__('test_ending_which', v), off=lambda: not R['test_ending'], default=RG.DEFAULT['test_ending_which'])
-        which['hint'] = 'settings.chapter_5_after_psaro_every   settings.chapter_6_after_aamon_same   settings.ending_offers_save_answer_no'
-        return [dict(t='sep', l=N_('settings.difficulty')), sn, dict(t='sep', l=N_('settings.modifier')), dict(t='sep', l=N_('settings.cheats')), end, which]
+        return [dict(t='sep', l=N_('settings.difficulty')), sn, dict(t='sep', l=N_('settings.modifier')), dict(t='sep', l=N_('settings.cheats'))]
 
     def _key_row(self, action):
         """Line of an action: three cells (main key, secondary key, gamepad input); Delete clears the chosen cell, the round button (or Home) restores the original keys and input."""

@@ -49,9 +49,9 @@ class TestOldSavestate(unittest.TestCase):
             m.state.fbx[3] = {'id': 103, 'visible': True, 'pos': (0.0, 0.0, 0.0), 'rot': (0.0, 180.0, 0.0), 'scl': (1.0, 1.0, 1.0), 'col': (1.0, 1.0, 1.0, 1.0), 'anim': [(m.frames, 0, False)]}
             m.state.fbx[4] = dict(m.state.fbx[3], anim=[])
             d = savestates.snapshot(m)
-            del m.state.fbx[3], m.state.fbx[4]; m.fbx_playing = [7]; m.ending_wait = m.frames + 600
+            del m.state.fbx[3], m.state.fbx[4]; m.fbx_playing = [7]
             savestates.apply(m, d)
-            self.assertIn(3, m.fbx_playing); self.assertNotIn(4, m.fbx_playing); self.assertNotIn(7, m.fbx_playing); self.assertIsNone(m.ending_wait)
+            self.assertIn(3, m.fbx_playing); self.assertNotIn(4, m.fbx_playing); self.assertNotIn(7, m.fbx_playing)
             for _ in range(5): m.step(0, 0)                  # the engine still runs (the title dragon, slot 0, loops: kept, no end message)
         finally:
             shutil.rmtree(wdir, ignore_errors=True); shutil.rmtree(rdir, ignore_errors=True)

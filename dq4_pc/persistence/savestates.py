@@ -149,7 +149,6 @@ def apply(m, d):
     m.end_roll = p.get('end_roll')                      # the end of the game under way (credits, "The End"); a savestate saved by an older version has none
     m.fbx_playing = [k for k, v in sorted(m.state.fbx.items()) if v.get('anim')]          # 3D model animations of the loaded state: the engine waits for their end (setMotionEnd); the list of the game before the load
                                                                   # named other models, so an effect saved while playing stayed on screen; a finished one gets its end at the next step
-    m.ending_wait = None                                 # (the ending shortcut's wait belonged to the game before the load)
     m.reapply_fixes()                                    # original hero speeds (a savestate saved by an old version during a run contains them inflated), "Settings" button -> Pause menu (a savestate saved
                                                                   # before this redirection put the original instruction back), widened places window and "Sauv. cloud" removed (same: the original image is reloaded above)
     m.pk.begin()
