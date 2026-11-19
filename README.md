@@ -1,7 +1,5 @@
 # Dragon Quest IV, V and VI — unofficial PC port
 
-*[Version française plus bas](#version-française).*
-
 An unofficial, fan-made way to play the **Android versions of Dragon Quest IV, V and VI** on a Windows PC: the original game in a resizable **16:9** window, with mouse, keyboard or gamepad, its own music and sound effects, savestates and a few optional comfort features.
 
 > **This repository contains no game file.** It is code only. To play, you need **your own copy** of the Android game (its APK files), which the port reads on your computer. Nothing from the game is downloaded, copied or distributed by this project.
@@ -104,28 +102,3 @@ Texts: the code only holds keys (`settings.battle_speed`); `dq456_pc/language.py
 - **Unofficial fan project**, not affiliated with, endorsed or sponsored by Square Enix. *Dragon Quest* is a registered trademark of Square Enix Holdings Co., Ltd. All game content (code, graphics, music, text) belongs to its owners and is **not** part of this repository.
 - The port's code is released under the **GNU General Public License, version 2 or (at your option) any later version**: see [`LICENSE`](LICENSE).
 - Third-party components and their licenses: [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
-
----
-
-## Version française
-
-Un portage **non officiel**, fait par des fans, pour jouer aux **versions Android de Dragon Quest IV, V et VI** sur PC Windows : le jeu d'origine dans une fenêtre **16:9** redimensionnable, à la souris, au clavier ou à la manette, avec sa musique et ses bruitages, des états instantanés et quelques options de confort.
-
-> **Ce dépôt ne contient aucun fichier du jeu.** Il ne contient que du code. Pour jouer, il faut **votre propre copie** du jeu Android (ses fichiers APK), que le portage lit sur votre ordinateur. Ce projet ne télécharge, ne copie et ne distribue rien du jeu.
-
-### Installation
-
-1. Installez **Python 3.12, 3.13 ou 3.14** depuis [python.org](https://www.python.org/downloads/) (cochez « Add python.exe to PATH »).
-2. Récupérez ce dépôt (Code > Download ZIP, ou `git clone`).
-3. Placez vos fichiers dans le dossier `data` à la racine du projet (ses dossiers existent déjà, chacun avec un court `README.txt`) :
-   - `data\apk\dq4\fr\` : `base.apk`, `split_config.arm64_v8a.apk`, `split_UnityDataAssetPack.apk`, patchés avec une traduction française (projet séparé, non inclus) ;
-   - `data\apk\dq4\en\` : les trois mêmes fichiers de la version anglaise d'origine (facultatif) ;
-   - `data\saves\dq4\` : vos sauvegardes copiées depuis le téléphone (`data1.dat` … `data5.dat`, `data9.dat`, facultatif) ;
-   - même rangement pour les autres jeux, dans `dq5\` et `dq6\` au lieu de `dq4\`.
-4. Double-cliquez sur **`launch_dq4.bat`**, **`launch_dq5.bat`** ou **`launch_dq6.bat`**. Le premier lancement prépare l'environnement Python (quelques minutes). Le premier lancement de chaque jeu lit ensuite la disposition d'origine des fenêtres du jeu dans votre APK (quelques minutes, une seule fois : l'outil libre [Il2CppDumper](https://github.com/Perfare/Il2CppDumper) est téléchargé la première fois, il faut donc une connexion internet une fois ; sans elle, ce lancement affiche des menus simples et le suivant réessaie), puis le jeu s'ouvre.
-
-Tout ce que le portage écrit (sauvegardes, états, réglages, caches, journaux) reste dans `data`, dont le contenu est ignoré par git (seul le `README.txt` de ses dossiers est dans le dépôt). Les commandes sont dans le tableau ci-dessus (toutes modifiables dans le menu Échap > Commandes).
-
-### Mentions légales
-
-Projet de fans **non officiel**, sans lien avec Square Enix. *Dragon Quest* est une marque déposée de Square Enix Holdings Co., Ltd. Le contenu du jeu appartient à ses ayants droit et ne fait **pas** partie de ce dépôt. Le code du portage est distribué sous **licence GNU GPL, version 2 ou (à votre choix) toute version ultérieure** ([`LICENSE`](LICENSE)) ; composants tiers : [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
