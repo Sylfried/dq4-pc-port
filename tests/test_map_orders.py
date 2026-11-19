@@ -4,8 +4,8 @@ import numpy as np
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 import pyglet
 pyglet.options['shadow_window'] = False
-from dq4_pc.core import engine as ENGINE
-from dq4_pc.window import field as FI
+from dq456_pc.core import engine as ENGINE
+from dq456_pc.window import field as FI
 
 
 class Objects:

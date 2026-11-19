@@ -20,8 +20,8 @@ sys.path.insert(0, os.path.join(HERE, '..'))
 import pyglet
 if sys.platform.startswith('linux') and not os.environ.get('DISPLAY'): pyglet.options['headless'] = True; pyglet.options['shadow_window'] = False
 import numpy as np
-from dq4_pc.window import game as F
-from dq4_pc.core import engine as ENGINE
+from dq456_pc.window import game as F
+from dq456_pc.core import engine as ENGINE
 
 APK, SAVES = os.environ.get('DQ_APK'), os.environ.get('DQ_SAVES')
 BASE_POS, BASE_ROT = (0.0, 4.75, -39.8125), (-0.703125, 180.0, 0.0)          # battle camera at rest (after the approach at the start)
@@ -100,7 +100,7 @@ class RealEngine(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        import unicorn; from dq4_pc.persistence import savestates as SS
+        import unicorn; from dq456_pc.persistence import savestates as SS
         from unicorn.arm64_const import UC_ARM64_REG_W1, UC_ARM64_REG_W2, UC_ARM64_REG_W3
         cls.SS = SS; eng = cls.eng = ENGINE.Engine(APK, SAVES, tempfile.mkdtemp(prefix='sv_camcb_')); c = cls.c = eng.core
         sys.path.insert(0, HERE); import _saves as SV

@@ -14,7 +14,7 @@ No screen, no GL, no APK.
 import os, sys, types, unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from dq4_pc.window import inputs as EN
+from dq456_pc.window import inputs as EN
 
 
 def engine(msg, ports):
@@ -62,7 +62,7 @@ class Wiring(unittest.TestCase):
     def test_entries_uses_it(self):
         """The decision is no longer written twice in `_entries` (that was the line that discarded the port)."""
         import inspect
-        from dq4_pc.window import keyboard_mouse as KM
+        from dq456_pc.window import keyboard_mouse as KM
         body = inspect.getsource(KM.KeyboardMouseMixin._entries)
         self.assertIn('EN.menu_under_message(eng, port)', body)
         self.assertNotIn("eng.msg_visible and not eng.ui.f[port].get('entree'): port = None", body)

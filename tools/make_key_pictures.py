@@ -1,4 +1,4 @@
-"""Draws the pictures of the Shift, Alt, Alt Gr and Ctrl keys from Kenney's own key pictures (CC0, dq4_pc/assets/input_prompts), in their style: a white key, the sign cut out of it.
+"""Draws the pictures of the Shift, Alt, Alt Gr and Ctrl keys from Kenney's own key pictures (CC0, dq456_pc/assets/input_prompts), in their style: a white key, the sign cut out of it.
 Shift: the hollow up arrow printed on keyboards (the outline of Kenney's arrow key); Alt: "ALT" on the key shape of Tab; Alt Gr: "ALT" / "GR" on two lines, on the key shape of Caps Lock;
 Ctrl: "CTRL" on the key shape of Tab. The letters are Kenney's own (taken from the A, C, L, T, G and R keys). Run once: python3 tools/make_key_pictures.py (writes keyboard_shift.png, keyboard_alt.png,
 keyboard_altgr.png, keyboard_ctrl.png)."""
@@ -7,7 +7,7 @@ import numpy as np
 from PIL import Image
 from scipy import ndimage
 
-FOLDER = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'dq4_pc', 'assets', 'input_prompts')
+FOLDER = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'dq456_pc', 'assets', 'input_prompts')
 
 
 def alpha(name): return np.array(Image.open(os.path.join(FOLDER, name + '.png')).convert('RGBA'))[..., 3] > 127

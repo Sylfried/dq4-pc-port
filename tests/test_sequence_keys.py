@@ -14,7 +14,7 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..'))
 import _paths          # (test helper)
-from dq4_pc.world import map_objects as OC
+from dq456_pc.world import map_objects as OC
 
 APK = os.environ.get('DQ_APK', '')
 PACK = os.path.join(APK, 'split_UnityDataAssetPack.apk')
@@ -48,7 +48,7 @@ class Keys(unittest.TestCase):
 @unittest.skipUnless(os.path.exists(PACK), 'DQ_APK: folder of the APKs (split_UnityDataAssetPack.apk)')
 class RealRaft(unittest.TestCase):
     def test_chout_raft(self):
-        from dq4_pc.world import data as DO
+        from dq456_pc.world import data as DO
         cache = tempfile.mkdtemp(prefix='cache_test_sequence_keys_')
         try:
             c = DO.Data(PACK, cache, log=lambda *a: None).game_map('chout')

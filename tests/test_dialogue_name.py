@@ -16,8 +16,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import _paths
 import pyglet
 if sys.platform.startswith('linux') and not os.environ.get('DISPLAY'): pyglet.options['headless'] = True; pyglet.options['shadow_window'] = False
-from dq4_pc.menus import ui_menu as UM
-from dq4_pc.core import engine as ENGINE
+from dq456_pc.menus import ui_menu as UM
+from dq456_pc.core import engine as ENGINE
 
 CACHE = _paths.ui_cache('/tmp/uicache4')
 

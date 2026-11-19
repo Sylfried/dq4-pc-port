@@ -2,7 +2,7 @@
 (frameData), quadrilateral of the text canvas (the text is drawn by the engine) and position of the end-of-page cursor.
 Usage: python message.py output.json   (variables DQ_IL2, DQ_META, DQ_FRAME as in layout.py)"""
 import sys, json, struct
-import scene as S, runall2 as R, menusys as M, layout as L
+import scene as S, runall2 as R, menusys as M, layout as L, addresses as A
 from unicorn import UC_HOOK_CODE
 from unicorn.arm64_const import *
 T = S.T
@@ -21,36 +21,39 @@ def read_borders():
 
 BORDERS = read_borders()
 st = R.statics(T, 'MenuMessage')
-parts_win = T.u(st + 8, 8)                                   # MenuMessage.m_window (MenuParts)
+parts_win = T.u(st + A.field('MenuMessage', 'm_window'), 8)       # MenuMessage.m_window (MenuParts)
 go_win = T.U[parts_win]['go']
 mf_win = [c for c in T.U[go_win]['comps'] if T.U[c]['kind'] == 'MeshFilter'][0]
 ALL = []
+NOW_TYPE = A.field('MenuMessage', 'm_nowType')
 
 
 def _border(uc, a, sz, ud):
     """m_frame.Change(n): delegate call not emulated -> we set the frame mesh n on the window ourselves (then we skip the call)."""
     n = uc.reg_read(UC_ARM64_REG_X1) & 0xffffffff
+    if n >= len(BORDERS):                                         # a type whose frame number is not a frame (DQ VI: -1, no frame): the window keeps no frame mesh
+        ALL.append(n); uc.reg_write(UC_ARM64_REG_PC, A.SET_CANVAS_MESH_FRAME_CALL + 4); return
     v, t = BORDERS[n]
     m = T.U[mf_win].get('mesh')
     if not m: m = T.U[mf_win]['mesh'] = T.newU('Mesh', 'UnityEngine.Mesh', vtx=[], uv=[], tris={}, sub=1)
     T.U[m]['vtx'] = [tuple(x[:3]) for x in v]; T.U[m]['uv'] = [tuple(x[3:]) for x in v]; T.U[m]['tris'] = {0: t}
     ALL.append(n)
-    uc.reg_write(UC_ARM64_REG_PC, 0xcfa644)
+    uc.reg_write(UC_ARM64_REG_PC, A.SET_CANVAS_MESH_FRAME_CALL + 4)
 
 
-T.uc.hook_add(UC_HOOK_CODE, _border, None, 0xcfa640, 0xcfa640)
+T.uc.hook_add(UC_HOOK_CODE, _border, None, A.SET_CANVAS_MESH_FRAME_CALL, A.SET_CANVAS_MESH_FRAME_CALL)
 
 
 def export_saves():
-    cd = T.u(st + 0, 8); n = T.u(cd + 0x18, 4)
+    cd = T.u(st + A.field('MenuMessage', 'canvas_data'), 8); n = T.u(cd + 0x18, 4)
     msg = T.msg
     canvas_go = T.u(msg + 0x18, 8)
     types = []
     for no in range(n):
         raw = struct.unpack('<iiffffff', bytes(T.uc.mem_read(cd + 0x20 + 32 * no, 32)))
-        T.uc.mem_write(msg + 0x5c, b'\xff\xff')              # m_nowType: forces the recalculation
+        T.uc.mem_write(msg + NOW_TYPE, b'\xff\xff')              # m_nowType: forces the recalculation
         del ALL[:]
-        err = T.run(0xcfa4b4, [msg, no])
+        err = T.run(A.SET_CANVAS_MESH, [msg, no])
         cm = T.U[T.u(msg + 0x28, 8)]
         win = T.U[go_win]; feed_parts = T.u(msg + 0x20, 8); feed_go = T.U[feed_parts]['go']
         fm = T.U[mf_win].get('mesh'); fm = T.U[fm] if fm else None

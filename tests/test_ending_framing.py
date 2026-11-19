@@ -3,8 +3,8 @@ instead of 22.5) so it fell out of the top of the screen. During the ending (cha
 (other maps, normal play, an fov sent by the engine), and the correction fades out as the window gets taller (it already shows the whole phone height). Without window or engine."""
 import os, sys, types, unittest
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from dq4_pc.window.camera import CameraMixin
-from dq4_pc.window.constants import ENDING_FRAMING, TOWN_FOV_DEFAULT
+from dq456_pc.window.camera import CameraMixin
+from dq456_pc.window.constants import ENDING_FRAMING, TOWN_FOV_DEFAULT
 
 
 def view(map_name='mqout', chapter=9):

@@ -11,9 +11,9 @@ The battle BACKGROUND is the `bg_color` of the FETC block of the loaded scenery 
 import os, sys, struct, tempfile, unittest, pickle, json
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from dq4_pc.core import engine as ENGINE
-from dq4_pc.world import data as DO
-from dq4_pc.world import map_tint as TC
+from dq456_pc.core import engine as ENGINE
+from dq456_pc.world import data as DO
+from dq456_pc.world import map_tint as TC
 
 APK, SAVES, CACHE = os.environ.get('DQ_APK'), os.environ.get('DQ_SAVES'), os.environ.get('DQ_MAP_CACHE')
 STAGE_ADDRESS = 0x23d430          # GOT: StageStatus (g_StageStatus)

@@ -17,11 +17,11 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..'))
 import pyglet
 pyglet.options['shadow_window'] = False          # no hidden window: the test runs without a display server
-from dq4_pc.window import inputs as EN
-from dq4_pc.menus import hud_mobile as HM
+from dq456_pc.window import inputs as EN
+from dq456_pc.menus import hud_mobile as HM
 
 try:
-    from dq4_pc.window import game as WND
+    from dq456_pc.window import game as WND
 except Exception as ex:          # window.py needs pyglet, numpy, unicorn... (the import alone is enough, no window is created)
     WND = None; ERROR_WND = ex
 
@@ -164,8 +164,8 @@ class InfoF1(unittest.TestCase):
 
 
 try:
-    from dq4_pc.persistence import settings as RG
-    from dq4_pc.menus import pause as PA
+    from dq456_pc.persistence import settings as RG
+    from dq456_pc.menus import pause as PA
 except Exception as ex:          # pause.py needs pyglet (without a display: the import alone is enough)
     PA = None
 
@@ -484,7 +484,7 @@ class ArrowsInGame(unittest.TestCase):
 
     def test_no_up_down_arrow_actions(self):
         """the up / down arrows are no longer actions (menus are walked with the movement keys; only the camera keys remain on the arrows)."""
-        from dq4_pc.persistence import settings as S
+        from dq456_pc.persistence import settings as S
         self.assertNotIn('cam_up', S.DEFAULT_KEYS); self.assertNotIn('cam_down', S.DEFAULT_KEYS); self.assertEqual({a for a, _ in S.ACTIONS} & {'cam_up', 'cam_down'}, set())
         K = pyglet.window.key; r = S.Settings(None)
         for k in (K.UP, K.DOWN): self.assertIsNone(r.action_of(k))

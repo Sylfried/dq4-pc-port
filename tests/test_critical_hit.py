@@ -11,7 +11,7 @@ Real engine (Unicorn), slot 4, one weak monster (Encount + 0x34 / 0x44). The cri
 import os, sys, struct, tempfile, unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from dq4_pc.core import engine as ENGINE
+from dq456_pc.core import engine as ENGINE
 
 APK, SAVES = os.environ.get('DQ_APK'), os.environ.get('DQ_SAVES')
 MONSTER = 3
@@ -19,7 +19,7 @@ MONSTER = 3
 
 class Sound(unittest.TestCase):
     def test_sfx_0_is_not_searched_but_407_is(self):
-        from dq4_pc import sound as SOUND
+        from dq456_pc import sound as SOUND
         s = object.__new__(SOUND.Sound); seen = []
         s._get = lambda name_str, callback: seen.append(name_str)
         s.play_sfx(0); s.play_sfx(407)

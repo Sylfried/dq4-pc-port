@@ -4,8 +4,8 @@
 import os, sys, tempfile, types, unittest, zipfile
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from dq4_pc.core import emu_core as T
-from dq4_pc.core import engine as ENGINE
+from dq456_pc.core import emu_core as T
+from dq456_pc.core import engine as ENGINE
 APK = os.environ.get('DQ_APK', '')
 
 

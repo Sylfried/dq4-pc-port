@@ -6,8 +6,8 @@ python3 tests/test_legacy_names.py
 import copy, os, pickle, sys, tempfile, unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from dq4_pc.core import engine as ENGINE, legacy_state as LS
-from dq4_pc.persistence import savestates as SS
+from dq456_pc.core import engine as ENGINE, legacy_state as LS
+from dq456_pc.persistence import savestates as SS
 
 
 def old_state_dict():
@@ -138,7 +138,7 @@ class HistoryFile(unittest.TestCase):
 
     def test_version_2_file_is_read_then_rewritten_in_english(self):
         import json
-        from dq4_pc.core import history as HI
+        from dq456_pc.core import history as HI
         f = os.path.join(tempfile.mkdtemp(prefix='legacy_hist_'), 'history.json')
         with open(f, 'w', encoding='utf-8') as fh: json.dump(self.OLD, fh)
         h = HI.History(f); h.set_adventure('0123456789ab')                                                  # (the common favorites go to the first adventure)

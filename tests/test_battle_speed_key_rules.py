@@ -8,9 +8,9 @@ import json, os, shutil, sys, tempfile, types, unittest
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 import pyglet
 pyglet.options['shadow_window'] = False
-from dq4_pc.core import engine as ENGINE
-from dq4_pc.persistence import settings as RG
-from dq4_pc.window import game as WND
+from dq456_pc.core import engine as ENGINE
+from dq456_pc.persistence import settings as RG
+from dq456_pc.window import game as WND
 
 
 class BattleSpeedKey(unittest.TestCase):
@@ -40,7 +40,7 @@ class BackToTitle(unittest.TestCase):
 class Halo(unittest.TestCase):
     def test_soft_halo_keeps_the_gradient_without_magenta(self):
         import numpy as np
-        from dq4_pc.world import hd as HD
+        from dq456_pc.world import hd as HD
         a = np.zeros((1, 4, 4), np.uint8); a[0, 0] = (255, 0, 255, 60); a[0, 1] = (10, 200, 30, 230); a[0, 2] = (255, 0, 255, 0); a[0, 3] = (255, 0, 255, 100)
         sharp, _ = HD.clean_sheet(a); soft, _ = HD.clean_sheet(a, soft=True)
         self.assertEqual(sharp[0, :, 3].tolist(), [0, 255, 0, 0])
@@ -51,7 +51,7 @@ class SystemClick(unittest.TestCase):
     """click, hold and drag values are Windows' own (GetDoubleClickTime, SM_CXDRAG / SM_CYDRAG); elsewhere the Windows defaults."""
     def test_values_and_drag(self):
         from unittest import mock
-        from dq4_pc.window import inputs as EN
+        from dq456_pc.window import inputs as EN
         if sys.platform != 'win32': self.assertEqual(EN.system_click(), (0.5, 4, 4))
         with mock.patch.object(EN, 'system_click', lambda: (0.5, 4, 4)):
             self.assertFalse(EN.is_drag(4, -4)); self.assertTrue(EN.is_drag(5, 0)); self.assertTrue(EN.is_drag(0, -5))
@@ -62,7 +62,7 @@ class BarOutline(unittest.TestCase):
     """the dark outline of the rotation bar's icons never fills the gaps between the dashes of the arrows (the stray dark lines seen in a window)."""
     def test_gaps_stay_open(self):
         import numpy as np
-        from dq4_pc.menus import hud_mobile as HM
+        from dq456_pc.menus import hud_mobile as HM
         b = HM.Buttons.__new__(HM.Buttons); b.orig = {}
         a = np.zeros((32, 32, 4), np.uint8); a[15:17, 4:6, 3] = 255; a[15:17, 7:9, 3] = 255                  # two dashes, one transparent column (6) between them
         b.orig['bar_1'] = a; o = b._outline('bar_1')[..., 3] > 0

@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.join(HERE, '..'))
 import pyglet
 pyglet.options['shadow_window'] = False
 if sys.platform.startswith('linux') and not os.environ.get('DISPLAY'): pyglet.options['headless'] = True
-from dq4_pc.window import menu_display as MD
+from dq456_pc.window import menu_display as MD
 
 
 def fake(msg_type):
@@ -48,8 +48,10 @@ class Priority(unittest.TestCase):
     def test_every_frame_pairs_the_two_calls(self):
         """Each drawing path calls the background plane before the windows and the front plane after them (the background plane drawn in front relies on it)."""
         for name in ('game.py', 'capture_effects.py'):
-            src = open(os.path.join(HERE, '..', 'dq4_pc', 'window', name), encoding='utf-8').read()
-            self.assertEqual(src.count('self._draw_fade(True)'), src.count('self._draw_fade()'), name)
+            with open(os.path.join(HERE, '..', 'dq456_pc', 'window', name), encoding='utf-8') as fh: src = fh.read()
+            lines = src.splitlines()
+            ortho = sum(1 for i, line in enumerate(lines) if 'self._draw_fade()' in line and any(w in lines[i - 1] for w in ('self._draw_endroll(', 'self._draw_slime_touch(')))
+            self.assertEqual(src.count('self._draw_fade(True)') + ortho, src.count('self._draw_fade()'), name)          # (DQ V / VI end credits and Slime Touch: the scene camera is off, only the orthographic layer and the front plane are drawn)
 
 
 if __name__ == '__main__':

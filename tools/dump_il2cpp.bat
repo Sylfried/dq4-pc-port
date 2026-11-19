@@ -1,12 +1,19 @@
 @echo off
 setlocal
 cd /d "%~dp0"
+rem the game: first argument (dq4, dq5 or dq6), otherwise DQ_GAME, otherwise dq4
+set "ARG_GAME="
+for %%G in (dq4 dq5 dq6) do if /i "%~1"=="%%G" set "ARG_GAME=%%G"
+if defined ARG_GAME set "DQ_GAME=%ARG_GAME%"
+if defined ARG_GAME shift
+if not defined DQ_GAME set "DQ_GAME=dq4"
 title Extracting the game's C# code (research)
 echo.
-echo  Extracting the structure of the DQ4 C# code (classes, fields, methods)
+echo  Extracting the structure of the game C# code (classes, fields, methods)
 echo  ------------------------------------------------------------------------
-echo  Reads your APK files in ..\data\apk\fr (never modified).
-echo  Result: ..\data\cache\il2cpp\dump.cs  (stays on your PC, not sent to GitHub).
+echo  Game: %DQ_GAME%  ^(other game: dump_il2cpp.bat dq5, dump_il2cpp.bat dq6^)
+echo  Reads your APK files in ..\data\apk\%DQ_GAME%\fr (never modified).
+echo  Result: ..\data\cache\%DQ_GAME%\fr\il2cpp\dump.cs  (stays on your PC, not sent to GitHub).
 echo  Needs internet the first time (Il2CppDumper, and .NET if missing).
 echo.
 if not exist "..\.venv\Scripts\python.exe" (
@@ -36,6 +43,6 @@ if not defined DOTNET (
   echo  .NET installed.
 )
 
-"..\.venv\Scripts\python.exe" dump_il2cpp.py %*
+"..\.venv\Scripts\python.exe" dump_il2cpp.py %1
 echo.
 pause

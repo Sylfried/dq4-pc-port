@@ -2,8 +2,8 @@
 Run from the root: PYGLET_HEADLESS=1 python3 tests/test_save_writing.py"""
 import os, sys, tempfile, types, unittest, shutil
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from dq4_pc import language as _LANGUAGE; _LANGUAGE.select_language('fr')          # (these tests expect the French texts, whatever the computer's language)
-from dq4_pc.core import engine as ENGINE
+from dq456_pc import language as _LANGUAGE; _LANGUAGE.select_language('fr')          # (these tests expect the French texts, whatever the computer's language)
+from dq456_pc.core import engine as ENGINE
 
 
 def fake_core(path, data=b'abc'):
@@ -59,7 +59,7 @@ class Writing(unittest.TestCase):
 
 class Window(unittest.TestCase):
     def test_report_in_log_and_message(self):
-        try: from dq4_pc.window import game as F
+        try: from dq456_pc.window import game as F
         except Exception as ex: raise unittest.SkipTest('fenetre non importable ici (%r)' % (ex,))
         d = tempfile.mkdtemp(); self.addCleanup(shutil.rmtree, d, True)
         os.environ['DQ_WINDOW_LOG'] = os.path.join(d, 'logs', 'window_errors.log')

@@ -9,7 +9,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..')); sys.path.insert(0, HERE)
 import pyglet
 pyglet.options['shadow_window'] = False
-from dq4_pc.persistence import settings as RG
+from dq456_pc.persistence import settings as RG
 import test_pause_pages as TP
 
 K = pyglet.window.key
@@ -38,7 +38,7 @@ class Default(unittest.TestCase):
     def test_tab_elsewhere_in_the_code(self):
         """The only uses of Tab (K.TAB): collapsing the interface editor's panel (Pause menu), changing mode in name entry, moving to the next button of the Saves screen. These three screens
         take the key in Game.on_key_press BEFORE the game's actions (Pause menu open, name entry, Saves screen): Tab is never the "Menu" key there. A new use must be examined here."""
-        here = os.path.join(HERE, '..', 'dq4_pc'); found_set = set()
+        here = os.path.join(HERE, '..', 'dq456_pc'); found_set = set()
         for f in glob.glob(os.path.join(here, '**', '*.py'), recursive=True):
             with open(f, encoding='utf-8') as fh:
                 if re.search(r'\bK\.TAB\b', fh.read()): found_set.add(os.path.basename(f))
@@ -76,7 +76,7 @@ class Migration(unittest.TestCase):
 
     def test_other_keys_do_not_move(self):
         r, _ = load({'keys_version': 4, 'keys': {'menu': ['RETURN', None], 'up': ['W', None], 'map': ['N', None]}})
-        self.assertEqual((r['keys']['up'], r['keys']['map'], r['keys']['history']), (['W', None], ['N', None], ['H', None]))
+        self.assertEqual((r['keys']['up'], r['keys']['map']), (['W', None], ['N', None])); self.assertNotIn('history', r['keys'])          # (no more History key)
 
 
 class CommandsPage(unittest.TestCase):
@@ -111,14 +111,14 @@ class InWindow(unittest.TestCase):
     """Real code of Game.on_key_press / _edges on a fake Game (like test_window_mode.py)."""
     @classmethod
     def setUpClass(cls):
-        try: from dq4_pc.window import game as window; cls.WND = window
+        try: from dq456_pc.window import game as window; cls.WND = window
         except Exception as ex: raise unittest.SkipTest('window.py non importable ici (%r)' % (ex,))
 
     def fake_game(self, pause=False, name_str=False):
         WND = self.WND
         j = types.SimpleNamespace(swallowed=set(), alt_cand=False, alt_tap=False, reg=RG.Settings(None), key_list=K.KeyStateHandler(), prev_action={}, n=0, _ready=True, combo=[False, False], _logo_touched=False, pause_presses=0, name_presses=0,
-                                  pause=None, port_screen=None, license_panel=None, title_screen=None, last_device='', bascules=0, cancellations=0, is_fullscreen=False, mouse=(0, 0), mouse_guard=__import__('dq4_pc.window.inputs', fromlist=['MouseGuard']).MouseGuard(), helptext=False)
-        j.pause = types.SimpleNamespace(opened=pause, capture=None, key_press=lambda sym, mods: setattr(j, 'pause_presses', j.pause_presses + 1))
+                                  pause=None, port_screen=None, license_panel=None, title_screen=None, last_device='', bascules=0, cancellations=0, is_fullscreen=False, mouse=(0, 0), mouse_guard=__import__('dq456_pc.window.inputs', fromlist=['MouseGuard']).MouseGuard(), helptext=False)
+        j.pause = types.SimpleNamespace(opened=pause, capture=None, last_page=lambda: 'display', key_press=lambda sym, mods: setattr(j, 'pause_presses', j.pause_presses + 1))
         j.name_entry = types.SimpleNamespace(key_press=lambda sym, mods: setattr(j, 'name_presses', j.name_presses + 1))
         j.toggle_full_screen = lambda: setattr(j, 'bascules', j.bascules + 1)
         j._held = lambda a: WND.Game._held(j, a); j._name_entry_in_progress = lambda: name_str; j._state_number = WND.Game._state_number; j._window_shortcut = lambda sym, mods: WND.Game._window_shortcut(j, sym, mods)
@@ -138,16 +138,16 @@ class InWindow(unittest.TestCase):
         j = self.fake_game(pause=True); self.press_state(j, K.TAB); self.assertEqual(j.pause_presses, 1)                    # Pause menu: the key belongs to it
         j = self.fake_game(name_str=True); self.press_state(j, K.TAB); self.assertEqual(j.name_presses, 1)                         # name entry: Tab changes mode (name_entry.py)
         j = self.fake_game(); j.port_screen = types.SimpleNamespace(key_press=lambda sym, mods: setattr(j, 'name_presses', 7)); self.press_state(j, K.TAB); self.assertEqual(j.name_presses, 7)      # Saves screen: next button
-        from dq4_pc.persistence import pad_inputs as PI
+        from dq456_pc.persistence import pad_inputs as PI
         got = []; j = self.fake_game(); j.port_screen = types.SimpleNamespace(key_press=lambda sym, mods: got.append(sym)); self.press_state(j, PI.SYMBOL['PAD_UP'])
         self.assertEqual(got, [PI.SYMBOL['PAD_UP']]); self.assertEqual(j.reg.action_of(got[0]), 'up')          # (the port screens get the input itself and read its action, no arrow in between)
 
     def test_esc_menu_only_when_free(self):
         """Esc opens the Esc menu only when the player moves freely; elsewhere (battle, message, scene, title) it does nothing (or Cancel in a game window, _esc_back)."""
         for free, opened in ((True, 1), (False, 0)):
-            j = self.fake_game(); j.opened = 0; j.pause.open_menu = lambda: setattr(j, 'opened', j.opened + 1); j._esc_back = lambda: False; j.history_possible = lambda: free
+            j = self.fake_game(); j.opened = 0; j.pause.open_menu = lambda **kw: setattr(j, 'opened', j.opened + 1); j._esc_back = lambda: False; j.history_possible = lambda: free
             self.press_state(j, K.ESCAPE); self.assertEqual(j.opened, opened, free)
-        j = self.fake_game(); j.opened = 0; j.pause.open_menu = lambda: setattr(j, 'opened', 1); j._esc_back = lambda: True; j.history_possible = lambda: True
+        j = self.fake_game(); j.opened = 0; j.pause.open_menu = lambda **kw: setattr(j, 'opened', 1); j._esc_back = lambda: True; j.history_possible = lambda: True
         self.press_state(j, K.ESCAPE); self.assertEqual((j.opened, j.click_b), (0, True))          # (a game window: Esc = Cancel)
 
 

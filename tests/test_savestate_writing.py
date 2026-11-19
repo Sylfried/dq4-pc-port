@@ -15,8 +15,8 @@ import os, shutil, sys, tempfile, time, unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from dq4_pc.persistence import savestates as SS
-from dq4_pc.persistence import write_dir as WD
+from dq456_pc.persistence import savestates as SS
+from dq456_pc.persistence import write_dir as WD
 
 APK, SAVES = os.environ.get('DQ_APK'), os.environ.get('DQ_SAVES')
 STATE = {'quoi': 'un etat', 'octets': b'\x00' * 4096}
@@ -71,7 +71,7 @@ class Writing(unittest.TestCase):
 class HeapDoesNotGrow(unittest.TestCase):
     def test_the_used_heap_stays_put_across_map_changes(self):
         """What made the savestate grow was the heap that never went back down. Measurement: 2.45 MB, stable."""
-        from dq4_pc.core import engine as ENGINE
+        from dq456_pc.core import engine as ENGINE
         import _saves as SV
         m = ENGINE.Engine(APK, SAVES, tempfile.mkdtemp(prefix='sv295_'))
         for _ in range(3): m.step(0, 0)

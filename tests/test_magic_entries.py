@@ -16,7 +16,7 @@ stayed visible and clickable: a tap there sent the engine a nonexistent spell (<
 Engine part (DQ_APK and DQ_SAVES: the saves are opened read-only, the engine writes to a temporary folder). The party and hit points no longer come from the player's save, which changes as soon as they play:
   the party is **imposed** (`status::PartyStatus`: clear then add Ragnar and Doc, 30 MP, who knows "Premiers secours") and HP are requested as "max" or "hurt" (5 less), the max HP being read from the save:
   5. Doc's list: a single row, "Premiers secours", row code 2, rows 1 to 3 hidden;
-  6. Premiers secours on wounded Ragnar: MP 30 -> 28, HP restored to max; on Ragnar at full HP: NO MP spent (BaseAction::useMp spends only if the action had an effect) and, outside battle, "Mais il ne se passe rien." (official message of Evac', id 0xc3d6d) in place of the healing success message
+  6. Premiers secours on wounded Ragnar: MP 30 -> 28, HP restored to max; on Ragnar at full HP: NO MP spent (BaseAction::useMp spends only if the action had an effect) and, outside battle, "Mais rien ne se passe." (the message of "Heal all" when nobody needs it, id 0xc3d6b) in place of the healing success message
      (hook Engine._magic_hooks; EXPECTED RESULT DELIBERATELY CHANGED: before, the engine displayed "Les blessures de Ragnar guerissent !" without spending MP);
   7. uses with no effect decided by the engine: Rappel on a living character, Antipoison with no poison: "Mais rien ne se passe.", no MP spent; insufficient MP: "Pas assez de PM !";
   8. Rappel on a dead character: "revient a la vie", MP spent; Antipoison on a poisoned character: "n'est plus empoisonne";
@@ -31,7 +31,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import _saves as SV
 import pyglet
 if sys.platform.startswith('linux') and not os.environ.get('DISPLAY'): pyglet.options['headless'] = True; pyglet.options['shadow_window'] = False
-from dq4_pc.menus import ui_menu as UM
+from dq456_pc.menus import ui_menu as UM
 import _text_render as TR          # (test helper: the real Render._text without GL)
 PAD_SLACK = 4.5                    # a quad overflows the texture margin (2 px on each side): ink = width - 4
 
@@ -208,7 +208,7 @@ class RealEngine(unittest.TestCase):
         for i in range(n): eng.step(0, decl if i == 0 else 0)
 
     def ready(self, sort=None, hit_points=None, mp=30, poison=False):
-        from dq4_pc.core import engine as ENGINE
+        from dq456_pc.core import engine as ENGINE
         eng = ENGINE.Engine(APK, SAVES, tempfile.mkdtemp(prefix='sv_magie_')); eng.load_save(1); self.advance(eng, 120)
         for _ in range(30):                                                # the opening dialogue must be closed and the player free
             self.advance(eng, 1, self.BTN_TALK); self.advance(eng, 20)
@@ -271,7 +271,7 @@ class RealEngine(unittest.TestCase):
     def test_heal_sfx_without_effect(self):
         for sort in (self.FIRST_AID, self.FIRST_AID + 1, self.FIRST_AID + 2):
             texts, sounds = self.sound_effects(sort, {self.RAGNAR: 'max'})
-            self.assertEqual(texts[-1], 'Mais il ne se passe rien.'); self.assertEqual(sounds, [self.LAUNCH], 'spell %d: the cast stays, the healing sound effect is cut' % sort)
+            self.assertEqual(texts[-1], 'Mais rien ne se passe.'); self.assertEqual(sounds, [self.LAUNCH], 'spell %d: the cast stays, the healing sound effect is cut' % sort)
 
     def test_useful_heal_sfx_kept(self):
         for sort in (self.FIRST_AID, self.FIRST_AID + 1, self.FIRST_AID + 2):
@@ -280,7 +280,7 @@ class RealEngine(unittest.TestCase):
 
     def test_group_heal_sfx(self):
         texts, sounds = self.sound_effects(self.MULTIHEAL, {self.RAGNAR: 'max', self.DOC: 'max'}, group=True)
-        self.assertEqual(texts[-1], 'Mais il ne se passe rien.'); self.assertEqual(sounds, [self.LAUNCH])
+        self.assertEqual(texts[-1], 'Mais rien ne se passe.'); self.assertEqual(sounds, [self.LAUNCH])
         texts, sounds = self.sound_effects(self.MULTIHEAL, {self.RAGNAR: 'hurt', self.DOC: 'max'}, group=True)
         self.assertEqual(sounds, [self.LAUNCH, self.HEAL_SFX, self.HEAL_SFX], 'un bruitage de soin par cible soignee')
 
@@ -308,7 +308,7 @@ class RealEngine(unittest.TestCase):
         eng = self.ready(hit_points={self.RAGNAR: 'max'}); texts = self.launch(eng)
         self.assertEqual(_stat(eng, self.DOC)[2], 30, 'the engine spends no MP when the healing was useless')
         self.assertEqual(_stat(eng, self.RAGNAR)[0], _stat(eng, self.RAGNAR)[1])
-        self.assertEqual(texts, ['Doc lance le sort Premiers secours !', 'Mais il ne se passe rien.'])          # the official Evac' message (id 0xc3d6d), not "Les blessures de Ragnar guérissent !"
+        self.assertEqual(texts, ['Doc lance le sort Premiers secours !', 'Mais rien ne se passe.'])          # the message of "Heal all" when nobody needs it (id 0xc3d6b), not "Les blessures de Ragnar guérissent !"
 
     def test_insufficient_mp(self):
         eng = self.ready(hit_points={self.RAGNAR: 'hurt'}, mp=1); texts = self.launch(eng)
@@ -327,11 +327,11 @@ class RealEngine(unittest.TestCase):
     def test_heals_at_full_hp_all_powers(self):
         for sort, name_str in ((self.FIRST_AID + 1, 'Soins partiels'), (self.FIRST_AID + 2, 'Soins complets')):
             eng, texts, pm0, pm1 = self.spell_on(sort, {self.RAGNAR: 'max'})
-            self.assertEqual(texts, ['Doc lance le sort %s !' % name_str, 'Mais il ne se passe rien.']); self.assertEqual((pm0, pm1), (30, 30), name_str)
+            self.assertEqual(texts, ['Doc lance le sort %s !' % name_str, 'Mais rien ne se passe.']); self.assertEqual((pm0, pm1), (30, 30), name_str)
 
     def test_group_heal_at_full_health(self):
         eng, texts, pm0, pm1 = self.spell_on(self.MULTIHEAL, {self.RAGNAR: 'max', self.DOC: 'max'}, group=True)
-        self.assertEqual(texts, ['Doc lance le sort Multisoin !', 'Mais il ne se passe rien.'], 'only once, not once per character'); self.assertEqual((pm0, pm1), (30, 30))
+        self.assertEqual(texts, ['Doc lance le sort Multisoin !', 'Mais rien ne se passe.'], 'only once, not once per character'); self.assertEqual((pm0, pm1), (30, 30))
         self.assertEqual(eng.core.mem(eng.L + 0x257f84, 1)[0], 0, 'no more healing sound effect pending (the engine plays one per remaining target)')
 
     def test_group_heal_with_wounded_member_keeps_messages_and_mp(self):

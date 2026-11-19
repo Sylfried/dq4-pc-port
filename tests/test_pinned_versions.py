@@ -27,7 +27,7 @@ class Pinned(unittest.TestCase):
         self.assertEqual({k.lower() for k in pinned}, {m.lower() for m in MODULES}, pinned)
 
     def test_the_launcher_reads_the_file(self):
-        with io.open(os.path.join(ROOT, 'launch_dq4.bat'), encoding='utf-8') as f: bat = f.read()
+        with io.open(os.path.join(ROOT, 'tools', 'launch_game.bat'), encoding='utf-8') as f: bat = f.read()
         self.assertIn('-r "requirements.txt"', bat)
         for m in MODULES:                                        # no more hand-written module list in the .bat
             self.assertNotIn('check %s' % m, bat); self.assertNotIn('check-%s' % m, bat)
@@ -42,7 +42,7 @@ class Pinned(unittest.TestCase):
 class FlushTb(unittest.TestCase):
     def test_no_hook_swallows_the_flush_any_more(self):
         import inspect
-        from dq4_pc.core import engine as ENGINE
+        from dq456_pc.core import engine as ENGINE
         src = inspect.getsource(ENGINE)
         self.assertEqual(src.count('ctl_flush_tb()'), 1, 'a single call, in `_flush_tb`')
         self.assertNotIn('try: c.uc.ctl_flush_tb()', src)
@@ -50,7 +50,7 @@ class FlushTb(unittest.TestCase):
 
     def test_an_unavailable_flush_is_reported(self):
         """A version of Unicorn without `ctl_flush_tb`: the setting is reported missing instead of disappearing silently."""
-        from dq4_pc.core import engine as ENGINE
+        from dq456_pc.core import engine as ENGINE
         def boom(): raise AttributeError('ctl_flush_tb')
         eng = types.SimpleNamespace(core=types.SimpleNamespace(uc=types.SimpleNamespace(ctl_flush_tb=boom)), missing_hooks=[])
         eng._record_missing = types.MethodType(ENGINE.Engine._record_missing, eng)
@@ -59,7 +59,7 @@ class FlushTb(unittest.TestCase):
         self.assertIn('encounters', eng.missing_hooks[0]); self.assertIn('ctl_flush_tb', eng.missing_hooks[0])
 
     def test_nothing_is_reported_when_it_works(self):
-        from dq4_pc.core import engine as ENGINE
+        from dq456_pc.core import engine as ENGINE
         calls = []
         eng = types.SimpleNamespace(core=types.SimpleNamespace(uc=types.SimpleNamespace(ctl_flush_tb=lambda: calls.append(1))), missing_hooks=[])
         eng._record_missing = types.MethodType(ENGINE.Engine._record_missing, eng)

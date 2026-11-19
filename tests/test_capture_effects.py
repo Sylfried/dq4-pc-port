@@ -11,12 +11,12 @@ import os, sys, types, unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 import numpy as np
-from dq4_pc.core import engine as ENGINE
-from dq4_pc.core import game_priority as PJ
-from dq4_pc.render import capture_effects as EF
-from dq4_pc.render.lamp_effect import LampEffect
-from dq4_pc.render.riremito_effect import RiremitoEffect
-from dq4_pc.render.tabi_effect import TabiEffect
+from dq456_pc.core import engine as ENGINE
+from dq456_pc.core import game_priority as PJ
+from dq456_pc.render import capture_effects as EF
+from dq456_pc.render.lamp_effect import LampEffect
+from dq456_pc.render.riremito_effect import RiremitoEffect
+from dq456_pc.render.tabi_effect import TabiEffect
 
 
 def play(effect, toward=None):
@@ -33,7 +33,7 @@ class Durations(unittest.TestCase):
             e = factory(); savestates = play(e)
             self.assertEqual(e.frames, expected, name_str); self.assertEqual(EF.FRAMES[name_str], expected); self.assertTrue(e.finished); self.assertEqual(e.duration, expected)
         self.assertEqual(EF.frames_of('tabi', True), 45); self.assertEqual(EF.frames_of('tabi', False), 64); self.assertEqual(EF.frames_of('lamp', True), 64)       # (bit 7: no effect outside of travel)
-        self.assertEqual(EF.KINDS, {3: 'tabi', 5: 'lamp', 6: 'riremito'})
+        self.assertEqual(EF.KINDS, {3: 'tabi', 5: 'lamp', 6: 'riremito', 9: 'pegasus', 10: 'ido'}); self.assertEqual(EF.V2_ONLY, ('pegasus', 'ido'))      # (9 and 10: DQ VI only)
 
     def test_game_stays_normal_first_two_calls(self):
         for factory in (lambda: TabiEffect(False), LampEffect, RiremitoEffect):

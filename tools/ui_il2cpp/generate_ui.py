@@ -1,22 +1,22 @@
-"""Generates data/cache/ui_layout.json: the EXACT layout of the game's menu windows.
+"""Generates data/cache/<game>/fr/ui_layout.json (the cache of the game, paths.py; game: DQ_GAME): the EXACT layout of the game's menu windows.
 
 Principle: the game's MenuPortItemTable.Make_* functions (libil2cpp.so, ARM64) are run under Unicorn with
 "fake" Unity calls ; the nodes, meshes, texts and binding tables that they build are read back.
 Nothing is copied or redistributed: the produced file stays in cache/ (ignored by git).
 
-Inputs: data/cache/il2cpp/ (dump.cs, script.json, entrees/libil2cpp.so, entrees/global-metadata.dat: tools/dump_il2cpp.bat)
-          data/cache/ui_frameData.bin (extracted from the APKs automatically)
+Inputs: <cache>/il2cpp/ (dump.cs, script.json, entrees/libil2cpp.so, entrees/global-metadata.dat: tools/dump_il2cpp.bat)
+          <cache>/ui_frameData.bin (extracted from the APKs automatically)
 Usage   : python generate_ui.py [apk_folder]"""
 import concurrent.futures as cf, json, os, platform, subprocess, sys, tempfile, time, traceback
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, ROOT)
-from dq4_pc import paths as CH
+from dq456_pc import paths as CH
 CACHE = CH.FOLDERS.cache
 IL2 = os.path.join(CACHE, 'il2cpp')
 OUTPUT = os.path.join(CACHE, 'ui_layout.json')
-APKS = sys.argv[1] if len(sys.argv) > 1 else CH.FOLDERS.apk
+APKS = sys.argv[1] if len(sys.argv) > 1 else CH.FOLDERS.code_apk()
 LOG = os.path.join(CACHE, 'ui_generation.log')
 _j = None
 
@@ -57,11 +57,11 @@ def main():
             except ImportError: raise SystemExit('Python module missing: %s (pip install %s in .venv)' % (m, m))
     frame = os.path.join(CACHE, 'ui_frameData.bin')
     if not os.path.exists(frame):
-        from dq4_pc.menus import ui_menu
+        from dq456_pc.menus import ui_menu
         if not ui_menu.prepare_resources(APKS, CACHE) or not os.path.exists(frame):
             raise SystemExit('Cannot extract frameData from the APK files (%s)' % APKS)
     env = dict(os.environ, PYTHONUTF8='1', DQ_IL2=IL2, DQ_META=os.path.join(IL2, 'entrees', 'global-metadata.dat'), DQ_FRAME=frame, DQ_UI_H='800', PYTHONIOENCODING='utf-8')
-    tmp = tempfile.mkdtemp(prefix='dq4_ui_')
+    tmp = tempfile.mkdtemp(prefix="dq_ui_")
     t0 = time.time()
     ent = os.path.join(tmp, 'entete.json')
     rc, output = launch([sys.executable, os.path.join(HERE, 'header.py'), ent], env)

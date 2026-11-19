@@ -13,7 +13,7 @@ import _paths
 import numpy as np
 import pyglet
 if sys.platform.startswith('linux') and not os.environ.get('DISPLAY'): pyglet.options['headless'] = True; pyglet.options['shadow_window'] = False
-from dq4_pc.menus import ui_menu as UM
+from dq456_pc.menus import ui_menu as UM
 UM.TEXT_CENTERING = False          # (re-centering is the port's default; these tests measure the EXACT position of the original game, option DQ_ORIGINAL_TEXT=1; tests/test_text_recentering.py turns it back on)
 
 LEADING, ASCENT = 23.525390625, 18.88671875          # SE-GARRIR: line spacing and ascent (font px)

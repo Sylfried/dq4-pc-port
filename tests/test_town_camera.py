@@ -15,13 +15,13 @@ import math, os, sys, types, unittest, inspect
 import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-import _paths          # (test helper: finding the source code in the subfolders of dq4_pc)
+import _paths          # (test helper: finding the source code in the subfolders of dq456_pc)
 import pyglet
 if sys.platform.startswith('linux') and not os.environ.get('DISPLAY'): pyglet.options['headless'] = True; pyglet.options['shadow_window'] = False
-from dq4_pc.window import game as F
-from dq4_pc.window import constants as C
-from dq4_pc.core import engine as ENGINE
-from dq4_pc.persistence import settings as RG
+from dq456_pc.window import game as F
+from dq456_pc.window import constants as C
+from dq456_pc.core import engine as ENGINE
+from dq456_pc.persistence import settings as RG
 
 ASPECT_16_9 = 16.0 / 9.0
 
@@ -145,6 +145,19 @@ class TestTownCamera(unittest.TestCase):
         for aspect, x, y in ((16 / 9, phone_y, phone_x), (9 / 16, phone_x, phone_y), (21 / 9, phone_x * 21 / 9, phone_x), (4 / 3, phone_y, phone_y * 0.75), (1.0, phone_y, phone_y)):
             tx, ty = tangents(aspect); self.assertAlmostEqual(tx, x, 9, aspect); self.assertAlmostEqual(ty, y, 9, aspect)
 
+    def test_bestiary_like_the_phone_in_its_column(self):
+        """The bestiary (its monster is placed by the engine's camera, 83 units away, for the phone's portrait screen): a point lands in the interface column where the phone shows it,
+        the column centered, on the left, or enlarged (window 1920 x 1080: column 450 units, 1.35 px each)."""
+        cam, target, pts = (0.0, 0.0, -83.0), (4.1, 0.0, 0.0), [(0.0, 0.0, -41.5), (0.0, 0.7, -41.5), (-0.4, 0.3, -41.5)]
+        phone = unity_ndc(cam, target, F.TOWN_FOV_DEFAULT, F.TOWN_NEAR, F.TOWN_FAR, 0.0, F.ASPECT_PORTRAIT, pts)
+        for cx, k in ((960.0, 1.0), (225 * 1.35, 1.0), (960.0, 1.25)):
+            s_ = 1080 / 800.0 * k
+            e = fake_state(target, None, part=ENGINE.PART_BESTIARY, pos=cam)
+            M, _, _j = make_view(e, 16 / 9, width=1920, height=1080, ui_k=k, _ui_reference=lambda cx=cx, s_=s_: (cx, 540.0, s_))
+            got = np.array([ndc(M, p) for p in pts])
+            want = np.c_[(cx + phone[:, 0] * 225 * s_) / 960.0 - 1.0, phone[:, 1] * 400 * s_ / 540.0]
+            self.assertLess(float(np.abs(got - want).max()), 1e-9, (cx, k))
+
     def test_no_viewer_state_in_view(self):
         """Nothing other than what the engine sends changes the view: the fake game has no rotation, no scene weight, no lock (had them), and the view is the same whatever the state of the game."""
         target_pos = (5.0, 0.0, 4.0); ref = make_view(fake_state(target_pos, target_pos, part=ENGINE.PART_TOWN))[0]
@@ -157,14 +170,14 @@ class TestTownCamera(unittest.TestCase):
 
     def test_world_map_scale(self):
         """(cancels): as on the phone, the two zooms differ. The towns keep the game's own camera (the character panel, 1.152 high at 39.55 units from the target, takes
-        14.6 % of the 16:9 window) and the world map its own field (the hero, 33.2 map pixels of the 256 the window shows up: 13 %). The title screen and the parts with their own camera keep the phone's field."""
+        14.6 % of the 16:9 window) and the world map its own field (the hero, 33.2 map pixels of the 256 the window shows up: 13 %). The title screen and the bestiary show the phone's whole height."""
         target_pos = np.array((5.0, 0.0, 4.0)); pos = target_pos + np.array([0.0, 28.938, -26.959])
         self.assertAlmostEqual(float(np.linalg.norm(pos - target_pos)), C.TOWN_CAM_DIST, 2)
         def share(part, **kw):
             M, rep, _ = make_view(fake_state(target_pos, target_pos, part=part, pos=pos), **kw)
             return (ndc(M, target_pos + rep[1] * C.SPRITE_H * C.SPRITE_SCALE)[1] - ndc(M, target_pos)[1]) / 2
         self.assertAlmostEqual(share(ENGINE.PART_TOWN), C.TOWN_HERO_SHARE, 3); self.assertAlmostEqual(C.TOWN_HERO_SHARE, 0.146, 3)
-        self.assertAlmostEqual(share(ENGINE.PART_BESTIARY), C.TOWN_HERO_SHARE, 3)
+        self.assertAlmostEqual(share(ENGINE.PART_BESTIARY) / share(ENGINE.PART_TOWN, map_name=C.TITLE_MAP), 1.0, 9)          # (the bestiary: the phone's whole height, as its interface column)
         self.assertAlmostEqual(share(ENGINE.PART_TOWN, map_name=C.TITLE_MAP) / share(ENGINE.PART_BESTIARY, map_name=C.TITLE_MAP), 1.0, 9)          # (title screen unchanged)
         g = types.SimpleNamespace(mode=0); e = types.SimpleNamespace(field={'cam': (160.0, 320.0)}, field_scale=1.0)
         M, _, _, h = F.Game._field_camera(g, e, 16 / 9)

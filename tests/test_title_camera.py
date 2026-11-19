@@ -14,7 +14,7 @@ import os, sys, unittest
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import _paths          # (test helper: finding the source code in the subfolders of dq4_pc)
+import _paths          # (test helper: finding the source code in the subfolders of dq456_pc)
 import test_town_camera as T
 F = T.F
 

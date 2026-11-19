@@ -12,7 +12,7 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..'))
-from dq4_pc.world import hd as HD
+from dq456_pc.world import hd as HD
 
 APK = os.environ.get('DQ_APK')
 
@@ -66,7 +66,7 @@ class Clean(unittest.TestCase):
         self.assertEqual(c[0, :, 3].tolist(), [60, 255, 60]); self.assertEqual(c[0, 0, :3].tolist(), [20, 200, 30])
 
     def test_window_uses_the_hard_cleaning(self):
-        src = open(os.path.join(HERE, '..', 'dq4_pc', 'window', 'field.py'), encoding='utf-8').read()
+        src = open(os.path.join(HERE, '..', 'dq456_pc', 'window', 'field.py'), encoding='utf-8').read()
         self.assertIn("arr = HD.clean_sheet(arr, cell=(geo['width'], geo['height']))[0]", src)
         self.assertNotIn('clean_sheet(arr, soft=True)', src)
         self.assertGreaterEqual(HD.VERSION, 5, 'the HD caches made with the soft halo are redone')
@@ -76,7 +76,7 @@ class Clean(unittest.TestCase):
 class RealSheets(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        from dq4_pc.world import data as DO
+        from dq456_pc.world import data as DO
         cls.d = DO.Data(os.path.join(APK, 'split_UnityDataAssetPack.apk'), tempfile.mkdtemp(prefix='halo_'), log=lambda *a: None)
 
     def test_heroes(self):

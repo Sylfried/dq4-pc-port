@@ -13,11 +13,11 @@ import argparse, hashlib, inspect, os, sys, tempfile, types, unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..'))
-import _paths          # (test helper: finding the source code in the subfolders of dq4_pc)
+import _paths          # (test helper: finding the source code in the subfolders of dq456_pc)
 import pyglet
 pyglet.options['shadow_window'] = False                     # (no display needed: nothing is drawn)
-from dq4_pc.core import engine as ENGINE
-from dq4_pc.window import game as F
+from dq456_pc.core import engine as ENGINE
+from dq456_pc.window import game as F
 
 APK = os.environ.get('DQ_APK'); SAVES = os.environ.get('DQ_SAVES'); REST = sys.argv[1:]
 if __name__ == '__main__':
@@ -71,7 +71,7 @@ class FakeWindow:
     def __init__(self, ready=True, engine=None):
         self._ready = ready; self._closed = False; self.calls = []; self.engine = engine if engine is not None else UntouchableEngine()
         self.reg = types.SimpleNamespace(store=lambda: self.calls.append('reglages'))
-        self.history = types.SimpleNamespace(store=lambda force=False: self.calls.append('history'), apply_removals=lambda: None)
+        self.history = types.SimpleNamespace(store=lambda force=False: self.calls.append('history'))
         self.sound = types.SimpleNamespace(shutdown=lambda: self.calls.append('sound'))
     def on_close(self):
         # (the last line of Game.on_close is super().on_close(): the pyglet window, absent here)

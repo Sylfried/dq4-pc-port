@@ -14,7 +14,7 @@ APK = os.environ.get('DQ_APK')
 
 class Source(unittest.TestCase):
     def test_empty_animation_slot_skipped(self):
-        src = open(os.path.join(HERE, '..', 'dq4_pc', 'world', 'data.py'), encoding='utf-8').read()
+        src = open(os.path.join(HERE, '..', 'dq456_pc', 'world', 'data.py'), encoding='utf-8').read()
         i = src.index("for cref in comps['Animation'].read().m_Animations:")
         self.assertIn("if not getattr(cref, 'm_PathID', 0): continue", src[i:i + 300])
 
@@ -22,7 +22,7 @@ class Source(unittest.TestCase):
 @unittest.skipUnless(APK, 'APK: DQ_APK=<folder of the patched APKs>')
 class AllModels(unittest.TestCase):
     def test_every_model_extracts(self):
-        from dq4_pc.world import data as DO
+        from dq456_pc.world import data as DO
         d = DO.Data(os.path.join(APK, 'split_UnityDataAssetPack.apk'), tempfile.mkdtemp(prefix='fbx_tous_'), log=lambda *a: None)
         ids = sorted(int(k[1:]) for k in d._gos() if re.fullmatch(r'c\d{4}', k))
         self.assertGreaterEqual(len(ids), 36); self.assertIn(1003, ids); self.assertIn(1018, ids)

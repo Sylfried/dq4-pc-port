@@ -11,15 +11,15 @@ import ast, os, shutil, sys, tempfile, time, types, unittest
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, ROOT)
-from dq4_pc import language as _LANGUAGE; _LANGUAGE.select_language('fr')          # (these tests expect the French texts, whatever the computer's language)
+from dq456_pc import language as _LANGUAGE; _LANGUAGE.select_language('fr')          # (these tests expect the French texts, whatever the computer's language)
 
-ALLOWED = ('window.state_saved', 'window.state_loaded', 'window.state_empty', 'window.state_french_version_game_load', 'window.state_english_version_game_load', 'window.load_undone', 'window.no_load_undo', 'window.failed_r', 'window.save_failed_game_continues_details', 'menus.saves_imported', 'menus.language_will_change_when_leave')     # (start of the text of each call; the language screen's notice)
+ALLOWED = ('window.state_saved', 'window.state_loaded', 'window.state_empty', 'window.state_french_version_game_load', 'window.state_english_version_game_load', 'window.load_undone', 'window.failed_r', 'window.save_failed_game_continues_details', 'menus.saves_imported', 'menus.language_will_change_when_leave')     # (start of the text of each call; the language screen's notice)
 
 
 def toast_calls():
-    """[(file, line, call text)] of all the `.toast(...)` in the dq4_pc code (text = 1st argument: a string or the formatting of a string; None if it is not a string)."""
+    """[(file, line, call text)] of all the `.toast(...)` in the dq456_pc code (text = 1st argument: a string or the formatting of a string; None if it is not a string)."""
     out = []
-    for folder, _d, files in os.walk(os.path.join(ROOT, 'dq4_pc')):
+    for folder, _d, files in os.walk(os.path.join(ROOT, 'dq456_pc')):
         for name_str in files:
             if not name_str.endswith('.py'): continue
             with open(os.path.join(folder, name_str), encoding='utf-8') as f: tree = ast.parse(f.read())
@@ -44,9 +44,9 @@ class Code(unittest.TestCase):
 
     def test_other_alerts_have_no_message_on_screen(self):
         for name_str in ('full_screen.py', 'battle_scene.py', 'sound.py'):
-            path = os.path.join(ROOT, 'dq4_pc', 'window' if name_str != 'sound.py' else '', name_str)
+            path = os.path.join(ROOT, 'dq456_pc', 'window' if name_str != 'sound.py' else '', name_str)
             with open(path, encoding='utf-8') as f: self.assertNotIn('toast', f.read(), name_str)
-        with open(os.path.join(ROOT, 'dq4_pc', 'window', 'game.py'), encoding='utf-8') as f: src = f.read()
+        with open(os.path.join(ROOT, 'dq456_pc', 'window', 'game.py'), encoding='utf-8') as f: src = f.read()
         self.assertNotIn('alert=lambda', src)                           # (the sound "alert" hook is not connected)
 
 
@@ -54,7 +54,7 @@ class Behavior(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         try:
-            from dq4_pc.window import game as F, snapshots as I
+            from dq456_pc.window import game as F, snapshots as I
         except Exception as ex: raise unittest.SkipTest('fenetre non importable ici (%r)' % (ex,))
         cls.F, cls.I = F, I
 
@@ -62,14 +62,14 @@ class Behavior(unittest.TestCase):
         j = types.SimpleNamespace(msgs=[]); j.toast = lambda t, duration=1.8: j.msgs.append(t); return j
 
     def test_toast_expire(self):
-        from dq4_pc.window import menu_display as AM
+        from dq456_pc.window import menu_display as AM
         j = types.SimpleNamespace(toasts=[]); AM.MenusMixin.toast(j, 'État 1 enregistré', 0.05)
         self.assertEqual(j.toasts[0][0], 'État 1 enregistré'); self.assertGreater(j.toasts[0][1], time.time()); time.sleep(0.07); self.assertLess(j.toasts[0][1], time.time())
         AM.MenusMixin.toast(j, 'Autre'); self.assertEqual(len(j.toasts), 1)                    # one message at a time
 
     def test_cancel_load(self):
         j = self.fake(); j.undo_state = None
-        self.assertFalse(self.I.SnapshotsMixin.cancel_loading(j)); self.assertEqual(j.msgs, ['window.no_load_undo'])
+        self.assertFalse(self.I.SnapshotsMixin.cancel_loading(j)); self.assertEqual(j.msgs, [])           # (nothing to undo: no notice)
         j = self.fake(); j.undo_state = {'a': 1}; j._complete_savestate = lambda: {'b': 2}; j._apply_savestate = lambda d: None
         self.assertTrue(self.I.SnapshotsMixin.cancel_loading(j)); self.assertEqual(j.msgs, ['window.load_undone'])
 
@@ -82,15 +82,15 @@ class Behavior(unittest.TestCase):
         self.assertEqual(len(j.msgs), 1); self.assertIn("Chargement de l'état 3 impossible", j.msgs[0]); self.assertIn('disque', j.msgs[0])
 
     def test_import_of_saves(self):
-        from dq4_pc.window import title_screen as T
+        from dq456_pc.window import title_screen as T
         j = self.fake(); j.port_screen = types.SimpleNamespace(needs_reload=True); j._after_import = lambda: T.TitleMixin._after_import(j)
         T.TitleMixin._close_port_screen(j); self.assertIsNone(j.port_screen); self.assertEqual(j.msgs, ['menus.saves_imported'])
         j = self.fake(); j.port_screen = types.SimpleNamespace(needs_reload=False); j._after_import = lambda: T.TitleMixin._after_import(j)
         T.TitleMixin._close_port_screen(j); self.assertEqual(j.msgs, [])                              # nothing imported: no message
 
     def test_battle_speed_shows_nothing(self):
-        from dq4_pc.window import battle_scene as SC
-        from dq4_pc.persistence import settings as RG
+        from dq456_pc.window import battle_scene as SC
+        from dq456_pc.persistence import settings as RG
         class Settings(dict):
             def store(self): pass
         j = self.fake(); j.reg = Settings(battle_speed=0); j.apply_scroll = lambda: None; j.hud = types.SimpleNamespace(visible_ones=lambda: [])

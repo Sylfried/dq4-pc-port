@@ -10,20 +10,21 @@ Checks: (1) that every setting key is classified (interface or not): a key added
 import copy, json, os, sys, tempfile, types, unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from dq4_pc.persistence import settings as RG
+from dq456_pc.persistence import settings as RG
 
 # keys of DEFAULT that do NOT touch the interface editor (display, sound, text, keys, camera, speeds...);
 # "infos" = F1 information lines, "damage_size" = fixed value (no longer a setting)
-OUTSIDE_INTERFACE = {'sprite_mode', 'window_mode', 'msaa', 'render_scale', 'sharpness', 'brightness', 'info', 'sound', 'music_volume', 'sfx_volume',
+OUTSIDE_INTERFACE = {'settings_page', 'sprite_mode', 'window_mode', 'msaa', 'render_scale', 'sharpness', 'brightness', 'info', 'sound', 'music_volume', 'sfx_volume',
                   'master_volume', 'jingle_volume', 'interface_volume', 'music_enabled', 'jingles_enabled', 'sfx_enabled', 'interface_enabled', 'text_speed',
-                  'resolution', 'vignette', 'edge_blur', 'contrast', 'color_filter', 'motion_blur', 'accel_speed', 'battle_speed', 'damage_size',
-                  'keys_version', 'keys', 'level_up_heal'}
+                  'resolution', 'vignette', 'edge_blur', 'contrast', 'color_filter', 'motion_blur', 'accel_speed', 'battle_speed', 'quick_save_journal', 'exp_rate', 'gold_rate', 'party_damage_rate', 'enemy_damage_rate', 'difficulty', 'casino_rate', 'random_encounters', 'encounter_rate', 'damage_size',
+                  'keys_version', 'keys', 'level_up_heal', 'battle_end_heal'}
 OUTSIDE_INTERFACE |= {'camera_invert_lr', 'interface_version', 'gamepads'}          # direction of the camera moved with the mouse; version of the default window sizes
 OUTSIDE_INTERFACE |= {'history_favorites_only', 'language'}                                          # history's "Favorites only" checkbox: a window state, not an editor interface
 
 # values different from DEFAULT for each interface setting
 OTHER = {'buttons': False, 'dpad': False, 'dpad_size': 1.7, 'rotation_bar': False, 'buttons_size': 1.4, 'buttons_pos': {'map': [10, 5], 'menu': [3, 2.5], 'chat': [0, 9], 'dpad': [20, 9]},
           'speed_button': False, 'speed_button_size': 1.3, 'speed_button_pos': [4.0, 6.0],
+          'vehicle_button': False, 'vehicle_button_size': 1.6, 'vehicle_button_pos': [2.0, 7.0],
           'editor_grid': False, 'buttons_snap': False,
           'interface_windows': {'RootMenu': [1.3, 0.1, -0.2], 'Status': [0.7, -0.05, 0.3], 'msg': [1.5, 0.0, 0.1], 'YesNo': [0.8, 0.2, 0.0]},
           'interface_hidden': ['RootMenu', 'Status', 'msg', 'MapButton']}
@@ -52,7 +53,7 @@ class Reset(unittest.TestCase):
         self.assertEqual(classified - set(RG.DEFAULT), set(), 'key classified but missing from DEFAULT')
         self.assertEqual(set(RG.INTERFACE_KEYS) & OUTSIDE_INTERFACE, set())
         self.assertEqual(len(RG.INTERFACE_KEYS), len(set(RG.INTERFACE_KEYS)))
-        self.assertEqual(set(RG.SCREEN_KEYS + RG.SPEED_KEYS + RG.WINDOW_KEYS + RG.EDITOR_KEYS), set(RG.INTERFACE_KEYS))
+        self.assertEqual(set(RG.SCREEN_KEYS + RG.SPEED_KEYS + RG.VEHICLE_KEYS + RG.WINDOW_KEYS + RG.EDITOR_KEYS), set(RG.INTERFACE_KEYS))
 
     def test_old_file_gets_the_rotation_bar(self):
         path = os.path.join(tempfile.mkdtemp(), 'reglages.json'); json.dump({'dpad': False}, open(path, 'w'))
@@ -66,14 +67,21 @@ class Reset(unittest.TestCase):
         r = modified_settings(); av = interface(r); ap = others(r)
         r.reset_interface(RG.SCREEN_TARGET)
         for k in RG.SCREEN_KEYS: self.assertEqual(r[k], RG.DEFAULT[k], k)               # buttons and D-pad: everything comes back (display, sizes, positions)
-        for k in RG.SPEED_KEYS + RG.WINDOW_KEYS + RG.EDITOR_KEYS: self.assertEqual(r[k], av[k], k)           # battle speed button, windows and editor options: intact
+        for k in RG.SPEED_KEYS + RG.VEHICLE_KEYS + RG.WINDOW_KEYS + RG.EDITOR_KEYS: self.assertEqual(r[k], av[k], k)           # battle speed button, vehicle button, windows and editor options: intact
         self.assertEqual(others(r), ap)
 
     def test_speed_button_alone(self):
         r = modified_settings(); av = interface(r); ap = others(r)
         r.reset_interface(RG.SPEED_TARGET)
         for k in RG.SPEED_KEYS: self.assertEqual(r[k], RG.DEFAULT[k], k)                  # display, size and position: everything comes back (the position: stuck under the bottom box)
-        for k in RG.SCREEN_KEYS + RG.WINDOW_KEYS + RG.EDITOR_KEYS: self.assertEqual(r[k], av[k], k)       # buttons and D-pad, windows and editor options: intact
+        for k in RG.SCREEN_KEYS + RG.VEHICLE_KEYS + RG.WINDOW_KEYS + RG.EDITOR_KEYS: self.assertEqual(r[k], av[k], k)       # buttons and D-pad, vehicle button, windows and editor options: intact
+        self.assertEqual(others(r), ap)
+
+    def test_vehicle_button_alone(self):
+        r = modified_settings(); av = interface(r); ap = others(r)
+        r.reset_interface(RG.VEHICLE_TARGET)
+        for k in RG.VEHICLE_KEYS: self.assertEqual(r[k], RG.DEFAULT[k], k)                # display, size and position (back above Commands)
+        for k in RG.SCREEN_KEYS + RG.SPEED_KEYS + RG.WINDOW_KEYS + RG.EDITOR_KEYS: self.assertEqual(r[k], av[k], k)
         self.assertEqual(others(r), ap)
 
     def test_window_only(self):
@@ -82,7 +90,7 @@ class Reset(unittest.TestCase):
         self.assertNotIn('RootMenu', r['interface_windows']); self.assertNotIn('RootMenu', r['interface_hidden'])          # original size, position and display
         self.assertEqual(r['interface_windows'], {k: x for k, x in av['interface_windows'].items() if k != 'RootMenu'})      # the other windows keep their setting
         self.assertEqual(r['interface_hidden'], [n for n in av['interface_hidden'] if n != 'RootMenu'])                   # ... and their hiding
-        for k in RG.SCREEN_KEYS + RG.SPEED_KEYS + RG.EDITOR_KEYS: self.assertEqual(r[k], av[k], k)
+        for k in RG.SCREEN_KEYS + RG.SPEED_KEYS + RG.VEHICLE_KEYS + RG.EDITOR_KEYS: self.assertEqual(r[k], av[k], k)
         self.assertEqual(others(r), ap)
 
     def test_dialogues_and_yes_no_independent(self):
@@ -111,9 +119,9 @@ class Reset(unittest.TestCase):
     def test_no_sharing_with_default(self):
         r = RG.Settings(None); r.reset_interfaces()
         r['interface_windows']['X'] = [2.0, 0.0, 0.0]; r['interface_hidden'].append('X'); r['buttons_pos']['map'] = [1, 1]
-        self.assertEqual((RG.DEFAULT['interface_windows'], RG.DEFAULT['interface_hidden'], RG.DEFAULT['buttons_pos']), ({n: [RG.COMMANDS_WIDTH, 0.0, 0.0] for n in RG.BATTLE_COMMAND_WINDOWS}, [], {}))       # DEFAULT is never modified by a reset (only the battle command windows have a default size)
+        self.assertEqual((RG.DEFAULT['interface_windows'], RG.DEFAULT['interface_hidden'], RG.DEFAULT['buttons_pos']), (dict({n: [RG.COMMANDS_WIDTH, 0.0, 0.0] for n in RG.BATTLE_COMMAND_WINDOWS}, **{n: [RG.SMALL_SCREEN_SCALE, 0.0, 0.0] for n in RG.SMALL_SCREENS}), [], {}))       # DEFAULT is never modified by a reset (only the battle command windows and the small screens have a default size)
         r2 = RG.Settings(None); r2.reset_interface('X'); r2.reset_interface(RG.SCREEN_TARGET)
-        self.assertEqual((RG.DEFAULT['interface_windows'], RG.DEFAULT['interface_hidden'], RG.DEFAULT['buttons_pos']), ({n: [RG.COMMANDS_WIDTH, 0.0, 0.0] for n in RG.BATTLE_COMMAND_WINDOWS}, [], {}))
+        self.assertEqual((RG.DEFAULT['interface_windows'], RG.DEFAULT['interface_hidden'], RG.DEFAULT['buttons_pos']), (dict({n: [RG.COMMANDS_WIDTH, 0.0, 0.0] for n in RG.BATTLE_COMMAND_WINDOWS}, **{n: [RG.SMALL_SCREEN_SCALE, 0.0, 0.0] for n in RG.SMALL_SCREENS}), [], {}))
 
     def test_storage(self):
         f = os.path.join(tempfile.mkdtemp(prefix='rg_test_'), 'settings.json')
@@ -128,8 +136,8 @@ class Reset(unittest.TestCase):
     def test_preview_hidden_elements(self):
         """Editor preview: each hidden element (the whole interface, or the D-pad alone) is marked, the others are not; the D-pad remains selectable (its rectangle is always given)."""
         try:
-            from dq4_pc.menus import pause as PA
-            from dq4_pc.menus import hud_mobile as HM
+            from dq456_pc.menus import pause as PA
+            from dq456_pc.menus import hud_mobile as HM
         except Exception as ex:
             self.skipTest('pause.py non importable ici (%r)' % (ex,))
         r = RG.Settings(None)
@@ -158,7 +166,7 @@ class Reset(unittest.TestCase):
     def test_page_interface(self):
         """The "Restore" entries of the "Interface" page call these resets (fake game: `reg` and the window list); the panel's position (session) is reset to the origin by "all"."""
         try:
-            from dq4_pc.menus import pause as PA
+            from dq456_pc.menus import pause as PA
         except Exception as ex:
             self.skipTest('pause.py non importable ici (%r)' % (ex,))
         r = modified_settings(); P = PA.Pause(types.SimpleNamespace(reg=r, window_names=lambda: {'RootMenu': [1], 'Status': [2], 'Money': [3]}))

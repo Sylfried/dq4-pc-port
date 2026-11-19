@@ -7,7 +7,7 @@ a material with a texture is unchanged; an unreadable material keeps `None`.
 import os, sys, types, unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from dq4_pc.world import data as DO
+from dq456_pc.world import data as DO
 
 
 class _Mat:

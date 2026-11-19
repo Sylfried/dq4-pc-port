@@ -12,7 +12,7 @@ import os, sys, tempfile, unittest, zipfile
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
-from dq4_pc.core import engine as ENGINE
+from dq456_pc.core import engine as ENGINE
 APK, SAVES = os.environ.get('DQ_APK'), os.environ.get('DQ_SAVES')
 
 

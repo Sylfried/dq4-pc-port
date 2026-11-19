@@ -18,7 +18,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..'))
 import pyglet
 if sys.platform.startswith('linux') and not os.environ.get('DISPLAY'): pyglet.options['headless'] = True; pyglet.options['shadow_window'] = False
-from dq4_pc.window import game as G
+from dq456_pc.window import game as G
 
 BORROWED = ('_fatal', '_fatal_context', '_save_on_exit', '_guarded_loop', 'on_draw', 'on_close')
 
@@ -43,7 +43,6 @@ class Stub:
                 if name_str in fail: raise OSError('disque plein (%s)' % name_str)
                 done.append(name_str)
             shutdown = store
-            def apply_removals(self): pass                                  # (history: unstarred favorites removed at closing)
         return Part()
 
     def close(self): self.closed += 1
@@ -115,11 +114,13 @@ class Barrier(unittest.TestCase):
 
 class ExitCode(unittest.TestCase):
     def test_main_returns_non_zero_when_dead(self):
-        """`main` returns 1 when the game is dead: launch_dq4.bat keeps the console open on a non-zero code."""
-        src = open(os.path.join(HERE, '..', 'dq4_pc', 'main.py'), encoding='utf-8').read()
+        """`main` returns 1 when the game is dead: the launcher keeps the console open on a non-zero code."""
+        src = open(os.path.join(HERE, '..', 'dq456_pc', 'main.py'), encoding='utf-8').read()
         self.assertIn("if getattr(game, 'dead', False):", src)
         self.assertIn('return 1', src)
         self.assertIn('sys.exit(main())', src)
+        src = open(os.path.join(HERE, '..', 'dq456_pc', '__main__.py'), encoding='utf-8').read()
+        self.assertIn('sys.exit(main())', src, '`python -m dq456_pc` runs __main__.py: without sys.exit the launcher always read exit code 0')
 
 
 if __name__ == '__main__':

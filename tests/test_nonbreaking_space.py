@@ -13,8 +13,8 @@ import pyglet
 pyglet.options['shadow_window'] = False
 UM = TR.UM
 try:
-    from dq4_pc.menus import ui_history as UH
-    from dq4_pc.core import history as HI
+    from dq456_pc.menus import ui_history as UH
+    from dq456_pc.core import history as HI
     from PIL import Image
 except Exception as ex:
     UH = None; ERROR = ex

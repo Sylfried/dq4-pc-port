@@ -2,13 +2,13 @@
 
 ## Game content
 
-This repository contains **no content from the game**. The engine (`libdq4core.so`), the Unity data, the music, the graphics and the texts are read at runtime from APK files that each player supplies from their own copy of the game; caches computed from them stay in the player's `data` folder, which is excluded from the repository. *Dragon Quest* and all related content are the property of their respective owners (Square Enix Holdings Co., Ltd. and its licensors). This is an unofficial fan project, not affiliated with or endorsed by Square Enix.
+This repository contains **no content from the game**. The game engines (`libdq4core.so`, `libdq5core.so`, `libdq6core.so`), the Unity data, the music, the graphics and the texts are read at runtime from APK files that each player supplies from their own copy of the game; caches computed from them stay in the player's `data` folder, which is excluded from the repository. *Dragon Quest* and all related content are the property of their respective owners (Square Enix Holdings Co., Ltd. and its licensors). This is an unofficial fan project, not affiliated with or endorsed by Square Enix.
 
 ## Assets included in this repository
 
 | Component | Where | License |
 |---|---|---|
-| Kenney "Input Prompts" 1.1 (key and gamepad button pictures, www.kenney.nl); four key pictures (Shift, Alt, Alt Gr, Ctrl) assembled from Kenney's own blank key and letters by `tools/make_key_pictures.py` | `dq4_pc/assets/input_prompts/` | CC0 1.0 (public domain dedication), see `dq4_pc/assets/input_prompts/LICENSE.txt` |
+| Kenney "Input Prompts" 1.1 (key and gamepad button pictures, www.kenney.nl); four key pictures (Shift, Alt, Alt Gr, Ctrl) assembled from Kenney's own blank key and letters by `tools/make_key_pictures.py`; the left stick's four directions made from the right stick's pictures with the "L" of Kenney's left stick press picture by `tools/make_stick_pictures.py` | `dq456_pc/assets/input_prompts/` | CC0 1.0 (public domain dedication), see `dq456_pc/assets/input_prompts/LICENSE.txt` |
 
 ## Python modules installed by the launcher (not included)
 

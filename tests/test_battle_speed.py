@@ -7,17 +7,17 @@ import json, math, os, random, re, sys, tempfile, types, unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..'))
-import _paths          # (test helper: finding the source code in the subfolders of dq4_pc)
-from dq4_pc.persistence import settings as RG
-from dq4_pc.battle import battle_speed as VC
+import _paths          # (test helper: finding the source code in the subfolders of dq456_pc)
+from dq456_pc.persistence import settings as RG
+from dq456_pc.battle import battle_speed as VC
 
 try:
     import pyglet
     if sys.platform.startswith('linux') and not os.environ.get('DISPLAY'): pyglet.options['headless'] = True; pyglet.options['shadow_window'] = False
-    from dq4_pc.window import game as F
-    from dq4_pc.menus import hud_mobile as HM
-    from dq4_pc.core import engine as ENGINE
-    from dq4_pc.battle import battle_effect as EC
+    from dq456_pc.window import game as F
+    from dq456_pc.menus import hud_mobile as HM
+    from dq456_pc.core import engine as ENGINE
+    from dq456_pc.battle import battle_effect as EC
 except Exception as ex:                                                     # (no pyglet / engine here: the tests that need them are skipped)
     F = HM = ENGINE = None; IMPORT_ERROR = ex
 
@@ -31,8 +31,8 @@ def load(content):
 
 
 class Setting(unittest.TestCase):
-    def test_default_normal(self):
-        r = RG.Settings(None); self.assertEqual(r['battle_speed'], 1.0); self.assertEqual(RG.DEFAULT['battle_speed'], 1.0)
+    def test_default_manual(self):
+        r = RG.Settings(None); self.assertEqual(r['battle_speed'], 0.0); self.assertEqual(RG.DEFAULT['battle_speed'], 0.0)          # Manual: the original game's messages, advanced by hand
         self.assertEqual(RG.BATTLE_SPEEDS, (0.0, 1.0, 2.0, 3.0))
 
     def test_labels_never_x(self):
@@ -41,16 +41,16 @@ class Setting(unittest.TestCase):
 
     def test_validation(self):
         for raw_value, expected in ((0, 0.0), (1, 1.0), (2, 2.0), (3, 3.0), (1.0, 1.0), (2.4, 2.0), (1.5, 2.0), (2.5, 3.0), (0.4, 0.0), (0.5, 1.0), (-4, 0.0), (4, 3.0), (99, 3.0), (float('inf'), 3.0), (float('-inf'), 0.0),
-                              (float('nan'), 1.0), ('2', 1.0), ('x', 1.0), (None, 1.0), (True, 1.0), (False, 1.0), ([2], 1.0), ({'a': 2}, 1.0)):
+                              (float('nan'), 0.0), ('2', 0.0), ('x', 0.0), (None, 0.0), (True, 0.0), (False, 0.0), ([2], 0.0), ({'a': 2}, 0.0)):          # (not a number: the default, Manual)
             self.assertEqual(RG.battle_notch(raw_value), expected, repr(raw_value))
             r, _ = load({'battle_speed': raw_value}); self.assertEqual(r['battle_speed'], expected, 'fichier : %r' % (raw_value,))
-        r, _ = load({'sound': False}); self.assertEqual(r['battle_speed'], 1.0)                      # absent: Normal
+        r, _ = load({'sound': False}); self.assertEqual(r['battle_speed'], 0.0)                      # absent: Manual (the default)
 
     def test_cycle(self):
         v = 1.0; seen = []
         for _ in range(9): v = RG.next_battle_speed(v); seen.append(v)
         self.assertEqual(seen, [2.0, 3.0, 0.0, 1.0, 2.0, 3.0, 0.0, 1.0, 2.0])                         # Normal -> Fast -> Very fast -> Manual -> Normal
-        self.assertEqual(RG.next_battle_speed('x'), 2.0); self.assertEqual(RG.next_battle_speed(None), 2.0)    # invalid value: read as Normal
+        self.assertEqual(RG.next_battle_speed('x'), 1.0); self.assertEqual(RG.next_battle_speed(None), 1.0)    # invalid value: read as the default, Manual
 
     def test_storage(self):
         r, f = load({}); r['battle_speed'] = 3.0; r.store()
@@ -90,7 +90,7 @@ class MessageScrolling(unittest.TestCase):
     """The "Battle speed" also sets OptionStatus.battleSpeed: 4 (manual) in Manuel, 0 (12 frames, the shortest) otherwise."""
     def test_imposed_code(self):
         self.assertEqual([RG.scroll_code(v) for v in (0.0, 1.0, 2.0, 3.0)], [4, 0, 0, 0])
-        self.assertEqual(RG.scroll_code('x'), 0); self.assertEqual(RG.scroll_code(None), 0)             # invalid value: Normal
+        self.assertEqual(RG.scroll_code('x'), 4); self.assertEqual(RG.scroll_code(None), 4)             # invalid value: the default, Manual
 
     def test_game_changes_message_speed(self):
         self.assertEqual(RG.speed_after_game_code(4, 2.0), 0.0)                                              # Manuel chosen in the game
@@ -104,7 +104,7 @@ class MessageScrolling(unittest.TestCase):
             r, _ = load({'defilement_force': True, 'defilement_combat': old, 'battle_speed': 2.0}); self.assertEqual(r['battle_speed'], 2.0)
         r, _ = load({'defilement_force': False, 'defilement_combat': 4, 'battle_speed': 2.0}); self.assertEqual(r['battle_speed'], 2.0)       # not forced: the game's save decided, not the player
         r, _ = load({'defilement_auto': False, 'defilement_force': True}); self.assertEqual(r['battle_speed'], 0.0)      # any old "Automatic scrolling: no" forced
-        r, _ = load({'defilement_auto': False}); self.assertEqual(r['battle_speed'], 1.0)                 # (nothing was forced: the game's save decided)
+        r, _ = load({'defilement_auto': False}); self.assertEqual(r['battle_speed'], 0.0)                 # (nothing was forced: the default)
         r, _ = load({'defilement_force': True, 'defilement_combat': 4}); r.store()
         with open(r.path, encoding='utf-8') as fh: d = json.load(fh)
         self.assertEqual(d['battle_speed'], 0.0); self.assertNotIn('defilement_force', d); self.assertNotIn('defilement_combat', d)           # the old keys disappear from the file
@@ -216,7 +216,7 @@ class Sounds(unittest.TestCase):
         """A frame displayed at x3 sends several steps: the sound effect is started only once, with the duration of its file (no notion of speed in the sound module); the music keeps its real clock."""
         try:
             sys.modules.setdefault('pyglet', None)
-            from dq4_pc import sound as SOUND
+            from dq456_pc import sound as SOUND
         except Exception as ex: self.skipTest('sound.py non importable ici (%r)' % (ex,))
         launched = []
         class Player:
@@ -248,16 +248,25 @@ class AcceleratorIndependence(unittest.TestCase):
         j.engine = types.SimpleNamespace(state=state, msg_visible=msg, active_menu=lambda: menu, flags=lambda: 0x28, ui=types.SimpleNamespace(msg={'feed': feed}))
         j.pad = lambda: ENGINE.UP if direction else 0
         j._held = lambda a: accel_held and a == 'accel'; j.hud = types.SimpleNamespace(dpad_run=lambda: False); j.pause = types.SimpleNamespace(opened=False)
-        for name_str in ('_battle_clock', '_wait_for_player', '_jingle_wait'): setattr(j, name_str, types.MethodType(getattr(F.Game, name_str), j))
+        for name_str in ('_battle_clock', '_wait_for_player', '_battle_won'): setattr(j, name_str, types.MethodType(getattr(F.Game, name_str), j))
         j.sound = None                                                                                        # (no sound: no jingle to wait for)
         j.factor = lambda: F.Game._speed_factor(j)
         return j
 
-    def test_jingle_in_battle_keeps_the_battle_speed(self):
-        """a jingle or the victory fanfare holds the message, not the battle's speed."""
-        j = self.fake(ENGINE.PART_BATTLE, 3.0); j.sound = types.SimpleNamespace(jingle_playing=lambda: True); self.assertEqual(j.factor(), 3.0)
-        j.sound = types.SimpleNamespace(jingle_playing=lambda: False); self.assertEqual(j.factor(), 3.0)
-        j = self.fake(ENGINE.PART_FIELD, 1.0, 2.0, True); j.sound = types.SimpleNamespace(jingle_playing=lambda: True); self.assertEqual(j.factor(), 2.0)
+    def test_won_battle_results_at_the_game_clock(self):
+        """once the battle is won (results: experience, gold, items, level ups, then the exit), the clock is the game's at every speed, as in "Manual"; before, the setting's"""
+        from dq456_pc.battle import battle_history as BH
+        for speed in (0.0, 1.0, 2.0, 3.0):
+            j = self.fake(ENGINE.PART_BATTLE, speed); cc = BH.BattleSensor.__new__(BH.BattleSensor); cc.active = True; cc.events = []; cc.tracking = BH.Tracking()
+            j.engine.battle_sensor = cc; self.assertEqual(j.factor(), max(1.0, speed), 'fighting')
+            cc.events = []; cc.tracking.victory = True; self.assertEqual(j.factor(), 1.0, 'won')
+            cc.tracking = None; self.assertEqual(j.factor(), max(1.0, speed), 'next battle')
+            cc.tracking = BH.Tracking(); cc.tracking.victory = True; j._replay = object(); j.replay_between_turns = lambda: False; self.assertEqual(j.factor(), max(1.0, speed), 'battle replay: untouched')
+
+    def test_jingles_do_not_change_the_battle_speed(self):
+        """as in the game: a jingle or the victory fanfare holds nothing, neither the battle's speed nor its messages."""
+        self.assertEqual(self.fake(ENGINE.PART_BATTLE, 3.0).factor(), 3.0)
+        self.assertFalse(hasattr(F.Game, '_jingle_wait') or hasattr(F.Game, '_sync_level_jingle'), 'no jingle rule left in the window')
 
     def test_accelerator_does_not_accelerate_battle(self):
         for v in (0.0, 1.0, 2.0, 3.0):
@@ -303,10 +312,10 @@ class AcceleratorIndependence(unittest.TestCase):
         r = RG.Settings(None); saved = []; r.store = lambda: saved.append(r['battle_speed']); imposed = []
         vis = [()]
         j = types.SimpleNamespace(reg=r, hud=types.SimpleNamespace(visible_ones=lambda: vis[0]), apply_scroll=lambda: imposed.append(RG.scroll_code(r['battle_speed'])))
-        for expected in (2.0, 3.0, 0.0, 1.0, 2.0): F.Game.change_battle_speed(j); self.assertEqual(r['battle_speed'], expected)
-        self.assertEqual(saved, [2.0, 3.0, 0.0, 1.0, 2.0]); self.assertEqual(imposed, [0, 0, 4, 0, 0])
+        for expected in (1.0, 2.0, 3.0, 0.0, 1.0): F.Game.change_battle_speed(j); self.assertEqual(r['battle_speed'], expected)          # (from the default, Manual)
+        self.assertEqual(saved, [1.0, 2.0, 3.0, 0.0, 1.0]); self.assertEqual(imposed, [0, 0, 0, 4, 0])
         vis[0] = (HM.BATTLE,); F.Game.change_battle_speed(j); F.Game.change_battle_speed(j)                      # (on-screen button or not: never a message)
-        vis[0] = (); F.Game.change_battle_speed(j); self.assertEqual(saved[-3:], [3.0, 0.0, 1.0])
+        vis[0] = (); F.Game.change_battle_speed(j); self.assertEqual(saved[-3:], [2.0, 3.0, 0.0])
 
 
 @unittest.skipIf(F is None, 'window.py non importable ici')
@@ -357,7 +366,9 @@ class ScreenButton(unittest.TestCase):
         self.assertEqual(self.fake(fade={'front': dict(a=0.3, step=0.03, n=20)})[1].visible_ones(), ())                  # fade to black building up (end of battle)
         self.assertEqual(self.fake(fade={'front': dict(a=1.0)})[1].visible_ones(), ())                                  # black screen
         self.assertEqual(self.fake(fade={'back': dict(a=0.5, step=0.03, n=5)})[1].visible_ones(), ())                      # (background plane too)
-        self.assertEqual(self.fake(fade={'front': dict(a=0.5, step=-0.03, n=15)})[1].visible_ones(), (HM.BATTLE,))        # fade-in: the button appears
+        self.assertEqual(self.fake(fade={'front': dict(a=0.5, step=-0.03, n=15)})[1].visible_ones(), ())                  # fade-in (battle entry): not yet either
+        self.assertEqual(self.fake(fade={'back': dict(a=0.02, step=-0.02, n=1)})[1].visible_ones(), ())
+        self.assertEqual(self.fake(fade={'front': dict(a=0.0, step=-0.03, n=0)})[1].visible_ones(), (HM.BATTLE,))        # the fade is over: the button appears
 
     def test_click(self):
         J, b = self.fake(); x, y, w, h = b.rect(HM.BATTLE)
@@ -430,42 +441,13 @@ class EngineReplay(unittest.TestCase):
 
 
 @unittest.skipIf(F is None, 'window.py non importable ici')
-class LevelJingleWithItsMessage(unittest.TestCase):
-    """the level-up jingle and "X passe au niveau N !" start together. The engine asks for the jingle, then waits 90 frames before the message (ui_MsgLoop state
-    MSG_PAUSE): the jingle's music orders are kept until the message starts (the page beep is not delayed); during that wait the battle clock is JINGLE_SKIP and the keys are held."""
-
-    def fake(self, state=None, decoded=False):
-        from dq4_pc import sound as SOUND
-        snd = SOUND.Sound('inexistant.apk', '/tmp', log=lambda *a: None); snd.ok = True; snd.active = True
-        if decoded: snd.dec['BGM47'] = dict(pcm=[0] * 3117, frequency=1000, loop=False)
-        st = ENGINE.State(); st.part = ENGINE.PART_BATTLE
-        self.ms = [1, state if state is not None else ENGINE.MSG_PAUSE, 0, 0, 100]
-        eng = types.SimpleNamespace(state=st, msg_visible=True, message_state=lambda: tuple(self.ms), active_menu=lambda: None, flags=lambda: 0x28, ui=types.SimpleNamespace(msg={'feed': False}))
-        j = types.SimpleNamespace(engine=eng, sound=snd, _deferred_jingle=[], reg={'battle_speed': 3.0, 'accel_speed': 1.0})
-        for name_str in ('_sync_level_jingle', '_jingle_wait', '_battle_clock', '_wait_for_player'): setattr(j, name_str, types.MethodType(getattr(F.Game, name_str), j))
-        j.pad = lambda: 0; j._held = lambda a: False; j.hud = types.SimpleNamespace(dpad_run=lambda: False); j.pause = types.SimpleNamespace(opened=False)
-        return j
-
+class LevelJingle(unittest.TestCase):
+    """the level-up jingle: recognized as a jingle (its music orders go to the sound as the engine gives them, as in the game)."""
     def test_is_jingle(self):
-        j = self.fake()
-        self.assertTrue(j.sound.is_jingle(47)); self.assertTrue(j.sound.is_jingle(0x1005)); self.assertFalse(j.sound.is_jingle(30)); self.assertFalse(j.sound.is_jingle(0x4000))
-        self.assertTrue(self.fake(decoded=True).sound.is_jingle(47))
-
-    def test_jingle_kept_until_its_message(self):
-        j = self.fake(); evs = [(35, 300), (37, 0x4000), (37, 47)]
-        self.assertEqual(j._sync_level_jingle(j.engine, evs), [(35, 300)], 'the page beep goes at once, the music waits')
-        self.assertEqual(j._deferred_jingle, [(37, 0x4000), (37, 47)]); self.assertTrue(j._jingle_wait())
-        self.assertEqual(F.Game._speed_factor(j), F.JINGLE_SKIP, "the engine's wait before the message passes at once")
-        self.assertEqual(j._sync_level_jingle(j.engine, []), []); self.assertEqual(len(j._deferred_jingle), 2)
-        self.ms[1] = 1                                                                       # the message starts
-        self.assertEqual(j._sync_level_jingle(j.engine, []), [(37, 0x4000), (37, 47)]); self.assertEqual(j._deferred_jingle, [])
-
-    def test_nothing_kept_otherwise(self):
-        j = self.fake(state=5); evs = [(37, 0x4000), (37, 47)]
-        self.assertEqual(j._sync_level_jingle(j.engine, evs), evs, 'message deja affiche : rien a attendre')
-        j = self.fake(); self.assertEqual(j._sync_level_jingle(j.engine, [(37, 30)]), [(37, 30)], 'a music track (not a jingle)')
-        j = self.fake(); j.sound.mix.active['jingles'] = False; self.assertEqual(j._sync_level_jingle(j.engine, [(37, 47)]), [(37, 47)], 'jingles coupes')
-        j = self.fake(); j.engine.state.part = ENGINE.PART_FIELD; self.assertEqual(j._sync_level_jingle(j.engine, [(37, 47)]), [(37, 47)], 'hors combat')
+        from dq456_pc import sound as SOUND
+        snd = SOUND.Sound('inexistant.apk', '/tmp', log=lambda *a: None); snd.ok = True; snd.active = True
+        self.assertTrue(snd.is_jingle(47)); self.assertTrue(snd.is_jingle(0x1005)); self.assertFalse(snd.is_jingle(30)); self.assertFalse(snd.is_jingle(0x4000))
+        snd.dec['BGM47'] = dict(pcm=[0] * 3117, frequency=1000, loop=False); self.assertTrue(snd.is_jingle(47))
 
 
 if __name__ == '__main__':

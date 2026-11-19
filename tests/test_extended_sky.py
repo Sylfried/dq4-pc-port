@@ -12,7 +12,7 @@ import os, sys, unittest
 import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from dq4_pc.render import title_sky as CT
+from dq456_pc.render import title_sky as CT
 
 
 def plan(xmin=-9.1, xmax=17.9, y0=0.0, y1=10.0, z=2.4):
@@ -88,15 +88,15 @@ class MovingPlane(unittest.TestCase):
 
     def test_the_viewer_asks_for_the_side(self):
         import ast
-        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'dq4_pc', 'window', 'title_screen.py')
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'dq456_pc', 'window', 'title_screen.py')
         src = open(path, encoding='utf-8').read()                       # (read as text: importing the module needs a display, the CI has none)
         fn = [n for n in ast.walk(ast.parse(src)) if isinstance(n, ast.FunctionDef) and n.name == '_extended_sky']
-        self.assertEqual(len(fn), 1); self.assertIn("('mirror', side)", ast.get_source_segment(src, fn[0]))
+        self.assertEqual(len(fn), 1); self.assertIn("('mirror', whole[i] if whole else side)", ast.get_source_segment(src, fn[0]))          # (a plane in several parts that stop at different places: one axis for the whole plane)
 
 
 class Constants(unittest.TestCase):
     def test_maps_and_planes(self):
-        from dq4_pc.window import constants as C
+        from dq456_pc.window import constants as C
         self.assertEqual(C.EXTENDED_SKIES['dpout'], ('dpoutenk',))
         self.assertEqual(C.EXTENDED_SKIES['ev09'], ('e9km1',))
         self.assertNotIn(C.TITLE_MAP, C.EXTENDED_SKIES)             # the title has its own sky (`_title_sky`)

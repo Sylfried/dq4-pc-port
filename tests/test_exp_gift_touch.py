@@ -14,8 +14,8 @@ import os, sys, types, unittest
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, ROOT)
-from dq4_pc.window import inputs as EN
-from dq4_pc.core import engine as ENGINE
+from dq456_pc.window import inputs as EN
+from dq456_pc.core import engine as ENGINE
 
 A, B, TALK = 0x10, 0x20, 0x100          # (port keys; screen touch, see window/constantes.BTN_TALK)
 L = 0x10000000
@@ -95,8 +95,8 @@ class GamePad(unittest.TestCase):
 class Wiring(unittest.TestCase):
     def test_inputs_calls_the_conversion(self):
         """Game._entries (window/keyboard_mouse.py, needs pyglet: read as text) sends A to the engine after the conversion, only when a message is open (on the field, A = talk, already 0x100)."""
-        with open(os.path.join(ROOT, 'dq4_pc', 'window', 'keyboard_mouse.py'), encoding='utf-8') as f: src = f.read()
-        self.assertIn('from dq4_pc.window import inputs as EN', src)
+        with open(os.path.join(ROOT, 'dq456_pc', 'window', 'keyboard_mouse.py'), encoding='utf-8') as f: src = f.read()
+        self.assertIn('from dq456_pc.window import inputs as EN', src)
         line = [l for l in src.split('\n') if 'EN.touch_for_engine(' in l]
         self.assertEqual(len(line), 1)
         self.assertIn('elif decl & ENGINE.A:', line[0]); self.assertIn('eng.awaits_touch()', line[0]); self.assertIn('BTN_TALK', line[0])

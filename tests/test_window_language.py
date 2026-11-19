@@ -18,19 +18,19 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT); sys.path.insert(0, HERE)
 import _paths
 import test_language as TL
-from dq4_pc import paths as CH
-from dq4_pc import language as LG
-from dq4_pc.persistence import savestates as SS, logfile_format as FJ, saves as SA
+from dq456_pc import paths as CH
+from dq456_pc import language as LG
+from dq456_pc.persistence import savestates as SS, logfile_format as FJ, saves as SA
 
 french = TL.french
 
 
 OWN_KEYS = set(TL.catalog_by_file('fr')['window']) | set(TL.catalog_by_file('fr')['misc'])        # the keys of this group (texts/<language>/window.py and misc.py)
 FR, EN = LG.catalog('fr'), LG.catalog('en')
-FOLDER = os.path.join(ROOT, 'dq4_pc')
-WINDOW_FILES = [os.path.join('dq4_pc', 'window', f) for f in ('game.py', 'full_screen.py', 'field.py', 'keyboard_mouse.py', 'camera.py', 'options.py', 'helpers.py', 'battle_scene.py', 'snapshots.py')]
-SCOPE = (['dq4_pc/main.py', 'dq4_pc/paths.py', 'dq4_pc/sound.py', 'dq4_pc/core/engine.py'] + WINDOW_FILES
-             + ['dq4_pc/persistence/' + f for f in ('write_dir.py', 'savestates.py', 'saves.py', 'logfile_format.py', 'settings.py')]
+FOLDER = os.path.join(ROOT, 'dq456_pc')
+WINDOW_FILES = [os.path.join('dq456_pc', 'window', f) for f in ('game.py', 'full_screen.py', 'field.py', 'keyboard_mouse.py', 'camera.py', 'options.py', 'helpers.py', 'battle_scene.py', 'snapshots.py')]
+SCOPE = (['dq456_pc/main.py', 'dq456_pc/paths.py', 'dq456_pc/sound.py', 'dq456_pc/core/engine.py'] + WINDOW_FILES
+             + ['dq456_pc/persistence/' + f for f in ('write_dir.py', 'savestates.py', 'saves.py', 'logfile_format.py', 'settings.py')]
              + sorted(os.path.relpath(p, ROOT) for p in glob.glob(os.path.join(FOLDER, 'world', '*.py')) + glob.glob(os.path.join(FOLDER, 'render', '*.py'))))
 
 
@@ -144,7 +144,7 @@ class Coverage(unittest.TestCase):
 
 # ======================================================================================================================================================
 try:
-    from dq4_pc import main as P
+    from dq456_pc import main as P
 except Exception as _ex:
     P = None; _ERROR_P = _ex
 
@@ -169,7 +169,7 @@ class CommandLine(unittest.TestCase):
         with entry('fr'): fr = self.helpers()
         with entry('en'): ang = self.helpers()
         self.assertEqual(fr, ang); self.assertGreaterEqual(len(fr), 33)                                                  # (the help is a console text: English, whatever the tool language)
-        self.assertEqual(fr['--apk'], 'folder of the 3 APK files; default: data\\apk\\fr or data\\apk\\en, whichever matches the language chosen in the Esc menu (read when the game starts, and again when the language changes: the game restarts on the title screen)')
+        self.assertEqual(fr['--apk'], 'folder of the 3 APK files; default: data\\apk\\dq4\\fr or data\\apk\\dq4\\en, whichever matches the language chosen in the Esc menu (read when the game starts, and again when the language changes: the game restarts on the title screen)')
         self.assertEqual(fr['--no-sound'], 'turns the sound off for this session (the Esc menu can turn it back on)')
         for option in fr:
             self.assertFalse(french(fr[option]), '%s : %r' % (option, fr[option]))
@@ -179,7 +179,7 @@ class CommandLine(unittest.TestCase):
     def test_format_help_does_not_crash_in_both_languages(self):
         for code in ('fr', 'en'):
             with entry(code): text = P.build_parser(self.d).format_help()
-            self.assertIn('--saves-write', text); self.assertIn('usage: dq4_pc', text)
+            self.assertIn('--saves-write', text); self.assertIn('usage: dq456_pc', text)
 
     def test_settings_file_from_command_line(self):
         self.assertEqual(P.settings_file(['--slot', '2'], self.d), self.d.settings)
@@ -211,7 +211,7 @@ class CommandLine(unittest.TestCase):
         empty = os.path.join(self.t, 'vide'); os.makedirs(empty)
         for code in ('fr', 'en'):                                                                                        # (the console is in English, whatever the tool's language)
             self.settings(code); text, code_ = self.main_text(['--apk', empty]); self.assertEqual(code_, 1)
-            self.assertEqual(text, 'Game: APK files in %s\n\nThe APK files were not found.\nPut base.apk, split_config.arm64_v8a.apk and split_UnityDataAssetPack.apk of the French version in:\n   %s\nand those of the English version in:\n   %s\n(and, if you have one, the data1.dat... files of your phone save in %s). Other folder: set DQ4_DATA=path\\to\\data\n'
+            self.assertEqual(text, 'Game: APK files in %s\n\nThe APK files of Dragon Quest IV were not found.\nPut base.apk, split_config.arm64_v8a.apk and split_UnityDataAssetPack.apk of the French version in:\n   %s\nand those of the English version in:\n   %s\n(and, if you have one, the data1.dat... files of your phone save in %s). Other folder: set DQ_DATA=path\\to\\data\n'
                              % (empty, os.path.normpath(self.d.apk_fr), os.path.normpath(self.d.apk_en), self.d.saves))
             self.assertFalse(french(without_paths(text)), text)
 
@@ -221,7 +221,7 @@ class CommandLine(unittest.TestCase):
         self.settings('en'); views, _, _ = self.main(['--apk', empty]); self.assertEqual(views, ['en'])
         self.settings('fr'); views, _, _ = self.main(['--apk', empty]); self.assertEqual(views, ['fr'])
         other = self.settings('en', os.path.join(self.t, 'autre.json')); views, text, _ = self.main(['--apk', empty, '--settings', other])
-        self.assertEqual(views, ['en']); self.assertIn('The APK files were not found.', text)
+        self.assertEqual(views, ['en']); self.assertIn('The APK files of Dragon Quest IV were not found.', text)
 
     def test_migration_impossible(self):
         CH.FOLDERS = self.d
@@ -236,10 +236,10 @@ class CommandLine(unittest.TestCase):
             self.assertEqual(buf.getvalue().splitlines()[0], att)
 
     def launch(self, *args, env=None):
-        e = dict(os.environ, DQ4_DATA=os.path.join(self.t, 'data'), PYTHONDONTWRITEBYTECODE='1', PYGLET_HEADLESS='1', PYGLET_AUDIO='silent'); e.update(env or {})
-        return subprocess.run([sys.executable, '-m', 'dq4_pc', *args], cwd=ROOT, env=e, capture_output=True, text=True, timeout=180)
+        e = dict(os.environ, DQ_DATA=os.path.join(self.t, 'data'), PYTHONDONTWRITEBYTECODE='1', PYGLET_HEADLESS='1', PYGLET_AUDIO='silent'); e.update(env or {})
+        return subprocess.run([sys.executable, '-m', 'dq456_pc', *args], cwd=ROOT, env=e, capture_output=True, text=True, timeout=180)
 
-    def test_python_m_dq4_pc_help_in_both_languages(self):
+    def test_python_m_dq456_pc_help_in_both_languages(self):
         """The real process: `--help` opens nothing, reads the language from the --settings file and prints the help in that language (the option names stay the real ones)."""
         for code in ('fr', 'en'):
             r = self.launch('--settings', self.settings(code, os.path.join(self.t, code + '.json')), '--help')
@@ -270,7 +270,7 @@ class Resume(unittest.TestCase):
 
     def test_in_french_the_text_is_english_too(self):
         with entry('fr'): done, lines = self.migrate()                                                                    # (the migration sentences are console messages: English, whatever the language)
-        for ph in ('cache moved: dq4_pc\\cache -> data\\cache', '1 APK file(s) copied: jeux\\DQ4\\patched_apks -> data\\apk\\fr',
+        for ph in ('cache moved: dq4_pc\\cache -> data\\cache\\dq4\\fr', '1 APK file(s) copied: jeux\\DQ4\\patched_apks -> data\\apk\\dq4\\fr',
                    '1 settings file(s) copied: dq4_pc -> data\\settings', 'error log copied: data\\logs'):
             self.assertIn(ph, done)
         self.assertTrue(any(ph.startswith('old folders moved: ') for ph in done), done)
@@ -278,7 +278,7 @@ class Resume(unittest.TestCase):
 
     def test_in_english_no_french_word_left(self):
         with entry('en'): done, lines = self.migrate()
-        self.assertIn('cache moved: dq4_pc\\cache -> data\\cache', done); self.assertIn('1 APK file(s) copied: jeux\\DQ4\\patched_apks -> data\\apk\\fr', done)
+        self.assertIn('cache moved: dq4_pc\\cache -> data\\cache\\dq4\\fr', done); self.assertIn('1 APK file(s) copied: jeux\\DQ4\\patched_apks -> data\\apk\\dq4\\fr', done)
         self.assertIn('1 settings file(s) copied: dq4_pc -> data\\settings', done); self.assertIn('error log copied: data\\logs', done)
         self.assertGreaterEqual(len(done), 6); self.assertEqual(lines, ['Migration: ' + ph for ph in done])
         for ph in lines: self.assertFalse(french(ph), ph)
@@ -292,13 +292,13 @@ class Resume(unittest.TestCase):
             self.assertEqual(len(phrase), 1, done); self.assertTrue(phrase[0].endswith('): they stay in place')); self.assertFalse(french(without_paths(phrase[0])), phrase[0])
 
     def test_migration_only_process_takes_language_from_setting(self):
-        """`python -m dq4_pc.paths` (launched by launch_dq4.bat before the game) reads the language from reglages.json before migrating."""
+        """`python -m dq456_pc.paths` (launched by launch_dq4.bat before the game) reads the language from reglages.json before migrating."""
         import runpy
         data = os.path.join(self.t, 'new_data'); rg = os.path.join(data, 'settings', 'settings.json'); os.makedirs(os.path.dirname(rg))
         with open(rg, 'w', encoding='utf-8') as f: json.dump({'language': 'en'}, f)
-        with mock.patch.dict(os.environ, {'DQ4_DATA': data}), mock.patch('os.replace'), mock.patch('shutil.copy2'), mock.patch('shutil.copyfile'):
+        with mock.patch.dict(os.environ, {'DQ_DATA': data}), mock.patch('os.replace'), mock.patch('shutil.copy2'), mock.patch('shutil.copyfile'):
             LG.select_language('fr')
-            with warnings.catch_warnings(): warnings.simplefilter('ignore'); output(runpy.run_module, 'dq4_pc.paths', run_name='__main__')
+            with warnings.catch_warnings(): warnings.simplefilter('ignore'); output(runpy.run_module, 'dq456_pc.paths', run_name='__main__')
         self.assertEqual(LG.current_language(), 'en')
 
 
@@ -422,7 +422,7 @@ class Persistence(unittest.TestCase):
 
 # ======================================================================================================================================================
 try:
-    from dq4_pc.window import game as WND, helpers as AI, snapshots as INS
+    from dq456_pc.window import game as WND, helpers as AI, snapshots as INS
     import test_window_mode as TM
 except Exception as _ex:
     WND = None
@@ -490,32 +490,32 @@ class Window(unittest.TestCase):
             self.assertEqual((t1.strip(), t2.strip()), (a1, a2))
 
     def test_cache_preparation_in_tool_language(self):
-        """The separate process (world/data.py) does not know settings.json: the game passes it the language (DQ4_LANGUAGE), not the computer's."""
+        """The separate process (world/data.py) does not know settings.json: the game passes it the language (DQ_LANGUAGE), not the computer's."""
         for code in ('fr', 'en'):
             calls = []
             with entry(code), mock.patch('subprocess.Popen', lambda *a, **kw: calls.append(kw) or types.SimpleNamespace()):
                 WND.Game._launch_preparation(types.SimpleNamespace(engine=types.SimpleNamespace(apk_data='x.apk')), 'cache')
-            self.assertEqual(calls[0]['env']['DQ4_LANGUAGE'], code)
+            self.assertEqual(calls[0]['env']['DQ_LANGUAGE'], code)
         with entry('en'), mock.patch('subprocess.Popen', side_effect=OSError('non')), mock.patch('threading.Thread'):
             j = types.SimpleNamespace(engine=types.SimpleNamespace(apk_data='x.apk'), data=types.SimpleNamespace(prepare=None), prep_stop=None)
             _, text = output(WND.Game._launch_preparation, j, 'cache')
         self.assertEqual(text.strip(), "Cache preparation: separate process failed (OSError('non')), running inside the game.")
 
     def test_preparation_process_speaks_received_language(self):
-        """Real process `python -m dq4_pc.world.data` (APK missing: "interrompue")."""
+        """Real process `python -m dq456_pc.world.data` (APK missing: "interrompue")."""
         cache = os.path.join(self.t, 'cache'); os.makedirs(cache)
         for code, begin in (('fr', 'Cache preparation interrupted: '), ('en', 'Cache preparation interrupted: ')):
-            e = dict(os.environ, DQ4_LANGUAGE=code, PYTHONDONTWRITEBYTECODE='1')
-            r = subprocess.run([sys.executable, '-m', 'dq4_pc.world.data', os.path.join(self.t, 'inexistant.apk'), cache], cwd=ROOT, env=e, stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=120)
+            e = dict(os.environ, DQ_LANGUAGE=code, PYTHONDONTWRITEBYTECODE='1')
+            r = subprocess.run([sys.executable, '-m', 'dq456_pc.world.data', os.path.join(self.t, 'inexistant.apk'), cache], cwd=ROOT, env=e, stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=120)
             self.assertTrue(any(l.startswith(begin) for l in r.stdout.splitlines()), (r.stdout, r.stderr))
         self.assertEqual(r.stdout.splitlines()[0], 'Reading the game data pack (once only, a few seconds)...')
 
     def test_cancel_load(self):
-        for code, a1, a2 in (('fr', 'Aucun chargement à annuler', 'Chargement annulé'), ('en', 'No load to undo', 'Load undone')):
+        for code, done in (('fr', 'Chargement annulé'), ('en', 'Load undone')):                       # (nothing loaded yet: no notice)
             with entry(code):
-                j = self.fake(); j.undo_state = None; INS.SnapshotsMixin.cancel_loading(j)
-                j.undo_state = {'a': 1}; j._complete_savestate = lambda: {'b': 2}; j._apply_savestate = lambda d: None; INS.SnapshotsMixin.cancel_loading(j)
-            self.assertEqual(j.msgs, [a1, a2])
+                j = self.fake(); j.undo_state = None; self.assertFalse(INS.SnapshotsMixin.cancel_loading(j))
+                j.undo_state = {'a': 1}; j._complete_savestate = lambda: {'b': 2}; j._apply_savestate = lambda d: None; self.assertTrue(INS.SnapshotsMixin.cancel_loading(j))
+            self.assertEqual(j.msgs, [done])
 
     def test_window_size_too_large(self):
         with mock.patch.object(AI, 'useful_zone', lambda: (1904, 1040)):
@@ -567,12 +567,12 @@ class Window(unittest.TestCase):
             self.assertEqual(text.strip(), "Monitors unreadable (OSError('plus de moniteurs'))")
 
     def test_window_title(self):
-        self.assertEqual(WND.Game.WINDOW_TITLE, 'window.dragon_quest_iv_pc_port')           # (module constant marked N_: translated at window creation)
-        with entry('en'): self.assertEqual(LG.tr(WND.Game.WINDOW_TITLE), 'Dragon Quest IV - PC port (trial)')
+        self.assertEqual(WND.Game.WINDOW_TITLE, 'window.pc_port')           # (module constant marked N_: translated at window creation)
+        with entry('en'): self.assertEqual(LG.tr(WND.Game.WINDOW_TITLE) % 'Dragon Quest IV', 'Dragon Quest IV - PC port')
 
     def test_slot_text_on_the_command_line(self):
         """`--slot N`: the direct-load status is a console message (the two full sentences, in English in game.py)."""
-        with open(os.path.join(ROOT, 'dq4_pc', 'window', 'game.py'), encoding='utf-8') as f: code = f.read()
+        with open(os.path.join(ROOT, 'dq456_pc', 'window', 'game.py'), encoding='utf-8') as f: code = f.read()
         for att in ("'save %d loaded: yes'", "'save %d loaded: NO (file data%d.dat not found or invalid in %s)'"): self.assertIn(att, code)
 
 
@@ -611,7 +611,7 @@ class Engine(unittest.TestCase):
 @unittest.skipIf(WND is None, 'son non importable ici')
 class Sound(unittest.TestCase):
     def new(self):
-        from dq4_pc import sound as SOUND
+        from dq456_pc import sound as SOUND
         self.SOUND = SOUND; lines, logfile, alerts = [], [], []
         with mock.patch.dict(sys.modules, {'pyglet': None, 'soundfile': None}):                                  # neither pyglet nor soundfile: "unavailable"
             s = SOUND.Sound('inexistant.apk', self.tmp, log=lambda *a: lines.append(' '.join(str(x) for x in a)), logfile=logfile.append, alert=alerts.append)

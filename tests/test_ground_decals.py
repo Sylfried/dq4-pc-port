@@ -11,7 +11,7 @@ import os, pickle, sys, unittest
 import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from dq4_pc.world.data import MAP_PREFIX           # prefix of the map cache, read from the source: hard-coded, this test silently skipped itself after the switch to carte11_
+from dq456_pc.world.data import MAP_PREFIX           # prefix of the map cache, read from the source: hard-coded, this test silently skipped itself after the switch to carte11_
 
 CACHE = os.environ.get('DQ_MAP_CACHE', '')
 STEP = 0.125            # overlay unit of the scenery layers

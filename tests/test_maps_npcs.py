@@ -8,7 +8,7 @@
 import os, sys, unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from dq4_pc.core import engine as ENGINE
+from dq456_pc.core import engine as ENGINE
 
 
 def map_name(): return 'carte_test'

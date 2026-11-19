@@ -7,8 +7,8 @@ import json, os, sys, tempfile, unittest
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 import _paths
 import test_pause_pages as TP
-from dq4_pc import language as LG
-from dq4_pc.persistence import settings as RG
+from dq456_pc import language as LG
+from dq456_pc.persistence import settings as RG
 
 
 class FakeGameDisplay(TP.FakeGame):

@@ -1,6 +1,6 @@
 """entering the places of the world map, other than the starting village, with the real engine under the port.
 
-From a save on the world map at chapter 5 (with the nine characters), the hero is put one cell beside each place of the map (the engine's own table,
+From a save on the world map at chapter 5 (with the nine characters; the main world, field type 0, is imposed when the save is in another one), the hero is put one cell beside each place of the map (the engine's own table,
 `FieldData + 0x170`: 95 entries of 10 bytes, [1] kind, [4:6] x, [6:8] y of the anchor (bottom middle), [8] width, [9] height) and walks onto it, from the south, then the north,
 the west, the east. Measured: 63 places entered (towns, castles, caves, towers, shrines), 16 entries of the table are not entrances (decorations and the other state
 of two places, same position, kinds 0, 1, 5 and 8). The state is put back between two places (savestate).
@@ -21,14 +21,20 @@ SET_POSITION = '_ZN18FieldPlayerManager11setPositionERN3dss12Fix32Vector3E'
 class WorldEntries(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        from dq4_pc.core import engine as ENGINE
-        from dq4_pc.persistence import savestates as SS
+        from dq456_pc.core import engine as ENGINE
+        from dq456_pc.persistence import savestates as SS
         E = ENGINE
         def make():
             e = ENGINE.Engine(APK, SAVES, tempfile.mkdtemp(prefix='sv_entrees_'))
             for _ in range(3): e.step(0, 0)
             return e
-        def wanted(e): SV.settle(e, 200, 600); return e.state.part == ENGINE.PART_FIELD and SV.chapter(e) >= 5
+        def wanted(e):
+            SV.settle(e, 200, 600)
+            if e.state.part != ENGINE.PART_FIELD or SV.chapter(e) < 5: return False
+            g = e._global()
+            if struct.unpack('<i', e.core.mem(g + 4, 4))[0] != 0:                     # a save in another world (Global + 4 = field type; 1 = the separate world reached by balloon, 7 places): the main world is imposed
+                e.core.mem_w(g + 8, struct.pack('<i', 0)); e.core.call(e.core.export('_ZN6Global10startFieldEv'), g, label='startField'); SV.settle(e, 300, 600)
+            return e.state.part == ENGINE.PART_FIELD and struct.unpack('<i', e.core.mem(g + 4, 4))[0] == 0
         e, _ = SV.pick_save(make, wanted, 'a save on the world map at chapter 5 or later')
         c = e.core; fd = e.fielddata
         table = struct.unpack('<Q', c.mem(fd + 0x170, 8))[0]; n = struct.unpack('<H', c.mem(fd + 0x1a0, 2))[0]

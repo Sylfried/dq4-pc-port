@@ -16,11 +16,11 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..')); sys.path.insert(0, HERE)
 import pyglet
 pyglet.options['shadow_window'] = False          # no hidden window: the test runs without a display server
-from dq4_pc.window import screens as EK
-from dq4_pc.persistence import settings as RG
+from dq456_pc.window import screens as EK
+from dq456_pc.persistence import settings as RG
 
 try:
-    from dq4_pc.window import game as WND
+    from dq456_pc.window import game as WND
     from test_window_mode import FakeWindow, FakeScreen
 except Exception as ex:
     WND = None; ERROR_WND = ex
@@ -169,7 +169,7 @@ class FullScreen(unittest.TestCase):
 class DisplayPage(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        from dq4_pc.menus import pause; cls.PA = pause
+        from dq456_pc.menus import pause; cls.PA = pause
 
     def test_no_more_line_to_choose_monitor(self):
         f = win([A(), B()]); f.mode = 4; f.zoom = 1.0; f.post = types.SimpleNamespace(max_msaa=None); f.resolutions = lambda: [(1280, 720), (1920, 1080)]; f.current_resolution = lambda: (1280, 720)

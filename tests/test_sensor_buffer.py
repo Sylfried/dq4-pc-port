@@ -16,7 +16,7 @@ import os, sys, tempfile, unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..'))
-from dq4_pc.core import emu_core
+from dq456_pc.core import emu_core
 
 APK, SAVES = os.environ.get('DQ_APK'), os.environ.get('DQ_SAVES')
 BORROWED = ('malloc', 'free', 'heap_rewind', 'scratch')
@@ -68,8 +68,8 @@ class Scratch(unittest.TestCase):
 
     def test_both_sensors_go_through_scratch(self):
         import inspect
-        from dq4_pc.core import history as HI
-        from dq4_pc.battle import battle_history as HC
+        from dq456_pc.core import history as HI
+        from dq456_pc.battle import battle_history as HC
         for mod in (HI, HC):
             src = inspect.getsource(mod)
             self.assertIn("c.scratch(", src, mod.__name__)
@@ -79,8 +79,8 @@ class Scratch(unittest.TestCase):
 @unittest.skipUnless(APK and SAVES, 'real engine: DQ_APK=<folder of the patched APKs> DQ_SAVES=<folder of the saves>')
 class RealEngine(unittest.TestCase):
     def test_buffer_and_engine_block_never_overlap_after_loading(self):
-        from dq4_pc.core import engine as ENGINE
-        from dq4_pc.persistence import savestates as SS
+        from dq456_pc.core import engine as ENGINE
+        from dq456_pc.persistence import savestates as SS
         m = ENGINE.Engine(APK, SAVES, tempfile.mkdtemp(prefix='sv_317_')); m.load_save(1)
         for _ in range(200): m.step(0, 0)
         c = m.core

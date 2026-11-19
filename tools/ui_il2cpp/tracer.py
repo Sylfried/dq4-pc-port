@@ -5,11 +5,27 @@ from unicorn import *
 from unicorn.arm64_const import *
 import disasm as d
 import reloc as rl
+import addresses as A
 
 so = d.so
 PAGE = 0x1000
 HEAP, STACK = 0x40000000, 0x7f000000
 RET_INS = bytes.fromhex('c0035fd6')
+
+def island(t, fn, end):
+    """Is `t` a branch island of the function [fn, end): a few instructions placed elsewhere by the linker, ending with a `b` back into the function
+    (DQ VI: `ldr x20, [x20, #imm] ; b <back>`)? It is part of the function's own flow: it is neither stubbed nor followed as a call."""
+    raw = d.rd(t, 16)
+    if not raw: return False
+    for k in range(4):
+        w, = struct.unpack_from('<I', raw, 4 * k)
+        if (w & 0xfc000000) == 0x14000000:                                          # b
+            o = w & 0x3ffffff
+            if o & (1 << 25): o -= 1 << 26
+            return fn <= t + 4 * k + 4 * o < end
+        if (w & 0xfc000000) == 0x94000000 or w == 0xd65f03c0 or (w & 0xfffffc1f) in (0xd63f0000, 0xd61f0000): return False      # bl, ret, blr, br: a function
+    return False
+
 
 # ---------------------------------------------------------------- signatures (dump.cs)
 SIG = {}      # rva -> dict
@@ -102,8 +118,8 @@ class Tr:
             self.event('dataexec', pc=a, lr=lr)
             uc.reg_write(UC_ARM64_REG_X0, 0)
             uc.reg_write(UC_ARM64_REG_PC, lr)
-        self.data_lo = 0x1b00000
-        uc.hook_add(UC_HOOK_CODE, dataexec, None, 0x1b00000, segs_end)
+        self.data_lo = A.CODE_END
+        uc.hook_add(UC_HOOK_CODE, dataexec, None, A.CODE_END, segs_end)
         self.uc.hook_add(UC_HOOK_MEM_READ_UNMAPPED | UC_HOOK_MEM_WRITE_UNMAPPED | UC_HOOK_MEM_FETCH_UNMAPPED, self._unm)
         self.klass = {}        # T -> dummy class
         self.kname = {}        # dummy class -> name
@@ -142,6 +158,7 @@ class Tr:
         self.w(k + 0xb8, st)
         self.w(k + 0xe0, 0xffffffff, 4); self.w(k + 0xd8, 0xffffffff, 4)
         self.w(k + 0x28, 0xffffffff, 4)
+        hier = self.alloc(16); self.w(hier, k); self.w(k + 0xc8, hier); self.w(k + 0x130, 1, 1)          # Il2CppClass.typeHierarchy / typeHierarchyDepth: the class is its own only ancestor (a cast to that same class succeeds, to another one fails)
         self.klass[T] = k; self.kname[k] = rl.M.get(T) or ('T%x' % T)
         cn = self.kname[k].replace('_TypeInfo', '')
         for tp, off in STAT.get(cn, []):
@@ -240,6 +257,14 @@ class Tr:
             self.event('call', name=nm, args=b if b is not None else [self.fmt(x) for x in X[:6]], floats=[round(f, 4) for f in F[:4]] if not b else None, ret=self.oname(ret) if ret in self.obj else ret, lr=self.uc.reg_read(UC_ARM64_REG_X30))
         return h
 
+    def klass_named(self, short):
+        """The dummy class of the Unity / game type `short` ("BoxCollider"), found by its TypeInfo whatever its namespace ("UnityEngine.BoxCollider_TypeInfo"), created if needed; None if unknown."""
+        T = next((t for t, n in rl.M.items() if n == short + '_TypeInfo' or n.endswith('.' + short + '_TypeInfo')), None)
+        if T is None: return None
+        k = self.klass.get(T) or self.new_klass(T)
+        if self.u(T, 8) == 0: self.w(T, k)
+        return k
+
     def klass_for_type(self, tname):
         key = tname.split('<')[0]
         for T, k in self.klass.items():
@@ -284,10 +309,11 @@ class Tr:
             self.event('throw', lr=self.uc.reg_read(UC_ARM64_REG_X30), addr=a)
             raise Abort('throw @%x' % a)
         def ident(a): pass
-        self.intercept(0xc1018c, init)
-        self.intercept(0xc103a4, objnew)
-        self.intercept(0xc10200, arrnew); self.intercept(0xc10208, arrnew2)
-        self.intercept(0xc103ac, throw); self.intercept(0xc103b4, throw)
+        H_ = A.HELPERS
+        self.intercept(H_['init'], init)
+        self.intercept(H_['objnew'], objnew)
+        self.intercept(H_['arrnew'], arrnew); self.intercept(H_['arrnew2'], arrnew2)
+        self.intercept(H_['throw'], throw); self.intercept(H_['throw2'], throw)
 
     REAL = re.compile(r'^(MenuPortItemTable\.Sub_|eIndent\.|MenuPortItemTable\.<>c__DisplayClass\d+_\d+\.<)')
     def observe(self, addr, nm):
@@ -306,9 +332,9 @@ class Tr:
         for ins in d.md.disasm(d.rd(fn, end - fn), fn):
             if ins.mnemonic in ('bl', 'b') and ins.operands[0].type == 2:
                 t = ins.operands[0].imm
-                if fn <= t < end or t in self.patched: continue
+                if fn <= t < end or t in self.patched or island(t, fn, end): continue
                 sg = SIG.get(t); nm = (sg['cls'] + '.' + sg['name']) if sg else d.names.get(t, 'sub_%x' % t)
-                if 0xc10000 <= t <= 0xc11000:
+                if A.HELPER_BLOCK[0] <= t <= A.HELPER_BLOCK[1]:
                     self.intercept(t, lambda a: None); continue
                 if self.REAL.match(nm) and 'ctor' not in nm:
                     self.observe(t, nm); self.collect(t, seen)

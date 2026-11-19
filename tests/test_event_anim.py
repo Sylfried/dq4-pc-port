@@ -4,7 +4,7 @@
 
 1. reading: FMAP carries `mobj` objects (the event objects follow the `nobj` map objects), FEAN = count, an unused float, (start, end) pairs - even when the size recorded in the chunk
    is too small (ddb5b);
-2. packet 6: number < 0x1000 = event animation; >= 0x1000 = SetCameraNo (no visible effect); negative ignored;
+2. packet 6: number < 0x1000 = event animation; >= 0x1000 = SetCameraNo (DQ IV: ignored; DQ V / VI: camera movement, see test_dq5_title); negative ignored;
 3. `MapObjects.event_anim` (logic from the disassembly of SetEventAnimation, 0xCD637C): event objects hidden at the start; animation `no` shows start .. end - 1 and hides the map objects with the same
    non-zero `uid`; a following animation does not hide the objects of the previous one; 0 resets everything; number outside the table or map without FEAN: nothing; the display of packet 7 (mask) is added to the table;
    the animation of the shown objects restarts from the beginning; state saved / restored (savestates);
@@ -17,9 +17,9 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..'))
 import _paths          # (test helper)
-from dq4_pc.world import fld
-from dq4_pc.world import map_objects as OC
-from dq4_pc.core import engine as ENGINE
+from dq456_pc.world import fld
+from dq456_pc.world import map_objects as OC
+from dq456_pc.core import engine as ENGINE
 
 APK = os.environ.get('DQ_APK', '')
 PACK = os.path.join(APK, 'split_UnityDataAssetPack.apk')
@@ -176,7 +176,7 @@ class Dispatch(unittest.TestCase):
     def test_event_reaches_objects_and_palettes(self):
         import types, pyglet
         pyglet.options['shadow_window'] = False
-        from dq4_pc.window import field as FI
+        from dq456_pc.window import field as FI
         log = []
         objects = types.SimpleNamespace(event=0, dirty_uv=set(), dirty_col=set(), event_anim=lambda no: log.append(('objects', no)), tick=lambda: set())
         palettes = types.SimpleNamespace(start_event=lambda no: log.append(('palettes', no)), tick=lambda: None)
@@ -190,7 +190,7 @@ class Dispatch(unittest.TestCase):
 class RealMaps(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        from dq4_pc.world import data as DO
+        from dq456_pc.world import data as DO
         cls.cache = tempfile.mkdtemp(prefix='cache_test_event_anim_')
         cls.d = DO.Data(PACK, cls.cache, log=lambda *a: None)
 

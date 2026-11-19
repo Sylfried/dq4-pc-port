@@ -31,7 +31,7 @@ class FakeCountdownCore:
 
 
 def dummy_engine():
-    from dq4_pc.core import engine as ENGINE
+    from dq456_pc.core import engine as ENGINE
     m = ENGINE.Engine.__new__(ENGINE.Engine)
     m.core = FakeCountdownCore(); m.L = 0; m.state = ENGINE.State(); m.frames = 0; m._countdown = 0; m._countdown_armed = -99; m._countdown_done = True
     return m
@@ -39,7 +39,7 @@ def dummy_engine():
 
 class Calc(unittest.TestCase):
     def setUp(self):
-        from dq4_pc.core import engine as ENGINE
+        from dq456_pc.core import engine as ENGINE
         self.ENGINE = ENGINE; self.speed = ENGINE.State.fade_speed
 
     def tearDown(self): self.ENGINE.State.fade_speed = self.speed
@@ -51,7 +51,7 @@ class Calc(unittest.TestCase):
         return e
 
     def test_proportion_remembered_per_state(self):
-        from dq4_pc.core import game_priority as PJ
+        from dq456_pc.core import game_priority as PJ
         for vf in SPEEDS:
             self.ENGINE.State.fade_speed = vf
             e = self.fade(0x1000 | GAME_FADE)
@@ -61,9 +61,9 @@ class Calc(unittest.TestCase):
         self.assertEqual(self.fade(0x1000 | GAME_FADE).fade_ratio[1], 1.0, "x1: the game's duration")
 
     def test_shortened_battle_like_others_entry_without_countdown(self):
-        from dq4_pc.core import game_priority as PJ
+        from dq456_pc.core import game_priority as PJ
         self.ENGINE.State.fade_speed = 4.0
-        self.assertAlmostEqual(self.fade(0x1000 | GAME_FADE, part=self.ENGINE.PART_BATTLE).fade_ratio[1], PJ.fade_duration(GAME_FADE, 4.0) / GAME_FADE, 6, 'fondu d\'un combat : suit « Vitesse de transition » (#47)')
+        self.assertAlmostEqual(self.fade(0x1000 | GAME_FADE, part=self.ENGINE.PART_BATTLE).fade_ratio[1], PJ.fade_duration(GAME_FADE, 4.0) / GAME_FADE, 6, 'battle fade: follows "Transition speed"')
         self.assertEqual(self.fade(GAME_FADE).fade_ratio[1], 1.0, 'fade-in (to the scene): no countdown to adjust')
 
     def arm(self, m, byte, ratio, fade_frame=None):
@@ -97,7 +97,7 @@ class Calc(unittest.TestCase):
 class RealEngine(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        from dq4_pc.core import engine as ENGINE; from dq4_pc.persistence import savestates as SS
+        from dq456_pc.core import engine as ENGINE; from dq456_pc.persistence import savestates as SS
         cls.ENGINE, cls.SS = ENGINE, SS
 
         def at_the_church_door(eng):
@@ -142,7 +142,7 @@ class RealEngine(unittest.TestCase):
         self.eng._countdown = 0; self.eng._countdown_armed = -99; self.eng._countdown_done = True
 
     def check(self, log, vf, name_str):
-        from dq4_pc.core import game_priority as PJ
+        from dq456_pc.core import game_priority as PJ
         im = {g: [x[0] for x in log if x[1] == g] for g in ('FONDU', 'CHARGE')}
         sfxs = [(x[0], x[2]) for x in log if x[1] == 'SE']
         self.assertEqual(len(im['FONDU']), 1, name_str); self.assertEqual(len(im['CHARGE']), 1, name_str)

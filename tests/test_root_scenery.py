@@ -19,7 +19,7 @@ ORDINARY = ['btl_pl_d', 'btlcb1_d']
 class TestRootSceneries(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        from dq4_pc.world import data as DO
+        from dq456_pc.world import data as DO
         cls.cache = tempfile.mkdtemp(prefix='cache_test_racine_')
         cls.d = DO.Data(PACK, cls.cache, log=lambda *a: None)
 

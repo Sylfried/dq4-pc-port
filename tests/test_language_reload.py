@@ -34,9 +34,9 @@ if __name__ != '__main__' or not os.environ.get('DQ_RELOAD_SCENARIO'):
     import pyglet
     pyglet.options['shadow_window'] = False
     import _paths
-    from dq4_pc import language as LG, main as M
-    from dq4_pc.persistence import savestates as SS
-    from dq4_pc.window import game as GM, snapshots as SN
+    from dq456_pc import language as LG, main as M
+    from dq456_pc.persistence import savestates as SS
+    from dq456_pc.window import game as GM, snapshots as SN
 
 
     def fake_engine(img=b'library image'):
@@ -218,7 +218,7 @@ if __name__ != '__main__' or not os.environ.get('DQ_RELOAD_SCENARIO'):
             self.assertEqual(r.get('main'), 0, log)
             self.assertEqual(r['game1'], 'fr', log); self.assertTrue(r['pending']); self.assertFalse(r['on_title_1'])
             self.assertEqual(r['games_while_away'], 1, log)                          # (away from the title screen: no reload)
-            self.assertEqual(r['game2'], 'en', log); self.assertTrue(r['on_title_2'], log); self.assertTrue(r['apk2'].endswith('en'), log); self.assertTrue(r['cache2'].endswith('cache_en'), log)
+            self.assertEqual(r['game2'], 'en', log); self.assertTrue(r['on_title_2'], log); self.assertTrue(r['apk2'].endswith('en'), log); self.assertTrue(r['cache2'].endswith(os.path.join('cache', 'dq4', 'en')), log)
             self.assertFalse(r['engine1_alive'], log); self.assertEqual(r['size2'], [1280, 720], log)
             self.assertEqual(r['refused'], 'fr', log)
             self.assertEqual(r['game3'], 'fr', log); self.assertEqual(r['setting3'], 'fr', log)
@@ -228,23 +228,23 @@ if __name__ != '__main__' or not os.environ.get('DQ_RELOAD_SCENARIO'):
 
 
 def scenario(out):
-    """The real-engine sequence (separate process: DQ4_DATA must be set before dq4_pc is imported). Writes `result.json` in `out`."""
+    """The real-engine sequence (separate process: DQ_DATA must be set before dq456_pc is imported). Writes `result.json` in `out`."""
     D = os.path.join(out, 'data')
-    for sub in ('settings', 'saves/savestates', 'cache', 'cache_en', 'apk'): os.makedirs(os.path.join(D, sub))
-    os.symlink(os.path.abspath(os.environ['DQ_APK']), os.path.join(D, 'apk', 'fr')); os.symlink(os.path.abspath(english_apk()), os.path.join(D, 'apk', 'en'))
-    for f in glob.glob(os.path.join(os.environ['DQ_SAVES'], 'data*.dat')): shutil.copy(f, os.path.join(D, 'saves'))
+    for sub in ('settings', 'saves/dq4/savestates', 'cache/dq4/fr', 'cache/dq4/en', 'apk/dq4'): os.makedirs(os.path.join(D, sub))
+    os.symlink(os.path.abspath(os.environ['DQ_APK']), os.path.join(D, 'apk', 'dq4', 'fr')); os.symlink(os.path.abspath(english_apk()), os.path.join(D, 'apk', 'dq4', 'en'))
+    for f in glob.glob(os.path.join(os.environ['DQ_SAVES'], 'data*.dat')): shutil.copy(f, os.path.join(D, 'saves', 'dq4'))
     caches = [os.environ['DQ_MAP_CACHE']] + [c for c in (os.environ.get('DQ_UI_CACHE'),) if c and os.path.isdir(c)]
     for c in caches:
         for f in os.listdir(c):
-            dst = os.path.join(D, 'cache', f)
+            dst = os.path.join(D, 'cache', 'dq4', 'fr', f)
             if not os.path.exists(dst): os.symlink(os.path.abspath(os.path.join(c, f)), dst)          # (read only: the French cache is ready, nothing is written there)
     with open(os.path.join(D, 'settings', 'settings.json'), 'w') as f: json.dump({'language': 'fr'}, f)
-    os.environ['DQ4_DATA'] = D
+    os.environ['DQ_DATA'] = D
     sys.path.insert(0, ROOT)
     import gc, weakref
     import pyglet
-    from dq4_pc import main as M, language as LG
-    from dq4_pc.persistence import savestates as SS
+    from dq456_pc import main as M, language as LG
+    from dq456_pc.persistence import savestates as SS
     argv = ['--slot', '4', '--no-sound', '--msaa', '0', '--width', '1280', '--height', '720', '--no-logos', '--images', '100000', '--shot', os.path.join(out, 'x.png'), '--history', os.path.join(out, 'fav.json')]
     games = []; refs = []; r = {}; st = {'phase': 'fr_wait', 'k': 0}; t0 = time.time()
     class G(M.Game):

@@ -9,8 +9,8 @@ import argparse, os, pickle, sys, tempfile, types, unittest
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import _saves as SV
-from dq4_pc.core import engine as ENGINE
-from dq4_pc.world import map_tint as TC
+from dq456_pc.core import engine as ENGINE
+from dq456_pc.world import map_tint as TC
 
 ARGS = None
 

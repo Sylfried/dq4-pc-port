@@ -1,10 +1,10 @@
 """Header of the layout: icon sheets (PartsInfo), text colors, language parameters, "pressed" offset of the buttons.
 Usage: python header.py output.json"""
 import json, struct, sys
-import scene as S, runall2 as R, menusys as M
+import scene as S, runall2 as R, menusys as M, addresses as A
 T = S.T
 # Color.cyan / Color.green: native Unity properties (absent from the emulation) -> standard Unity values
-GENERATION = 3      # layout version number: 2 = language set (GetLangages) ; 3 = argument of the Make_* = rank in the type group (type 22: Mode button) ; launch_dq4.bat regenerates a file of an older generation
+GENERATION = 3      # layout version number: 2 = language set (GetLangages) ; 3 = argument of the Make_* = rank in the type group (type 22: Mode button) ; the launcher regenerates a file of an older generation
 UNITY_COLORS = {5: [0.0, 1.0, 1.0, 1.0], 6: [0.0, 1.0, 0.0, 1.0]}
 
 
@@ -14,13 +14,15 @@ def header():
     for i in T.info:
         W = i['W']; ps = i['ps']
         info.append(dict(tex=i['texNo'], sx=i['sx'], sy=i['sy'], ps=ps, dps=i['dps'], W=W, uvsize=ps / W, startV=i['sy'] / W, widthNum=W // ps, startNo=i['sx'] // ps))
-    cl = T.u(st + 0x70, 8); n = T.u(cl + 0x18, 8)
+    cl = T.u(st + A.field('MenuParts', 's_colorList'), 8); n = T.u(cl + 0x18, 8)
     colors = [list(struct.unpack('<4f', bytes(T.uc.mem_read(cl + 0x20 + 16 * k, 16)))) for k in range(n)]
     for k, c in enumerate(colors):
         ok = all(0.0 <= x <= 1.0 and (x == 0.0 or x > 1e-6) for x in c) and c[3] == 1.0
         if not ok and k in UNITY_COLORS: colors[k] = UNITY_COLORS[k]
-    sz, line, dy, hiro, nameb = struct.unpack('<5f', bytes(T.uc.mem_read(st + 8, 20)))
-    k = M.klass_of(T, 'MenuParts.IButton'); T.run(0xd04310)
+    f32 = lambda name: struct.unpack('<f', bytes(T.uc.mem_read(st + A.field('MenuParts', name), 4)))[0]
+    sz, line, dy, nameb = (f32(n_) for n_ in ('BIAS_FONT_SIZE', 'BIAS_FONT_LINE', 'BIAS_FONT_Y', 'NAME_BASE_SCALE'))
+    hiro = f32('HIRO_NAME_SCALE') if A.field('MenuParts', 'HIRO_NAME_SCALE') is not None else nameb          # (DQ VI has no separate scale for the hero's name)
+    k = M.klass_of(T, 'MenuParts.IButton'); T.run(A.IBUTTON_CCTOR)
     pu = struct.unpack('<2f', bytes(T.uc.mem_read(T.u(k + 0xb8, 8), 8)))
     return dict(info=info, colors=colors, lang=dict(size=sz, line=line, dy=dy, hiro=hiro, nameBase=nameb), pushed=list(pu), W=450, nTypes=len(R.tbl), gen=GENERATION)
 

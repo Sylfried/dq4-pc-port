@@ -6,10 +6,10 @@ import inspect, os, sys, unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..'))
-import _paths          # (test helper: finding the source code in the subfolders of dq4_pc)
+import _paths          # (test helper: finding the source code in the subfolders of dq456_pc)
 import pyglet
 pyglet.options['shadow_window'] = False
-from dq4_pc.window import game as F
+from dq456_pc.window import game as F
 
 
 class WithoutReminder(unittest.TestCase):

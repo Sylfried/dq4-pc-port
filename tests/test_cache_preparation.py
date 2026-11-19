@@ -1,6 +1,6 @@
 """Test of the map cache preparation process: it exits cleanly, and no test hard-codes the cache prefix.
 
-1. **Exit code.** `Game._launch_preparation` launches `python -m dq4_pc.world.data <apk> <cache>` with `stdin=subprocess.PIPE` at every startup. The module's `__main__` reads standard input in a `daemon` thread
+1. **Exit code.** `Game._launch_preparation` launches `python -m dq456_pc.world.data <apk> <cache>` with `stdin=subprocess.PIPE` at every startup. The module's `__main__` reads standard input in a `daemon` thread
    to know when the game stops. When the preparation finishes before the game (cache already complete: the usual case), the interpreter shut down while that thread held the lock of the buffered
    reader: `Fatal Python error: _enter_buffered_busy` and code 134 (SIGABRT) — on Windows, a "python.exe has stopped working" window at every launch.
 
@@ -14,14 +14,14 @@ import glob, os, re, subprocess, sys, tempfile, unittest
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, ROOT)
-from dq4_pc.world.data import MAP_PREFIX
+from dq456_pc.world.data import MAP_PREFIX
 
 
 class Exit(unittest.TestCase):
     def test_leaves_without_aborting_with_the_pipe_still_open(self):
         """As the game launches it: standard input as a pipe **kept open** (that is the condition of the defect; `subprocess.run` would close it right away and the abort would not happen).
         Before: code -6 (SIGABRT) and `Fatal Python error: _enter_buffered_busy` on standard error, measured in 1.2 s."""
-        p = subprocess.Popen([sys.executable, '-m', 'dq4_pc.world.data', tempfile.mkdtemp(prefix='apk_vide_'), tempfile.mkdtemp(prefix='cache_')],
+        p = subprocess.Popen([sys.executable, '-m', 'dq456_pc.world.data', tempfile.mkdtemp(prefix='apk_vide_'), tempfile.mkdtemp(prefix='cache_')],
                              cwd=ROOT, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         try: code = p.wait(timeout=300)
         except subprocess.TimeoutExpired: p.kill(); self.fail('the preparation process does not end')
@@ -33,7 +33,7 @@ class Exit(unittest.TestCase):
     def test_the_exit_is_guarded(self):
         """The exit is in a `finally`: a preparation that raises must not reopen the door to the abort."""
         import inspect
-        from dq4_pc.world import data as DO
+        from dq456_pc.world import data as DO
         tail = inspect.getsource(DO).split("if __name__ == '__main__':")[1]
         self.assertIn('finally:', tail); self.assertIn('os._exit(0)', tail)
         self.assertLess(tail.index('finally:'), tail.index('os._exit(0)'))
@@ -55,7 +55,7 @@ class Prefix(unittest.TestCase):
         self.assertEqual(wrong, [], 'hard-coded prefix (the current one is map%s_, see world/data.MAP_PREFIX): %s' % (version, wrong))
 
     def test_the_module_keeps_one_source(self):
-        from dq4_pc.world import data as DO
+        from dq456_pc.world import data as DO
         self.assertTrue(MAP_PREFIX.startswith('map') and MAP_PREFIX.endswith('_'), MAP_PREFIX)
         self.assertIs(DO.MAP_PREFIX, MAP_PREFIX)
 

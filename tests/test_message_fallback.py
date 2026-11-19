@@ -5,7 +5,7 @@ import os, struct, sys, types, unittest
 import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from dq4_pc.core import engine as ENGINE
+from dq456_pc.core import engine as ENGINE
 
 L, OBJ = 0x100000, 0x200000
 

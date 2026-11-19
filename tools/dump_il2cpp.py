@@ -1,14 +1,14 @@
 """Extracts the STRUCTURE of the game's C# code (classes, fields, methods, addresses) with Il2CppDumper.
 
 Inputs (your files, never modified): libil2cpp.so and global-metadata.dat, taken from your APKs.
-Outputs: <root>/data/cache/il2cpp/  (dump.cs, script.json, DummyDll...) -> ignored by git (game code).
+Outputs: <root>/data/cache/<game>/fr/il2cpp/ (the cache of the game, paths.py; game: DQ_GAME)  (dump.cs, script.json, DummyDll...) -> ignored by git (game code).
 """
 import io, json, os, subprocess, sys, urllib.request, zipfile
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, ROOT)
-from dq4_pc import paths as CH
-APKS = sys.argv[1] if len(sys.argv) > 1 else CH.FOLDERS.apk
+from dq456_pc import paths as CH
+APKS = sys.argv[1] if len(sys.argv) > 1 else CH.FOLDERS.code_apk()
 OUTPUT = os.path.join(CH.FOLDERS.cache, 'il2cpp')
 TOOL = os.path.join(OUTPUT, 'Il2CppDumper')
 INPUTS = os.path.join(OUTPUT, 'entrees')
@@ -36,7 +36,7 @@ def download_tool():
     if exe:
         return exe
     print('Downloading Il2CppDumper (one time only)...')
-    req = urllib.request.Request('https://api.github.com/repos/Perfare/Il2CppDumper/releases/latest', headers={'User-Agent': 'dq4-pc'})
+    req = urllib.request.Request('https://api.github.com/repos/Perfare/Il2CppDumper/releases/latest', headers={'User-Agent': 'dq456-portage'})
     rel = json.load(urllib.request.urlopen(req, timeout=60))
     choice = None
     for pattern in ('net472', 'net6', 'net7', 'net8'):          # net472 = .NET Framework, already present in Windows 10/11
@@ -47,7 +47,7 @@ def download_tool():
     if not choice:
         raise SystemExit('No Il2CppDumper archive found in the latest release: ' + ', '.join(a['name'] for a in rel.get('assets', [])))
     print('  version:', rel.get('tag_name'), '/', choice['name'])
-    data = urllib.request.urlopen(urllib.request.Request(choice['browser_download_url'], headers={'User-Agent': 'dq4-pc'}), timeout=300).read()
+    data = urllib.request.urlopen(urllib.request.Request(choice['browser_download_url'], headers={'User-Agent': 'dq456-portage'}), timeout=300).read()
     os.makedirs(TOOL, exist_ok=True)
     zipfile.ZipFile(io.BytesIO(data)).extractall(TOOL)
     for root, _, files in os.walk(TOOL):

@@ -1,12 +1,15 @@
-"""launch_dq4.bat: the console closes with the game window; messages in French or English depending on Windows' language. The file is read as text (without Windows): after the line that launches the game, `pause` is only allowed
-in the block "if the exit code is not 0" (the game stopped on an error: the message is left readable), and the launcher returns the game's exit code. CRLF line endings are kept. The messages are labels
-(`:m_xxx_fr` / `:m_xxx_en`) at the bottom of the file, called by `call :m_xxx_%DQLANG%`: each call must have both versions, the English one with no French word, and the file must stay ASCII.
+"""The launchers: launch_dq4.bat, launch_dq5.bat and launch_dq6.bat (project root) only choose the game and call the shared launcher tools\\launch_game.bat.
+The shared launcher: the console closes with the game window. The file is read as text (without Windows): after the line that launches the game, `pause` is only allowed
+in the block "if the exit code is not 0" (the game stopped on an error, or this version does not run the game: the message is left readable), and the launcher returns the game's exit code. CRLF line endings are kept.
+The messages are labels (`:m_xxx`) at the bottom of the file, called by `call :m_xxx`: each one is called and returns, in English only, and the file stays ASCII.
 
     python3 tests/test_launcher.py"""
-import os, re, unittest
+import os, re, sys, unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-BAT = os.path.join(HERE, '..', 'launch_dq4.bat')
+ROOT = os.path.join(HERE, '..')
+BAT = os.path.join(ROOT, 'tools', 'launch_game.bat')
+GAME_LAUNCHERS = {'dq4': 'launch_dq4.bat', 'dq5': 'launch_dq5.bat', 'dq6': 'launch_dq6.bat'}
 
 
 def lines():
@@ -36,7 +39,7 @@ class Launcher(unittest.TestCase):
 
     def test_console_closes_with_game(self):
         l = body()
-        i = max(k for k, x in enumerate(l) if '-m dq4_pc' in x and 'import' not in x and '.chemins' not in x)                    # the line that launches the game
+        i = max(k for k, x in enumerate(l) if '-m dq456_pc' in x and 'import' not in x and '.chemins' not in x)                    # the line that launches the game
         after = l[i + 1:]
         self.assertTrue(any(x.strip().startswith('set "CODE=%errorlevel%"') for x in after[:2]), "the game's exit code must be read at once")
         level = 0; in_error = False
@@ -53,7 +56,7 @@ class Launcher(unittest.TestCase):
 
     def test_pauses_before_launch_are_preparation_errors(self):
         l = body()
-        i = max(k for k, x in enumerate(l) if '-m dq4_pc' in x and 'import' not in x and '.chemins' not in x)
+        i = max(k for k, x in enumerate(l) if '-m dq456_pc' in x and 'import' not in x and '.chemins' not in x)
         for k, x in enumerate(l[:i]):
             if x.strip().lower() == 'pause':                                                              # each earlier pause follows a failure message (Python not found, installation...) or an "exit /b 1"
                 context_text = ' '.join(l[max(0, k - 6):k + 2]).lower()
@@ -77,12 +80,48 @@ class Launcher(unittest.TestCase):
         for lookup_key, lg in messages().items():
             for x in lg:
                 if x.strip().lower().startswith('title'): x = x[5:]
-                remainder = re.sub(r'"[^"]*"|\^\(|\^\)|\b[\w\\.]+\.(bat|log|py)\b|data\\\S*|donnees\\\S*|dq4_pc\\\S*|DQ4_DATA|tools\\\S*', '', x)             # paths and proper names excluded
+                remainder = re.sub(r'"[^"]*"|\^\(|\^\)|\b[\w\\.]+\.(bat|log|py)\b|data\\\S*|donnees\\\S*|dq456_pc\\\S*|DQ_DATA|tools\\\S*', '', x)             # paths and proper names excluded
                 self.assertIsNone(french.search(remainder), 'French word in %s: %s' % (lookup_key, x.strip()))
 
     def test_ascii_only(self):
         raw_value, _ = lines()
         raw_value.decode('ascii')                                                                                # the Windows console does not display accents without a setting: no non-ASCII byte
+
+
+    def test_not_playable_keeps_the_console_without_an_error_message(self):
+        """Exit code 3 (main.NOT_PLAYABLE: a game this version does not run, only its files were checked): the console stays open, without "The game stopped on an error"."""
+        l = [x.strip() for x in body()]
+        i = l.index('if not "%CODE%"=="0" (')
+        self.assertEqual(l[i + 1], 'if not "%CODE%"=="3" call :m_game_error %CODE%')
+        self.assertEqual(l[i + 2], 'pause')
+
+    def test_root_of_the_project(self):
+        """The shared launcher is in tools\\: it works from the project root (.venv, requirements.txt, data)."""
+        self.assertIn('cd /d "%~dp0.."', body())
+
+
+class GameLaunchers(unittest.TestCase):
+    def read(self, name):
+        with open(os.path.join(ROOT, name), 'rb') as f: return f.read()
+
+    def test_one_launcher_per_game(self):
+        sys.path.insert(0, ROOT)
+        from dq456_pc import games as GM
+        self.assertEqual(set(GAME_LAUNCHERS), set(GM.GAMES))
+        for key, name in GAME_LAUNCHERS.items():
+            raw = self.read(name); raw.decode('ascii')
+            self.assertNotIn(b'\n', raw.replace(b'\r\n', b''), name + ': a lone line feed (LF) breaks cmd.exe')
+            l = [x.strip() for x in raw.decode('ascii').split('\r\n')]
+            self.assertEqual(l[0], '@echo off'); self.assertIn('setlocal', l)
+            self.assertIn('set "DQ_GAME=%s"' % key, l, name)
+            self.assertIn('set "GAME_NAME=%s"' % GM.GAMES[key].name, l, name)
+            self.assertIn('call "%~dp0tools\\launch_game.bat" %*', l, name)
+            self.assertEqual([x for x in l if x][-1], 'exit /b %errorlevel%', name + ': the exit code of the game goes back to the caller')
+            self.assertNotIn('pause', [x.lower() for x in l], name + ': the shared launcher decides when the console stays open')
+
+    def test_shared_launcher_defaults_to_dq4(self):
+        l = [x.strip() for x in body()]
+        self.assertIn('if not defined DQ_GAME set "DQ_GAME=dq4"', l); self.assertIn('if not defined GAME_NAME set "GAME_NAME=Dragon Quest IV"', l)
 
 
 if __name__ == '__main__':

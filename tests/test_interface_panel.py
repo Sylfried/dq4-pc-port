@@ -17,10 +17,10 @@ from unittest import mock
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 import pyglet
 pyglet.options['shadow_window'] = False          # no hidden window: the test runs without a display server
-from dq4_pc.persistence import settings as RG
+from dq456_pc.persistence import settings as RG
 
 try:
-    from dq4_pc.menus import pause as PA
+    from dq456_pc.menus import pause as PA
 except Exception as ex:          # pause.py needs pyglet (without a display: the import alone is enough)
     PA = None; ERROR = ex
 

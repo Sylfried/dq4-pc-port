@@ -57,8 +57,8 @@ class Recorder:
 class Services(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        from dq4_pc.core import engine as ENGINE
-        from dq4_pc.persistence import savestates as SS
+        from dq456_pc.core import engine as ENGINE
+        from dq456_pc.persistence import savestates as SS
         cls.E, cls.SS = ENGINE, SS
         def make():
             e = ENGINE.Engine(APK, SAVES, tempfile.mkdtemp(prefix='sv_services_'))

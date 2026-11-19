@@ -8,9 +8,9 @@ taken over by the first adventure; with the real engine (DQ_APK, DQ_SAVES): the 
 import json, os, shutil, sys, tempfile, types, unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from dq4_pc import language as LG
+from dq456_pc import language as LG
 LG.select_language('fr')
-from dq4_pc.core import history as HI
+from dq456_pc.core import history as HI
 
 
 class FakeSensor:
@@ -99,7 +99,7 @@ class TestAdventures(unittest.TestCase):
 @unittest.skipUnless(os.environ.get('DQ_APK') and os.environ.get('DQ_SAVES'), 'real engine: DQ_APK and DQ_SAVES')
 class RealEngine(unittest.TestCase):
     def test_hooks_and_logs(self):
-        from dq4_pc.core import engine as ENGINE
+        from dq456_pc.core import engine as ENGINE
         d = tempfile.mkdtemp(prefix='adv_mo_'); self.addCleanup(shutil.rmtree, d, True)
         eng = ENGINE.Engine(os.environ['DQ_APK'], os.environ['DQ_SAVES'], os.path.join(d, 'sv')); h = HI.History(os.path.join(d, 'fav.json'))
         for _ in range(3): eng.step(0, 0); h.do_update(eng)

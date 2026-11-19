@@ -1,12 +1,12 @@
 """Test of the migration from the old layout: it no longer repeats when a name is already taken.
 
 **.** When `etat_01.dqs` and `state_01.dqs` exist side by side (or 300 cache files with the same name), `english_names` does not rename, overwrites nothing (good), but the step was never recorded in
-`resume.json`: the same sentence came back **at every launch** — and even **twice per launch**, because `launch_dq4.bat` calls `python -m dq4_pc.paths` and `main` calls `migrate` again.
+`resume.json`: the same sentence came back **at every launch** — and even **twice per launch**, because `launch_dq4.bat` calls `python -m dq456_pc.paths` and `main` calls `migrate` again.
 Now a name already taken records the step as done (that name will stay taken: repeating it teaches nothing) and the conflicts fit in ONE sentence; only a rename that FAILS (locked folder, permissions) leaves the step
 open and is retried. Nothing is ever overwritten or deleted: the old file stays where it is, and this is said once.
 
-**.** `launch_dq4.bat` hard-coded `data\\cache` for the menu layout although it itself recommends `DQ4_DATA`: with a data folder of one's own, either it announced "menus simples"
-wrongly, or the layout was never redone. The folder now comes from `python -m dq4_pc.paths --cache`.
+**.** `launch_dq4.bat` hard-coded `data\\cache` for the menu layout although it itself recommends `DQ_DATA`: with a data folder of one's own, either it announced "menus simples"
+wrongly, or the layout was never redone. The folder now comes from `python -m dq456_pc.paths --cache`.
 
     python3 tests/test_migration_repeats.py
 No screen, no GL, no APK (everything happens in temporary folders).
@@ -15,7 +15,7 @@ import io, json, os, re, shutil, subprocess, sys, tempfile, unittest
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, ROOT)
-from dq4_pc import paths as CH
+from dq456_pc import paths as CH
 
 
 class Conflict(unittest.TestCase):
@@ -80,8 +80,8 @@ class CacheFolderForTheBat(unittest.TestCase):
     def test_paths_prints_the_cache_folder(self):
         root = tempfile.mkdtemp(prefix='donnees_a_moi_')
         try:
-            env = dict(os.environ, DQ4_DATA=root); env.pop('DQ4_DONNEES', None)
-            out = subprocess.run([sys.executable, '-m', 'dq4_pc.paths', '--cache'], cwd=ROOT, capture_output=True, timeout=120, env=env)
+            env = dict(os.environ, DQ_DATA=root); env.pop('DQ4_DONNEES', None)
+            out = subprocess.run([sys.executable, '-m', 'dq456_pc.paths', '--cache'], cwd=ROOT, capture_output=True, timeout=120, env=env)
             printed = out.stdout.decode('utf-8', 'replace').strip().splitlines()
             self.assertEqual(len(printed), 1, 'a single line, read by a CMD `for /f`: %r' % printed)
             self.assertTrue(os.path.normcase(printed[0]).startswith(os.path.normcase(root)), (printed, root))
@@ -89,9 +89,9 @@ class CacheFolderForTheBat(unittest.TestCase):
         finally: shutil.rmtree(root, ignore_errors=True)
 
     def test_the_bat_no_longer_writes_the_cache_folder_by_hand(self):
-        with io.open(os.path.join(ROOT, 'launch_dq4.bat'), encoding='utf-8') as f: bat = f.read()
+        with io.open(os.path.join(ROOT, 'tools', 'launch_game.bat'), encoding='utf-8') as f: bat = f.read()
         block = bat.split('--- 2b.')[1].split('--- 3.')[0]
-        self.assertIn('dq4_pc.paths --cache', block)
+        self.assertIn('dq456_pc.paths --cache', block)
         self.assertNotIn('data\\cache\\ui_layout.json', block)
         self.assertNotIn('data\\cache\\il2cpp', block)
         self.assertNotIn("open('data/cache", block)

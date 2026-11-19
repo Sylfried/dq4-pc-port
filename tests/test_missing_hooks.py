@@ -4,8 +4,8 @@ notes them in `window_errors.log` and displays a message (Game._report_missing_h
 import os, shutil, struct, sys, tempfile, types, unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from dq4_pc import language as _LANGUAGE; _LANGUAGE.select_language('fr')          # (these tests expect the French texts, whatever the computer's language)
-from dq4_pc.core import engine as ENGINE
+from dq456_pc import language as _LANGUAGE; _LANGUAGE.select_language('fr')          # (these tests expect the French texts, whatever the computer's language)
+from dq456_pc.core import engine as ENGINE
 APK = os.environ.get('DQ_APK', '')
 SAVES = os.environ.get('DQ_SAVES', '')
 
@@ -38,6 +38,18 @@ class WithoutEngine(unittest.TestCase):
         for dec in (0x44, 0x48, 0x4c): self.assertEqual((word(m, BASE + dec) >> 10) & 0xfff, 1600)
         m._widen_symbols(); self.assertEqual(m.missing_hooks, [])               # already widened (after loading a savestate): neither error nor message
 
+    def test_locations_window_dq5_dq6(self):
+        """DQ V and DQ VI: other constants, another base register and another place in the function; DQ VI (21 icon slots) only grows to a 21:9 screen."""
+        for imms, dec, base, wide in (((0x80, 0x180, 0x248), 0x90, 21, (1600,) * 3), ((0x60, 0x160, 0x26e), 0x48, 9, (0xf0, 0x1b0, 0x190))):
+            m = fake_engine((0, 0, 0))
+            for k, imm in enumerate(imms): m.mem[BASE + dec + 4 * k:BASE + dec + 4 * k + 4] = struct.pack('<I', 0x11000000 | (imm << 10) | (base << 5) | (24 + k))
+            m._widen_symbols()
+            self.assertEqual(m.missing_hooks, [])
+            for k in range(3):
+                w = word(m, BASE + dec + 4 * k)
+                self.assertEqual(((w >> 10) & 0xfff, (w >> 5) & 0x1f, w & 0x1f), (wide[k], base, 24 + k))
+            m._widen_symbols(); self.assertEqual(m.missing_hooks, [])
+
     def test_locations_window_other_version(self):
         other = (ORIGINAL[0], ORIGINAL[1], 0x11000120 | (0x555 << 10))
         m = fake_engine(other); m._widen_symbols()
@@ -64,7 +76,7 @@ class WithoutEngine(unittest.TestCase):
 
 class Window(unittest.TestCase):
     def setUp(self):
-        try: from dq4_pc.window import game as F
+        try: from dq456_pc.window import game as F
         except Exception as ex: raise unittest.SkipTest('fenetre non importable ici (%r)' % (ex,))
         self.F = F; d = tempfile.mkdtemp(); self.addCleanup(shutil.rmtree, d, True)
         self.logfile = os.environ['DQ_WINDOW_LOG'] = os.path.join(d, 'logs', 'window_errors.log')

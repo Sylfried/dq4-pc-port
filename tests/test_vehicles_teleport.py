@@ -29,7 +29,7 @@ BTN_MENU, BTN_TALK = 0x800, 0x100
 class VehiclesFollowTheParty(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        from dq4_pc.core import engine as ENGINE
+        from dq456_pc.core import engine as ENGINE
         cls.E = ENGINE
         cls.out = tempfile.mkdtemp(prefix='sv_vehicules_')
         def make():

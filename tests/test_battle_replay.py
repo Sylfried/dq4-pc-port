@@ -16,11 +16,11 @@ import os, random, shutil, struct, sys, tempfile, threading, types, unittest
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 import pyglet
 pyglet.options['shadow_window'] = False
-from dq4_pc import language as LG
+from dq456_pc import language as LG
 LG.select_language('fr')
-from dq4_pc.core import history as HI
-from dq4_pc.menus import ui_history as UH
-from dq4_pc.window import battle_replay as BRP
+from dq456_pc.core import history as HI
+from dq456_pc.menus import ui_history as UH
+from dq456_pc.window import battle_replay as BRP
 
 ADV = '0123456789ab'
 
@@ -49,7 +49,7 @@ class TestFiles(unittest.TestCase):
         kept = self.h.add_battle(battle(2)); kept.replay = ADV + '/cccccccccccc.dqs'; p2 = self.touch(kept.replay); self.h.toggle_favorite(kept)
         for i in range(HI.MAX_BATTLES): self.h.add_battle(battle(10 + i))
         self.assertFalse(os.path.exists(p1)); self.assertTrue(os.path.exists(p2))                         # out of the latest 100: deleted, unless it is a favorite
-        self.h.toggle_favorite(self.h.favorites[0]); self.h.apply_removals(); self.assertFalse(os.path.exists(p2))     # the favorite removed: its replay too
+        self.h.toggle_favorite(self.h.favorites[0]); self.assertFalse(os.path.exists(p2))     # the favorite removed: its replay too
 
     def test_window_prefers_the_replay(self):
         h = HI.History(None, lambda: 1.0); e = h.add_battle(battle(), [{'text': 'A !', 'kind': 'g', 'val': None, 'cat': 'c', 't': 1}]); e.replay = ADV + '/dddddddddddd.dqs'
@@ -63,13 +63,13 @@ class TestFiles(unittest.TestCase):
 class FakeWindow(BRP.ReplayMixin):
     def __init__(self, menu=None, ended=False):
         self.sent = []; self.applied = []; self.toasts = []; self.scroll_applied = 0; self.menu = menu
-        self.engine = types.SimpleNamespace(scroll_mode=0, send_menu=lambda *m: self.sent.append(m), core=types.SimpleNamespace(read_only=False), active_menu=lambda: self.menu,
+        self.engine = types.SimpleNamespace(scroll_mode=0, impose_scroll_mode=lambda c: setattr(self.engine, 'scroll_mode', c), send_menu=lambda *m: self.sent.append(m), core=types.SimpleNamespace(read_only=False), active_menu=lambda: self.menu,
                                             state=types.SimpleNamespace(part=0xd, effect=None, load_wait=None), battle_intro=True,
-                                            battle_sensor=types.SimpleNamespace(events=[('start',)], tracking=object(), outputs=[1]), sensor=types.SimpleNamespace(drain=lambda: [], events=[]),
+                                            battle_sensor=types.SimpleNamespace(events=[('start',)], tracking=object(), outputs=[1]), sensor=types.SimpleNamespace(drain=lambda: [], events=[], output=[]),
                                             record_inputs=lambda on: None)
         self.history = types.SimpleNamespace(replaying=False, flush_recording=lambda eng: None, replay_path=lambda e: 'x.dqs')
         hv = types.SimpleNamespace(elements=[], change_tab=lambda i: None, go_to=lambda i: None)
-        self.pause = types.SimpleNamespace(shutdown=lambda leaving=True: self.applied.append(('closed', leaving)), open_menu=lambda page=None: self.applied.append(('menu', page)), hist=hv,
+        self.pause = types.SimpleNamespace(shutdown=lambda leaving=True: self.applied.append(('closed', leaving)), open_menu=lambda page=None: self.applied.append(('menu', page)), open_history=lambda: self.applied.append(('menu', 'history')), hist=hv,
                                            view_state=lambda: 'VIEW', restore_view=lambda v: self.applied.append(('menu', v)))
         self.ref_effect = None; self.effect_tex_ready = False
     def _complete_savestate(self): return 'BACK'
@@ -118,6 +118,24 @@ class TestMixin(unittest.TestCase):
         self.assertEqual(w.applied[1:], ['BACK', ('menu', 'VIEW')]); self.assertFalse(w.history.replaying); self.assertFalse(w.engine.core.read_only); self.assertFalse(w.engine.battle_intro)          # (the menus as they were)
         self.assertEqual((w.engine.battle_sensor.events, w.engine.battle_sensor.tracking, w.engine.battle_sensor.outputs), ([], None, []))
 
+    def test_a_victory_ends_on_its_last_page(self):
+        """A won battle ends on "X est vaincu.", the first page after the victory (BattleExecDefeatMonster::initialize): the engine holds on it (manual messages imposed), then, messages turned by themselves,
+        the fade comes LAST_PAGE_STEPS steps later; "Manual": the player's key (replay_on_last_page). The rewards (experience, gold, items, levels) are never shown: the summary box has them."""
+        for manual in (False, True):
+            w = FakeWindow(); self.assertTrue(self.start(w)); w.engine.scroll_mode = 4 if manual else 0; out = w.engine.sensor.output; out += ['page'] * 3
+            self.assertFalse(w.replay_over()); w.engine.battle_sensor.events.append(('victory',))
+            self.assertFalse(w.replay_over()); self.assertEqual(w.engine.scroll_mode, 4); self.assertFalse(w.replay_on_last_page())          # (manual imposed: the engine will hold on the page)
+            for _ in range(10): self.assertFalse(w.replay_over())
+            out.append('Le rat volant est vaincu.'); self.assertTrue(w.replay_on_last_page())
+            for _ in range(BRP.LAST_PAGE_STEPS): self.assertFalse(w.replay_over())
+            self.assertEqual(w.replay_over(), not manual, manual)
+            for _ in range(200): self.assertEqual(w.replay_over(), not manual)
+            out.append("Ragnar reçoit 3 points d'expérience !"); self.assertTrue(w.replay_over())          # (a page after it: never expected, the replay ends anyway)
+            w.end_battle_replay(); self.assertEqual(w.engine.scroll_mode, 0, 'the scroll mode of before the replay')
+        w = FakeWindow(); self.start(w); w.engine.battle_sensor.events.append(('victory',))
+        for _ in range(BRP.LAST_PAGE_MAX): self.assertFalse(w.replay_over())
+        self.assertTrue(w.replay_over())                                                                    # (no page after the victory: the replay ends anyway)
+
     def test_cascade_starts_where_the_player_is(self):
         """the menus close, the screen as it is NOW is copied, then the battle's state is loaded; its entry cascade shatters that copy (not the place the battle was fought: no teleport)."""
         w = FakeWindow(); effect = {'duree': 57}
@@ -129,7 +147,7 @@ class TestMixin(unittest.TestCase):
     def test_sky_keeps_the_real_clock_between_turns(self):
         """between two turns the engine runs at REPLAY_SKIP, but the scenery's own animations (the plains' sky turns once in 150 s) only take the steps of the real clock: the sky no longer jumps."""
         import inspect
-        from dq4_pc.window import game as GM, field as FD
+        from dq456_pc.window import game as GM, field as FD
         self.assertIn('scenery_ticks', inspect.getsource(GM.Game._loop))
         ticks = []
         o = types.SimpleNamespace(scenery_ticks=2, objects=types.SimpleNamespace(tick=lambda: ticks.append(1) or set(), dirty_uv=set(), dirty_col=set()), palettes=None, ext_map=[], map_vl=[],
@@ -156,18 +174,36 @@ class TestMixin(unittest.TestCase):
         held = {}
         BRP.hold_monsters(core, held, 0); self.assertEqual((frame(0, 0), frame(1, 2), frame(2, 1)), (14, 2, 3))          # (the step adds one: the frame the skip began with)
         BRP.hold_monsters(core, held, 3); self.assertEqual((frame(0, 0), frame(1, 2), frame(2, 1)), (0, 5, 6))           # (3 steps of real time: 15 + 3 = 18 -> 1 after the step, looping at 17)
-        monster(1, 3, 0, 9, 25); BRP.hold_monsters(core, held, 4); self.assertEqual(frame(1, 3), -1)                    # (an action that began during the skip: from its first frame, now)
+        monster(1, 3, 0, 9, 25); BRP.hold_monsters(core, held, 4); self.assertEqual(frame(1, 3), 0)                     # (an action that began during the skip: from its start, now; never frame -1, the engine draws it before advancing it)
         BRP.hold_monsters(core, held, 7); self.assertEqual(frame(1, 3), 2)                                             # (then at the real clock's pace)
         monster(2, 1, 0, 28, 30); BRP.hold_monsters(core, held, 40); self.assertEqual(frame(2, 1), 28)                  # (past its last frame: left to end on its own)
         w = FakeWindow(); self.assertTrue(self.start(w)); w.engine.core = core
         w.replay_skip_step(True); self.assertIsNotNone(w._replay_skip); w.replay_skip_step(False); self.assertIsNone(w._replay_skip)
 
+    def test_a_turn_at_the_game_clock_ends_the_skip(self):
+        """"Manual" and "Normal": the turns are played at the game's clock (no battle step, so no replay_skip_step(False)); the loop itself ends the skip, otherwise the next one kept the frames
+        and the start time of the first (measured in a replay at "Normal": from the second turn on, each monster jumped to the frame of a clock started at the first skip)."""
+        from dq456_pc.window import game as WND
+        w = FakeWindow(); self.assertTrue(self.start(w)); w._replay_skip = (0.0, {0: (0, 5, 0)})
+        j = types.SimpleNamespace(n_loop=0, _replay=w._replay, replay_fading=lambda: False, args=types.SimpleNamespace(keys_test=False, shots_loop=False, options_test=False), _reload_step=lambda: False,
+                                  gamepad=types.SimpleNamespace(poll=lambda a: None), _focus_lost=False, sound=types.SimpleNamespace(out_of_focus=False), hd_jobs={}, pause=types.SimpleNamespace(opened=False),
+                                  t_loop=None, fixed_test=False, _battle_clock=lambda: True, _replay_skip=w._replay_skip, scenery_ticks=None, _scenery_acc=0.0)
+        j.replay_skip_step = lambda skipping: BRP.ReplayMixin.replay_skip_step(j, skipping)
+        j._speed_factor = lambda: 1.0; j.engine = types.SimpleNamespace(clock_speed=1.0)
+        try: WND.Game._loop(j, 0.03)
+        except Exception: pass                                                                                  # (the rest of the loop needs the real window)
+        self.assertIsNone(j._replay_skip)
+        j._replay_skip = (0.0, {}); j._speed_factor = lambda: BRP.REPLAY_SKIP
+        try: WND.Game._loop(j, 0.03)
+        except Exception: pass
+        self.assertIsNotNone(j._replay_skip)                                                                    # (between two turns: the skip goes on)
+
     def test_no_action_labels_during_a_replay(self):
         """the cells under each status box that show the action chosen for the turn ("Attack", "Follow orders") are not drawn during a replay; the steps between two turns get a smaller
         computing budget per frame, and a frame stops catching up as soon as the next turn begins."""
         import inspect
-        from dq4_pc.menus import ui_menu as UM
-        from dq4_pc.window import game as GM, menu_display as MD, battle_scene as BS
+        from dq456_pc.menus import ui_menu as UM
+        from dq456_pc.window import game as GM, menu_display as MD, battle_scene as BS
         self.assertEqual(BRP.HIDDEN_CELLS, {29: (4, 5)}); self.assertLess(BRP.REPLAY_BUDGET, 0.02)
         self.assertIn('RP.HIDDEN_CELLS', inspect.getsource(MD.MenusMixin._draw_menus)); self.assertIn('RP.REPLAY_BUDGET', inspect.getsource(GM.Game._loop))
         self.assertIn('replay_skip_step', inspect.getsource(BS.BattleMixin._do_battle_step))
@@ -181,8 +217,8 @@ class TestMixin(unittest.TestCase):
         """while the recording answers the command menus, the status plates' arrow (code 5) went from member to member, as if someone chose by hand: during a replay it is never drawn
         (it shows only in the command phase: measured with the real engine, code 5 is -1 everywhere else)."""
         import inspect
-        from dq4_pc.menus import ui_menu as UM
-        from dq4_pc.window import menu_display as MD
+        from dq456_pc.menus import ui_menu as UM
+        from dq456_pc.window import menu_display as MD
         w = types.SimpleNamespace(parts=[{'node': 7, 'ib': [{'k': 'icon', 'partsNo': 10}]}], N={7: {'act': False}}, _icon=lambda pt, ib, no: None)
         UM.Window._cursor_icon(w, 2, True); self.assertTrue(w.N[7]['up_cursor']); self.assertTrue(w.N[7]['act'])          # (the arrow's node is known as such)
         self.assertFalse(UM.Render.hide_up_cursor)                                                                           # (a real battle: shown)
@@ -200,7 +236,7 @@ class TestMixin(unittest.TestCase):
         st.fade = {'a': 0.0, 'n': 0}; st.part = 0xe; self.assertFalse(w.replay_between_turns())
         st.part = 0xd; w._replay['ended'] = 0; self.assertFalse(w.replay_between_turns(), 'after the end: the closing plays at its pace')
         import inspect
-        from dq4_pc.window import game as GM, menu_display as MD
+        from dq456_pc.window import game as GM, menu_display as MD
         self.assertIn('RP.REPLAY_SKIP', inspect.getsource(GM.Game._speed_factor)); self.assertIn('RP.KEEP_WINDOWS', inspect.getsource(MD.MenusMixin._draw_menus))
         self.assertEqual(BRP.KEEP_WINDOWS, (29,))                                                         # (only the party's status: never the monster names or the command windows)
 
@@ -250,7 +286,7 @@ class Rig(BRP.ReplayMixin):
     """What the replay uses of the window, around the real engine (the real window needs a screen)."""
     def __init__(self, eng, h, SS):
         self.engine, self.history = eng, h
-        self.pause = types.SimpleNamespace(shutdown=lambda leaving=True: None, open_menu=lambda page=None: None, hist=types.SimpleNamespace(elements=[], change_tab=lambda i: None, go_to=lambda i: None),
+        self.pause = types.SimpleNamespace(shutdown=lambda leaving=True: None, open_menu=lambda page=None: None, open_history=lambda: None, hist=types.SimpleNamespace(elements=[], change_tab=lambda i: None, go_to=lambda i: None),
                                            view_state=lambda: None, restore_view=lambda v: None)
         self.ref_effect = None; self.effect_tex_ready = False
         self._complete_savestate = lambda: SS.snapshot(eng); self._apply_savestate = lambda d: SS.apply(eng, d)
@@ -266,8 +302,8 @@ class RealEngine(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        from dq4_pc.core import engine as ENGINE
-        from dq4_pc.persistence import savestates as SS
+        from dq456_pc.core import engine as ENGINE
+        from dq456_pc.persistence import savestates as SS
         cls.ENGINE, cls.SS = ENGINE, SS
         cls.d = tempfile.mkdtemp(prefix='rp_mo_'); cls.sv = os.path.join(cls.d, 'sv'); os.makedirs(cls.sv)
         eng = cls.eng = ENGINE.Engine(os.environ['DQ_APK'], os.environ['DQ_SAVES'], cls.sv)
@@ -319,16 +355,23 @@ class RealEngine(unittest.TestCase):
         eng, h, ENGINE = self.eng, self.h, self.ENGINE; rnd = random.Random(seed); rig = Rig(eng, h, self.SS)
         self.assertTrue(rig.start_battle_replay(self.e)); eng.clock_speed = speed
         self.assertTrue(eng.state.effect is not None and eng.state.part != ENGINE.PART_BATTLE)           # (the entry cascade comes first, then the battle)
-        out = []; k = 0; last = 0
+        out = []; k = 0; last = 0; seen = len(eng.sensor.output)
         while not rig.replay_over() and k < 30000:
             rig.replay_feed()
             decl = ENGINE.A if eng.msg_visible and eng.active_menu() is None and not last and rnd.random() < 1.0 / period else 0          # (a key press is never seen at two consecutive steps)
-            eng.step(0, decl); last = decl; out += [r['text'] for r in eng.sensor.drain() if r['cat'] == 'c']; k += 1
+            if decl and rig.replay_on_last_page(): break                                                  # (as in the window: the key on "X est vaincu." ends the replay)
+            eng.step(0, decl); last = decl; out += [r['text'] for r in eng.sensor.output[seen:] if r['cat'] == 'c']; seen = len(eng.sensor.output); k += 1          # (the Sensor's pages are not taken: the replay counts them, as in the window)
         self.assertLess(k, 30000); eng.clock_speed = 1.0
         return out, k, rig
 
     def setUp(self):
         if not self.ok: self.skipTest('no battle met from these saves')
+
+    def won_part(self, messages):
+        """What a replay shows of the battle's messages: a victory ends on its "X est vaincu." (the rewards that follow are not replayed); any other outcome, all of them."""
+        if self.e.outcome != 'victory': return messages
+        i = max(i for i, m in enumerate(messages) if 'vaincu' in m); self.assertLess(i, len(messages) - 1)          # (the experience and the gold come after it)
+        return messages[:i + 1]
 
     def test_recorded_from_the_cascade(self):
         self.assertTrue(self.cascade_at_start)                                                           # (the state was taken when the cascade began, not when the battle did)
@@ -342,7 +385,7 @@ class RealEngine(unittest.TestCase):
         """with the real engine: the monsters' animations put back on the real clock between two turns (hold_monsters before each step, as the window does) change nothing in the
         battle (same messages, same outcome), and over the command phase a monster's frame is the one the real clock has reached."""
         eng, ENGINE = self.eng, self.ENGINE; rig = Rig(eng, self.h, self.SS); self.assertTrue(rig.start_battle_replay(self.e))
-        out = []; k = 0; last = 0; rnd = random.Random(5); sim = 0.0; skip = None; moves = []
+        out = []; k = 0; last = 0; seen = len(eng.sensor.output); rnd = random.Random(5); sim = 0.0; skip = None; moves = []
         while not rig.replay_over() and k < 30000:
             rig.replay_feed(); between = rig.replay_between_turns()
             if between:
@@ -351,12 +394,13 @@ class RealEngine(unittest.TestCase):
             else: skip = None
             sim += 0.003 if between else 1 / 30.0                                                         # (between two turns: 3 ms of real time per engine step)
             decl = ENGINE.A if eng.msg_visible and eng.active_menu() is None and not last and rnd.random() < 0.1 else 0
-            eng.step(0, decl); last = decl; out += [r['text'] for r in eng.sensor.drain() if r['cat'] == 'c']; k += 1
+            if decl and rig.replay_on_last_page(): break
+            eng.step(0, decl); last = decl; out += [r['text'] for r in eng.sensor.output[seen:] if r['cat'] == 'c']; seen = len(eng.sensor.output); k += 1
             if between:
                 now = BRP.monster_frames(eng.core)
                 moves += [(now[i][1], (f0 + tick - t0) % now[i][2]) for i, (a, f0, t0) in skip[1].items() if i in now and now[i][0] == a and now[i][4]]
         rig.end_battle_replay(); eng.sensor.output = []
-        self.assertEqual(out[:len(self.messages)], self.messages)
+        self.assertEqual(out, self.won_part(self.messages))
         self.assertTrue(moves); self.assertEqual([m for m in moves if m[0] != m[1]], [])                 # (each step shows the frame the real clock has reached: it raced through the command phase before)
 
     def test_replay_same_battle_whatever_the_pace(self):
@@ -366,7 +410,7 @@ class RealEngine(unittest.TestCase):
             replayed, k, rig = self.replay(seed, period, speed)
             rig.end_battle_replay()
             eng.sensor.output = []
-            self.assertEqual(replayed[:len(self.messages)], self.messages, (seed, period))              # same battle: same messages, same damage, same outcome, whatever the pace
+            self.assertEqual(replayed, self.won_part(self.messages), (seed, period))                     # same battle: same messages, same damage, same outcome, whatever the pace
             self.assertEqual(self.party(eng), before); self.assertEqual(len(h.battles), n_battles); self.assertEqual(sorted(os.listdir(self.sv)), files)
             self.assertFalse(h.replaying); self.assertFalse(eng.core.read_only)
 

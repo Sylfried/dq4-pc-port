@@ -19,9 +19,9 @@ import _paths          # (test helper)
 import pyglet
 if sys.platform.startswith('linux') and not os.environ.get('DISPLAY'): pyglet.options['headless'] = True
 pyglet.options['shadow_window'] = False
-from dq4_pc.core import engine as ENGINE
-from dq4_pc.core import emu_core as EC
-from dq4_pc.window import staffroll as SR
+from dq456_pc.core import engine as ENGINE
+from dq456_pc.core import emu_core as EC
+from dq456_pc.window import staffroll as SR
 
 APK, SAVES = os.environ.get('DQ_APK'), os.environ.get('DQ_SAVES')
 
@@ -89,7 +89,7 @@ def expected(y, hh, s, a_first=True):
 @unittest.skipUnless(os.environ.get('DISPLAY') or pyglet.options.get('headless'), 'needs a GL context (headless EGL or a display)')
 class Drawing(unittest.TestCase):
     def setUp(self):
-        from dq4_pc.window import field as FI
+        from dq456_pc.window import field as FI
         try: self.win = pyglet.window.Window(1280, 800, visible=False)
         except Exception as ex: self.skipTest('no GL window: %s' % ex)
         w = self.win; self.ui = ENGINE.Interface(); self.ui.staff = {'port': 12, 'live': True, 'visible': True, 'offset': 100 / 512, 'ready': True, 'float_next': False, 'tex': []}

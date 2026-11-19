@@ -32,11 +32,11 @@ if __name__ != '__main__' or not os.environ.get('DQ_PLATE_SCENARIO'):
     if sys.platform.startswith('linux') and not os.environ.get('DISPLAY'): pyglet.options['headless'] = True
     pyglet.options['shadow_window'] = False
     import _paths
-    from dq4_pc import main as M
-    from dq4_pc.core import engine as ENGINE
-    from dq4_pc.menus import flags as FL, ui_menu as UM, language_screen as LS
-    from dq4_pc import language as LG
-    from dq4_pc.window import constants as C, game as GM
+    from dq456_pc import main as M
+    from dq456_pc.core import engine as ENGINE
+    from dq456_pc.menus import flags as FL, ui_menu as UM, language_screen as LS
+    from dq456_pc import language as LG
+    from dq456_pc.window import constants as C, game as GM
     LAYOUT = os.path.join(_paths.ui_cache(), 'ui_layout.json')
 
     class Flags(unittest.TestCase):
@@ -181,24 +181,24 @@ if __name__ != '__main__' or not os.environ.get('DQ_PLATE_SCENARIO'):
 
 
 def scenario(out):
-    """French start menu -> right from "License" -> A -> language screen -> English -> English title screen (separate process: DQ4_DATA is set before dq4_pc is imported). Writes `result.json` in `out`."""
+    """French start menu -> right from "License" -> A -> language screen -> English -> English title screen (separate process: DQ_DATA is set before dq456_pc is imported). Writes `result.json` in `out`."""
     import time
     D = os.path.join(out, 'data')
-    for sub in ('settings', 'saves/savestates', 'cache', 'cache_en', 'apk'): os.makedirs(os.path.join(D, sub))
-    os.symlink(os.path.abspath(os.environ['DQ_APK']), os.path.join(D, 'apk', 'fr')); os.symlink(os.path.abspath(english_apk()), os.path.join(D, 'apk', 'en'))
-    for f in glob.glob(os.path.join(os.environ['DQ_SAVES'], 'data*.dat')): shutil.copy(f, os.path.join(D, 'saves'))
+    for sub in ('settings', 'saves/dq4/savestates', 'cache/dq4/fr', 'cache/dq4/en', 'apk/dq4'): os.makedirs(os.path.join(D, sub))
+    os.symlink(os.path.abspath(os.environ['DQ_APK']), os.path.join(D, 'apk', 'dq4', 'fr')); os.symlink(os.path.abspath(english_apk()), os.path.join(D, 'apk', 'dq4', 'en'))
+    for f in glob.glob(os.path.join(os.environ['DQ_SAVES'], 'data*.dat')): shutil.copy(f, os.path.join(D, 'saves', 'dq4'))
     for c in [os.environ['DQ_MAP_CACHE']] + [c for c in (os.environ.get('DQ_UI_CACHE'),) if c and os.path.isdir(c)]:
         for f in os.listdir(c):
-            for sub in ('cache', 'cache_en'):
+            for sub in ('cache/dq4/fr', 'cache/dq4/en'):
                 dst = os.path.join(D, sub, f)
-                if sub == 'cache_en' and not f.startswith(('ui_layout', 'map15', 'sprite_', 'world', 'backgrounds', 'fbx4', 'preparation')): continue      # (the English cache: what is the same in both languages, read only)
+                if sub == 'cache/dq4/en' and not f.startswith(('ui_layout', 'map15', 'sprite_', 'world', 'backgrounds', 'fbx4', 'preparation')): continue      # (the English cache: what is the same in both languages, read only)
                 if not os.path.exists(dst): os.symlink(os.path.abspath(os.path.join(c, f)), dst)
     with open(os.path.join(D, 'settings', 'settings.json'), 'w') as f: json.dump({'language': 'fr'}, f)
-    os.environ['DQ4_DATA'] = D
+    os.environ['DQ_DATA'] = D
     sys.path.insert(0, ROOT)
     import pyglet
-    from dq4_pc import main as M
-    from dq4_pc.core import engine as ENGINE
+    from dq456_pc import main as M
+    from dq456_pc.core import engine as ENGINE
     games = []; r = {'sent_12': 0}; st = {'k': 0, 'ph': 'title'}; t0 = time.time()
     class G(M.Game):
         def __init__(self, *a, **k):

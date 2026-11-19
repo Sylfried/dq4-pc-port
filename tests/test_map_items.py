@@ -19,9 +19,9 @@ import math, os, sys, unittest
 import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from dq4_pc.world.data import euler_mat
-from dq4_pc.world import map_objects as OC
-from dq4_pc.world.data import MAP_PREFIX           # prefix of the map cache, read from the source: hard-coded, these tests silently skipped after the switch to carte11_
+from dq456_pc.world.data import euler_mat
+from dq456_pc.world import map_objects as OC
+from dq456_pc.world.data import MAP_PREFIX           # prefix of the map cache, read from the source: hard-coded, these tests silently skipped after the switch to carte11_
 
 
 # ---- independent reference: Unity quaternions

@@ -8,8 +8,8 @@ import os, sys, glob, pickle, unittest
 import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from dq4_pc.world import scenery_outlines as CD
-from dq4_pc.world.data import MAP_PREFIX           # prefix of the map cache, read from the source: hard-coded, these tests silently skipped after the switch to carte11_
+from dq456_pc.world import scenery_outlines as CD
+from dq456_pc.world.data import MAP_PREFIX           # prefix of the map cache, read from the source: hard-coded, these tests silently skipped after the switch to carte11_
 
 CACHE = os.environ.get('DQ_MAP_CACHE')
 

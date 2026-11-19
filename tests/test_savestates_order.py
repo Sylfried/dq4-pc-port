@@ -4,8 +4,8 @@ Without APK: cases with a fake engine. With the APK (DQ_APK): the same test on t
 import hashlib, os, shutil, sys, tempfile, types, unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from dq4_pc import language as _LANGUAGE; _LANGUAGE.select_language('fr')          # (these tests expect the French texts, whatever the computer's language)
-from dq4_pc.persistence import savestates
+from dq456_pc import language as _LANGUAGE; _LANGUAGE.select_language('fr')          # (these tests expect the French texts, whatever the computer's language)
+from dq456_pc.persistence import savestates
 APK = os.environ.get('DQ_APK', '')
 
 
@@ -48,7 +48,7 @@ class WithoutRealEngine(unittest.TestCase):
 @unittest.skipUnless(os.path.exists(os.path.join(APK, 'split_config.arm64_v8a.apk')), 'no game APK')
 class WithRealEngine(unittest.TestCase):
     def test_failure_leaves_engine_intact_fingerprint_present(self):
-        from dq4_pc.core import engine as ENGINE
+        from dq456_pc.core import engine as ENGINE
         wdir = tempfile.mkdtemp(prefix='sv_test_ordre_'); rdir = tempfile.mkdtemp(prefix='sv_test_ordre_l_')
         try:
             m = ENGINE.Engine(APK, rdir, wdir)

@@ -11,13 +11,13 @@
 import math, os, sys, types, unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from dq4_pc.core import engine as ENGINE
+from dq456_pc.core import engine as ENGINE
 
 try:
     import pyglet
     pyglet.options['shadow_window'] = False
-    from dq4_pc.window import camera as CAM
-    from dq4_pc.window.constants import CH_PHONE_SHORT
+    from dq456_pc.window import camera as CAM
+    from dq456_pc.window.constants import CH_PHONE_SHORT
 except Exception as ex:          # window/camera.py needs pyglet (the import alone is enough)
     CAM = None
 

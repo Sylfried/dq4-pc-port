@@ -47,7 +47,7 @@ class TitleCentering(unittest.TestCase):
         env = dict(os.environ, PYGLET_HEADLESS='1', PYGLET_AUDIO='silent'); cls.res = {}
         for (w, h) in FORMATS:
             shot = os.path.join(cls.tmp, 'titre_%dx%d.png' % (w, h))
-            cmd = [sys.executable, '-W', 'ignore', '-m', 'dq4_pc', '--apk', apk, '--saves-read', saves, '--saves-write', os.path.join(cls.tmp, 'sv'), '--settings', rg, '--slot', '0', '--no-logos',
+            cmd = [sys.executable, '-W', 'ignore', '-m', 'dq456_pc', '--apk', apk, '--saves-read', saves, '--saves-write', os.path.join(cls.tmp, 'sv'), '--settings', rg, '--slot', '0', '--no-logos',
                    '--cache', cache, '--msaa', '0', '--width', str(w), '--height', str(h), '--no-preparation', '--no-sound', '--shot', shot, '--images', '100000', '--test-keys', '', '--shots-loop', str(FRAME)]
             subprocess.run(cmd, cwd=os.path.join(HERE, '..'), env=env, timeout=900, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             cls.res[(w, h)] = measures(os.path.join(cls.tmp, 'titre_%dx%d_b%d.png' % (w, h, FRAME)))

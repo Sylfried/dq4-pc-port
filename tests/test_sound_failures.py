@@ -5,9 +5,9 @@ import os, sys, time, unittest
 import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from dq4_pc import language as _LANGUAGE; _LANGUAGE.select_language('fr')          # (these tests expect the French texts, whatever the computer's language)
+from dq456_pc import language as _LANGUAGE; _LANGUAGE.select_language('fr')          # (these tests expect the French texts, whatever the computer's language)
 sys.modules['pyglet'] = None                                             # no pyglet: Sound takes it for "sound unavailable", we give it fake players
-from dq4_pc import sound as SOUND
+from dq456_pc import sound as SOUND
 
 
 class Outage:

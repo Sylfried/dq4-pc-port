@@ -6,8 +6,8 @@ python3 tests/test_settings_migration.py
 import json, os, sys, tempfile, unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from dq4_pc import language as LG
-from dq4_pc.persistence import settings as RG
+from dq456_pc import language as LG
+from dq456_pc.persistence import settings as RG
 
 # A file as the version saved it: all the keys, each with a value that is not the default.
 OLD_FILE = {
@@ -62,9 +62,9 @@ class Migration(unittest.TestCase):
         k = r['keys']
         self.assertEqual((k['up'][0], k['down'][0], k['left'][0], k['right'][0]), ('I', 'K', 'J', 'L'))
         self.assertEqual((k['cam_left'][0], k['cam_right'][0]), ('F', 'H')); self.assertNotIn('cam_up', k); self.assertNotIn('cam_down', k)          # (the up / down arrow actions are gone, their old keys with them)
-        self.assertEqual((k['map'][0], k['chat'][0], k['history'][0], k['info'][0], k['modifier'][0], k['battle_speed'][0]), ('N', 'C', 'Y', 'F2', 'X', 'B'))
+        self.assertEqual((k['map'][0], k['chat'][0], k['info'][0], k['modifier'][0], k['battle_speed'][0]), ('N', 'C', 'F2', 'X', 'B')); self.assertNotIn('history', k)          # (the History key is gone)
         pad = r['gamepad']
-        self.assertEqual((pad['up'], pad['map'], pad['chat'], pad['history'], pad['info'], pad['modifier'], pad['battle_speed']), ('PAD_UP', 'PAD_BACK', 'PAD_Y', 'PAD_R3', 'PAD_L3', 'PAD_RB', 'PAD_LT'))
+        self.assertEqual((pad['up'], pad['map'], pad['chat'], pad['info'], pad['modifier'], pad['battle_speed']), (['PAD_LS_UP', 'PAD_UP'], 'PAD_BACK', 'PAD_Y', 'PAD_L3', 'PAD_RB', 'PAD_LT')); self.assertNotIn('history', pad)          # (the left stick joins the d-pad: it was the same input)
         self.assertTrue(set(k) <= set(RG.DEFAULT_KEYS) and set(RG.DEFAULT_KEYS) <= set(k))
 
     def test_no_french_key_is_left_and_the_file_is_rewritten_in_english(self):

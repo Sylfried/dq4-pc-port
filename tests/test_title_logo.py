@@ -21,8 +21,8 @@ from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..'))
-import _paths          # (test helper: finding the source code in the subfolders of dq4_pc)
-from dq4_pc.menus import pre_game as AP
+import _paths          # (test helper: finding the source code in the subfolders of dq456_pc)
+from dq456_pc.menus import pre_game as AP
 
 FORMATS = ((1280, 720), (1280, 800), (1024, 768), (2560, 1080))              # 16:9,, 4:3, 21:9
 FRAME = 770
@@ -88,7 +88,7 @@ class TitleRender(unittest.TestCase):
         cls.tmp = tempfile.mkdtemp(prefix='titre_logo_'); rg = os.path.join(cls.tmp, 'settings.json'); json.dump({}, open(rg, 'w'))
         def launch(w, h, name_str, extra_env):
             shot = os.path.join(cls.tmp, name_str + '.png')
-            cmd = [sys.executable, '-W', 'ignore', '-m', 'dq4_pc', '--apk', apk, '--saves-read', saves, '--saves-write', os.path.join(cls.tmp, 'sv'), '--settings', rg, '--slot', '0', '--no-logos',
+            cmd = [sys.executable, '-W', 'ignore', '-m', 'dq456_pc', '--apk', apk, '--saves-read', saves, '--saves-write', os.path.join(cls.tmp, 'sv'), '--settings', rg, '--slot', '0', '--no-logos',
                    '--cache', cache, '--msaa', '0', '--width', str(w), '--height', str(h), '--no-preparation', '--no-sound', '--shot', shot, '--images', '100000', '--test-keys', '', '--shots-loop', str(FRAME)]
             env = dict(os.environ, PYGLET_HEADLESS='1', PYGLET_AUDIO='silent', **extra_env)
             subprocess.run(cmd, cwd=os.path.join(HERE, '..'), env=env, timeout=900, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

@@ -18,8 +18,8 @@ from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..'))
-import _paths          # (test helper: finding the source code in the subfolders of dq4_pc)
-from dq4_pc.menus import pre_game as AP
+import _paths          # (test helper: finding the source code in the subfolders of dq456_pc)
+from dq456_pc.menus import pre_game as AP
 
 PRESS, BEFORE, DARK = 1500, 1496, 1528           # loop frames: A pressed, last frame before it, fade almost black (measured: screen mean 6 / 255)
 ARGS = None; REST = sys.argv[1:]
@@ -58,7 +58,7 @@ class TitleFade(unittest.TestCase):
             for f in glob.glob(os.path.join(cache, 'ui_*')): shutil.copy(f, c2)
             AP.prepare(apk, c2); cache = c2
         shot = os.path.join(cls.tmp, 't.png')
-        cmd = [sys.executable, '-W', 'ignore', '-m', 'dq4_pc', '--apk', apk, '--saves-read', saves, '--saves-write', os.path.join(cls.tmp, 'sv'), '--settings', rg, '--slot', '0', '--no-logos',
+        cmd = [sys.executable, '-W', 'ignore', '-m', 'dq456_pc', '--apk', apk, '--saves-read', saves, '--saves-write', os.path.join(cls.tmp, 'sv'), '--settings', rg, '--slot', '0', '--no-logos',
                '--cache', cache, '--msaa', '0', '--width', '1280', '--height', '720', '--no-preparation', '--no-sound', '--shot', shot, '--images', '100000',
                '--test-keys', '%d:SPACE' % PRESS, '--shots-loop', '%d,%d' % (BEFORE, DARK)]
         env = dict(os.environ, PYGLET_HEADLESS='1', PYGLET_AUDIO='silent')

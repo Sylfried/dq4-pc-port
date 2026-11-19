@@ -15,8 +15,8 @@ import os, pickle, struct, sys, tempfile, types, unittest
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 import pyglet
 if sys.platform.startswith('linux') and not os.environ.get('DISPLAY'): pyglet.options['headless'] = True; pyglet.options['shadow_window'] = False
-from dq4_pc.core import engine as ENGINE
-from dq4_pc.window import game as F
+from dq456_pc.core import engine as ENGINE
+from dq456_pc.window import game as F
 
 APK, SAVES = os.environ.get('DQ_APK'), os.environ.get('DQ_SAVES')
 EVENING = [0.645, 0.516, 0.581, 0.839, 0.419, 0.194]               # mlout1 in the evening (zone 3): gray-pink at the top, orange at the bottom (entry 3 of param_map_backcolor, values out of 31)

@@ -4,7 +4,7 @@ Without window or engine (unicorn alone for the import):    python3 tests/test_b
 import os, sys, unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from dq4_pc.core import engine as ENGINE
+from dq456_pc.core import engine as ENGINE
 
 
 def state_with(slot=12):

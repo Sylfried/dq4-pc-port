@@ -20,9 +20,9 @@ CACHE = _paths.ui_cache('/tmp/uicache4')
 
 try:
     import numpy as np
-    from dq4_pc.menus import ui_menu as UM
-    from dq4_pc.window import constants as K
-    from dq4_pc.window.menu_display import MenusMixin
+    from dq456_pc.menus import ui_menu as UM
+    from dq456_pc.window import constants as K
+    from dq456_pc.window.menu_display import MenusMixin
     IMPORT_ERROR = None
 except Exception as ex:                                       # (CI: neither pyglet nor a window)
     UM = K = MenusMixin = np = None; IMPORT_ERROR = ex
@@ -159,13 +159,13 @@ class Code(unittest.TestCase):
         with open(os.path.join(ROOT, *path), encoding='utf-8') as f: return f.read()
 
     def test_yes_no_border_stacks_on_creation(self):
-        tree = ast.parse(self.source('dq4_pc', 'menus', 'ui_menu.py'))
+        tree = ast.parse(self.source('dq456_pc', 'menus', 'ui_menu.py'))
         init = [n for c in ast.walk(tree) if isinstance(c, ast.ClassDef) and c.name == 'Window' for n in c.body if isinstance(n, ast.FunctionDef) and n.name == '__init__'][0]
         calls = [n.func.attr for n in ast.walk(init) if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)]
         self.assertIn('_push_yes_no', calls)
 
     def test_drawing_click_and_preview_use_same_pose(self):
-        src = self.source('dq4_pc', 'window', 'menu_display.py')
+        src = self.source('dq456_pc', 'window', 'menu_display.py')
         self.assertGreaterEqual(src.count('_yesno_on_message('), 3)                       # definition + drawing + editor preview
         self.assertIn("ui_edges", src); self.assertIn("self.ui_tf[p] = (t2[0], t2[1] - D * t2[2], t2[2])", src)      # click areas = drawing coordinate frame
 

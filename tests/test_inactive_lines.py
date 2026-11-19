@@ -10,16 +10,16 @@ hover is checked on the pixels (the inactive line does not change when the point
 import copy, os, sys, types, unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-import _paths          # (test helper: finding the source code in the subfolders of dq4_pc)
+import _paths          # (test helper: finding the source code in the subfolders of dq456_pc)
 import pyglet
 if sys.platform.startswith('linux') and not os.environ.get('DISPLAY'): pyglet.options['headless'] = True; pyglet.options['shadow_window'] = False
 import numpy as np
-from dq4_pc.persistence import settings as RG
-from dq4_pc.menus import pause as PA
+from dq456_pc.persistence import settings as RG
+from dq456_pc.menus import pause as PA
 
 K = pyglet.window.key
 LEFT = 1
-PAGES = ('root', 'display', 'sound', 'controls', 'changes', 'states', 'quit', 'interface')
+PAGES = ('root', 'display', 'sound', 'controls', 'difficulty', 'randomizer', 'cheats', 'achievements', 'states', 'quit', 'interface')
 DRAWN_PAGES = tuple(p for p in PAGES if p != 'interface')          # (the "Interface" page draws the game preview: the fake game has none)
 CACHE = os.environ.get('DQ_UI_CACHE', '/inexistant')                    # (optional: the game's interface cache for the font and the icons; without it, system fonts and a fallback plate)
 
@@ -78,7 +78,7 @@ def menu(page, full=False, klass=PA.Pause, **attrs):
 
 def state(J, p):
     """Everything an action on a line could change."""
-    return repr((copy.deepcopy(J.reg.v), list(J.calls), list(p.stack), p.capture, p.entry, p.open_dropdown, p.popup, p.dragging, J.full, J.res, p.state_action))
+    return repr((copy.deepcopy(J.reg.v), list(J.calls), list(p.stack), p.capture, p.entry, p.open_dropdown, p.popup, p.dragging, J.full, J.res))
 
 
 def labels(e): return [x.get('l') for x in e]
@@ -294,11 +294,14 @@ class ChangesDuringAction(unittest.TestCase):
 
 class ChangesCaption(unittest.TestCase):
     def test_caption_everywhere(self):
+        """Difficulty, Cheats and Randomizer: three lines of the root, right below "Achievements", each with its page (no tabs)."""
         J, p = menu('root'); libs = labels(p._entries())
-        self.assertIn('settings.modifiers', libs); self.assertNotIn('Modifications', libs); self.assertNotIn('settings.cheats', libs); self.assertEqual(libs.index('settings.modifiers'), libs.index('settings.controls') + 1)           # ("Cheats" is a category of the page, not a root line)
-        e = next(x for x in p._entries() if x['l'] == 'settings.modifiers'); e['ok'](); self.assertEqual(p.screen_page, 'changes')
-        self.assertEqual([x['l'] for x in p._entries()], ['settings.difficulty', 'settings.hp_mp_restored_level_up', 'settings.modifier', 'settings.cheats'])           # (trois categories)
-
+        self.assertNotIn('settings.extras', libs); self.assertNotIn('Modifications', libs)
+        self.assertEqual(libs[libs.index('settings.achievements') + 1:libs.index('settings.achievements') + 4], ['settings.difficulty', 'settings.cheats', 'settings.randomizer'])
+        e = next(x for x in p._entries() if x['l'] == 'settings.difficulty'); e['ok'](); self.assertEqual(p.screen_page, 'difficulty')
+        self.assertEqual([x['l'] for x in p._entries()], ['settings.hp_mp_restored_level_up', 'settings.hp_mp_restored_battle_end', 'settings.difficulty_level', 'settings.experience_gained', 'settings.gold_gained', 'settings.casino_tokens_won', 'settings.damage_taken_party', 'settings.damage_taken_enemies', 'settings.encounter_rate'])
+        p.stack = ['root']; next(x for x in p._entries() if x['l'] == 'settings.randomizer')['ok'](); self.assertEqual([x['l'] for x in p._entries()], ['settings.game_without_randomizer'])
+        p.stack = ['root']; next(x for x in p._entries() if x['l'] == 'settings.cheats')['ok'](); self.assertEqual([x['l'] for x in p._entries()], ['settings.random_encounters'])
 
 if __name__ == '__main__':
     unittest.main(verbosity=1)

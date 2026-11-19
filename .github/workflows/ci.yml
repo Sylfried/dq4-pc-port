@@ -20,13 +20,13 @@ jobs:
         with:
           python-version: '3.14'
 
-      - name: "Compile the code (dq4_pc, tests and tools)"
-        run: python -m compileall -q dq4_pc tests tools
+      - name: "Compile the code (dq456_pc, tests and tools)"
+        run: python -m compileall -q dq456_pc tests tools
 
       - name: "Forbidden files (game content, saves, caches)"
         run: |
           patterns='(^|/)(data|saves|cache|captures|il2cpp)/|(^|/)(dump\.cs|script\.json)$|\.(apk|so|unity3d|obb|mpt|dat|dqs|pkl)$'
-          forbidden=$(git ls-files | grep -E "$patterns" || true)
+          forbidden=$(git ls-files | grep -vE '^data/(apk/dq[0-9]+/(fr|en)|saves/dq[0-9]+|settings|logs)/README\.txt$' | grep -E "$patterns" || true)          # (the empty data folders: their README.txt only)
           if [ -n "$forbidden" ]; then
             echo "::error::Forbidden files in the repository (game content, saves, caches):"
             echo "$forbidden"
@@ -47,9 +47,24 @@ jobs:
           python tests/test_savestates_order.py
           python tests/test_special_sheets.py
           python tests/test_balloon_shadow.py
+          python tests/test_world_symbols_reload.py
+          python tests/test_ui_sheets.py
+          python tests/test_fbx_preparation.py
+          python tests/test_scenery_texel_centers.py
+          python tests/test_scenery_sampling_all_maps.py
           python tests/test_saves_import.py
           python tests/test_unknown_map.py
           python tests/test_missing_hooks.py
+          python tests/test_status_articles.py
+          python tests/test_church_journal.py
+          python tests/test_reward_rates.py
+          python tests/test_random_encounters.py
+          python tests/test_casino_rate.py
+          python tests/test_slot_payout_skip.py
+          python tests/test_game_rules.py
+          python tests/test_savestates_per_game.py
+          python tests/test_randomizer_items.py
+          python tests/test_randomizer_encounters.py
           python tests/test_sound_failures.py
           python tests/test_full_screen_effects.py
           python tests/test_keyboard_sfx.py
@@ -57,6 +72,21 @@ jobs:
           python tests/test_message_fallback.py
           python tests/test_focus_loss.py
           python tests/test_sound_volumes.py
+          python tests/test_sound_music_v2.py
+          python tests/test_v2_object_positions.py
+          python tests/test_same_queue_scenery.py
+          python tests/test_native_memcpy.py
+          python tests/test_fade_in_current.py
+          python tests/test_menu_directions.py
+          python tests/test_battle_cascade_end.py
+          python tests/test_phone_scenes.py
+          python tests/test_debug_service.py
+          python tests/test_savestate_walk_speeds.py
+          python tests/test_debug_recorder.py
+          python tests/test_debug_panel.py
+          python tests/test_debug_catalog.py
+          python tests/test_return_to_title.py
+          python tests/test_smooth_objects.py
           python tests/test_play_time.py
           python tests/test_savestates_whitelist.py
           python tests/test_heap_alert.py
@@ -72,4 +102,14 @@ jobs:
           python tests/test_stacked_yes_no.py
           python tests/test_saves_in_one_folder.py
           python tests/test_launcher.py
+          python tests/test_games.py
+          python tests/test_engine_layout.py
+          python tests/test_dq5_title.py
+          python tests/test_dq56_screens.py
+          python tests/test_dq5_ingame.py
+          python tests/test_slime_touch.py
+          python tests/test_slime_curling.py
+          python tests/test_volcano.py
+          python tests/test_sugoroku.py
+          python tests/test_rules_v2.py
           python tests/test_language.py

@@ -11,12 +11,12 @@ sys.path.insert(0, os.path.join(HERE, '..')); sys.path.insert(0, HERE)
 import pyglet
 pyglet.options['shadow_window'] = False
 from pyglet.event import EventDispatcher
-from dq4_pc.persistence import settings as RG
-from dq4_pc.persistence import pad_inputs as PI
-from dq4_pc.window import gamepad as GP
-from dq4_pc.window.keyboard_mouse import KeyboardMouseMixin, physical_key
-from dq4_pc.window.field import FieldMixin
-from dq4_pc.menus import prompts as PR
+from dq456_pc.persistence import settings as RG
+from dq456_pc.persistence import pad_inputs as PI
+from dq456_pc.window import gamepad as GP
+from dq456_pc.window.keyboard_mouse import KeyboardMouseMixin, physical_key
+from dq456_pc.window.field import FieldMixin
+from dq456_pc.menus import prompts as PR
 import test_pause_pages as TP
 
 K = pyglet.window.key
@@ -49,6 +49,36 @@ FakeWindow.register_event_type('on_key_press'); FakeWindow.register_event_type('
 for _e in ('on_mouse_motion', 'on_mouse_press', 'on_mouse_release'): FakeWindow.register_event_type(_e)          # (the stick-driven pointer)
 
 
+class LeftStick(unittest.TestCase):
+    """The left stick and the d-pad are two inputs: "Button 1" of the directions shows the stick, "Button 2" the d-pad."""
+    def test_default_directions(self):
+        for fam in PI.FAMILIES:
+            r = RG.Settings(None); r.set_pad_family(fam)
+            for a, d in (('up', 'UP'), ('down', 'DOWN'), ('left', 'LEFT'), ('right', 'RIGHT')):
+                self.assertEqual(r.pad_slots(a), ['PAD_LS_' + d, 'PAD_' + d], (fam, a))
+                self.assertEqual(r.action_of(PI.SYMBOL['PAD_LS_' + d]), a); self.assertEqual(r.action_of(PI.SYMBOL['PAD_' + d]), a)
+
+    def test_pictures(self):
+        from dq456_pc.menus import prompts as PR
+        for fam, prefix in (('XB', 'xbox'), ('PS', 'playstation'), ('NS', 'switch')):
+            for d in ('up', 'down', 'left', 'right'):
+                p = PR.pad_file(fam, 'PAD_LS_' + d.upper()); self.assertIsNotNone(p, (fam, d)); self.assertTrue(p.endswith('%s_stick_l_%s.png' % (prefix, d)))
+                self.assertTrue(PR.pad_file(fam, 'PAD_' + d.upper()).endswith('%s_dpad_%s.png' % (prefix, d)))
+
+    def test_codes_of_the_other_inputs_did_not_move(self):
+        self.assertEqual(PI.SYMBOL['PAD_UP'], PI.PAD_BASE); self.assertEqual(PI.SYMBOL['PAD_TOUCH'], PI.PAD_BASE + 20); self.assertGreater(PI.SYMBOL['PAD_LS_UP'], PI.SYMBOL['PAD_TOUCH'])
+
+    def test_old_file_keeps_the_stick_moving(self):
+        """a settings file from before: PAD_UP... was the d-pad and the stick at once -> the stick input is added in front (the default of the time, or a player's own binding)"""
+        old = {'up': 'PAD_UP', 'down': 'PAD_DOWN', 'left': 'PAD_LEFT', 'right': 'PAD_RIGHT', 'A': 'PAD_A'}
+        d = RG.Settings.read_gamepads({'gamepads': {'XB': old, 'PS': dict(old, up='PAD_Y', menu='PAD_UP'), 'NS': dict(old, left=['PAD_LEFT', 'PAD_X'])}})
+        self.assertEqual(d['XB']['up'], ['PAD_LS_UP', 'PAD_UP']); self.assertEqual(d['XB']['right'], ['PAD_LS_RIGHT', 'PAD_RIGHT'])
+        self.assertEqual((d['PS']['up'], d['PS']['menu']), ('PAD_Y', ['PAD_LS_UP', 'PAD_UP']), 'the stick follows the d-pad direction wherever the player put it')
+        self.assertEqual(d['NS']['left'], ['PAD_LEFT', 'PAD_X'], 'two inputs already: the player\'s choice is kept')
+        new = {'up': 'PAD_UP', 'down': 'PAD_LS_DOWN'}
+        self.assertEqual(RG.Settings.read_gamepads({'gamepads': {'XB': new}})['XB']['up'], 'PAD_UP', 'a file that already has the stick inputs is read as it is')
+
+
 class Defaults(unittest.TestCase):
     def test_every_action_has_a_default_and_inputs_are_distinct(self):
         for fam in PI.FAMILIES:
@@ -67,9 +97,10 @@ class Defaults(unittest.TestCase):
         for d in (xb, ps, ns):
             self.assertEqual((d['cam_left'], d['cam_right'], d['accel'], d['battle_speed'], d['chat']), ('PAD_LB', 'PAD_RB', 'PAD_RT', 'PAD_LT', ['PAD_L3', 'PAD_R3']))
             self.assertFalse({'PAD_RS_UP', 'PAD_RS_DOWN', 'PAD_RS_LEFT', 'PAD_RS_RIGHT'} & {n for v in d.values() for n in PI.inputs(v)})
-        self.assertEqual((xb['A'], xb['menu'], xb['B'], xb['map'], xb['history']), ('PAD_A', 'PAD_Y', 'PAD_B', 'PAD_X', 'PAD_BACK'))
-        self.assertEqual((ps['A'], ps['menu'], ps['B'], ps['map'], ps['history']), ('PAD_A', 'PAD_Y', 'PAD_B', 'PAD_X', 'PAD_TOUCH'))
-        self.assertEqual((ns['A'], ns['menu'], ns['B'], ns['map'], ns['history']), ('PAD_B', 'PAD_Y', 'PAD_A', 'PAD_X', 'PAD_BACK'))          # (positional: the Switch's "A" is the right button)
+        self.assertEqual((xb['A'], xb['menu'], xb['B'], xb['map']), ('PAD_A', 'PAD_Y', 'PAD_B', 'PAD_X'))
+        self.assertEqual((ps['A'], ps['menu'], ps['B'], ps['map']), ('PAD_A', 'PAD_Y', 'PAD_B', 'PAD_X'))
+        self.assertEqual((ns['A'], ns['menu'], ns['B'], ns['map']), ('PAD_B', 'PAD_Y', 'PAD_A', 'PAD_X'))          # (positional: the Switch's "A" is the right button)
+        for d in (xb, ps, ns): self.assertNotIn('history', d)                                    # (no more History key: the history is a line of the Esc menu)
         self.assertNotIn('pad_mouse', RG.DEFAULT); self.assertEqual(PI.MOUSE_STICK, 'right')          # (always the right stick, no option)
 
     def test_codes_and_action_of(self):
@@ -118,7 +149,8 @@ class Binding(unittest.TestCase):
         self.assertEqual(r.v['gamepads']['NS']['A'], 'PAD_Y', 'a binding changed by the player goes to the three families')
         self.assertEqual(load({'gamepad': 'garbage'})['gamepad'], PI.DEFAULT_PAD)
         r = load({'gamepads': {'PS': {'history': 'PAD_BACK'}}, 'pad_mouse': 'nope'})
-        self.assertEqual(r.v['gamepads']['PS']['history'], 'PAD_BACK'); self.assertEqual(r.v['gamepads']['XB'], PI.DEFAULTS['XB']); self.assertNotIn('pad_mouse', r.v)          # (an old file's value is dropped)
+        self.assertNotIn('history', r.v['gamepads']['PS']); self.assertEqual(r.v['gamepads']['XB'], PI.DEFAULTS['XB']);          # (the History key is gone)
+        self.assertNotIn('pad_mouse', r.v)          # (an old file's value is dropped)
 
     def test_store_and_reload(self):
         f = os.path.join(tempfile.mkdtemp(prefix='rg_pad_'), 'settings.json'); r = RG.Settings(f); r.bind_pad('B', 'PAD_A'); r.store()
@@ -129,7 +161,7 @@ class Reading(unittest.TestCase):
     def test_strengths(self):
         s = GP.strengths(FakePad(a=True, lefty=-1.0, rightx=0.8, righttrigger=0.6, dpadx=-1.0))
         self.assertEqual((s['PAD_A'], s['PAD_B']), (1.0, 0.0))
-        self.assertEqual(s['PAD_UP'], 1.0, 'left stick up (y negative: SDL) = d-pad up'); self.assertEqual(s['PAD_DOWN'], 0.0)
+        self.assertEqual(s['PAD_LS_UP'], 1.0, 'left stick up (y negative: SDL)'); self.assertEqual((s['PAD_UP'], s['PAD_DOWN'], s['PAD_LS_DOWN']), (0.0, 0.0, 0.0), 'the stick is not the d-pad any more')
         self.assertEqual(s['PAD_LEFT'], 1.0, 'd-pad left'); self.assertAlmostEqual(s['PAD_RS_RIGHT'], 0.8); self.assertAlmostEqual(s['PAD_RT'], 0.6)
         self.assertEqual(GP.strengths(FakePad(dpady=1.0))['PAD_UP'], 1.0)          # d-pad up: y positive (pyglet)
 
@@ -137,11 +169,11 @@ class Reading(unittest.TestCase):
         w = FakeWindow(); pad = FakePad(); g = GP.Gamepad(w, FakeManager([pad])); self.assertTrue(pad.opened)
         g.poll(); self.assertEqual(w.events, [])
         pad.a = True; pad.leftx = 0.9; g.poll()
-        self.assertEqual(w.events, [('press', 'PAD_A'), ('press', 'PAD_RIGHT')]); self.assertTrue(w.key_list[PI.SYMBOL['PAD_A']]); self.assertTrue(w.key_list[PI.SYMBOL['PAD_RIGHT']])
+        self.assertEqual(w.events, [('press', 'PAD_A'), ('press', 'PAD_LS_RIGHT')]); self.assertTrue(w.key_list[PI.SYMBOL['PAD_A']]); self.assertTrue(w.key_list[PI.SYMBOL['PAD_LS_RIGHT']])
         w.events.clear(); g.poll(); self.assertEqual(w.events, [], 'held: no new event')
         pad.a = False; pad.leftx = 0.4; g.poll()
         self.assertEqual(w.events, [('release', 'PAD_A')], 'between the thresholds the stick stays pressed (hysteresis)'); self.assertFalse(w.key_list[PI.SYMBOL['PAD_A']])
-        w.events.clear(); pad.leftx = 0.2; g.poll(); self.assertEqual(w.events, [('release', 'PAD_RIGHT')]); self.assertFalse(w.key_list[PI.SYMBOL['PAD_RIGHT']])
+        w.events.clear(); pad.leftx = 0.2; g.poll(); self.assertEqual(w.events, [('release', 'PAD_LS_RIGHT')]); self.assertFalse(w.key_list[PI.SYMBOL['PAD_LS_RIGHT']])
         w.events.clear(); pad.leftx = 0.45; g.poll(); self.assertEqual(w.events, [], 'below the press threshold: nothing')
 
     def test_focus_loss_releases_everything(self):
@@ -180,15 +212,15 @@ class XInput(unittest.TestCase):
         pad = GP.XInputPad(self.library({0: [0x1000 | 0x8 | 0x100, 255, 0, 0, 32767, -32768, 0]}), 0)
         self.assertTrue(pad.connected); self.assertTrue(pad.a and pad.leftshoulder and not pad.b); self.assertEqual((pad.dpadx, pad.dpady), (1.0, 0.0))
         self.assertEqual((pad.lefttrigger, pad.righttrigger), (1.0, 0.0)); self.assertEqual((pad.lefty, pad.rightx), (1.0, -1.0))
-        s = GP.strengths(pad); self.assertEqual((s['PAD_UP'], s['PAD_DOWN'], s['PAD_RS_LEFT'], s['PAD_RIGHT'], s['PAD_LB'], s['PAD_LT']), (1.0, 0.0, 1.0, 1.0, 1.0, 1.0), 'XInput: y positive = stick up')
+        s = GP.strengths(pad); self.assertEqual((s['PAD_LS_UP'], s['PAD_LS_DOWN'], s['PAD_RS_LEFT'], s['PAD_RIGHT'], s['PAD_LB'], s['PAD_LT']), (1.0, 0.0, 1.0, 1.0, 1.0, 1.0), 'XInput: y positive = stick up')
         empty = GP.XInputPad(self.library({}), 1); self.assertFalse(empty.connected); self.assertEqual(max(GP.strengths(empty).values()), 0.0)
 
     def test_gamepad_reads_the_slots_and_ignores_pyglets_xinput_controllers(self):
         w = FakeWindow(); slots = {0: [0, 0, 0, 0, 0, 0, 0]}; pyglet_xi = FakePad(a=True); pyglet_xi.guid = 'XINPUTCONTROLLER'
         g = GP.Gamepad(w, FakeManager([pyglet_xi]), xinput=self.library(slots)); self.assertEqual(g.pads, [], "pyglet's own XInput controller is left aside")
         g.poll(); self.assertEqual(w.events, []); slots[0][0] = 0x2000; slots[0][4] = -32768; g.poll()
-        self.assertEqual(sorted(w.events), [('press', 'PAD_B'), ('press', 'PAD_DOWN')]); self.assertEqual(g.family(), 'XB')
-        w.events.clear(); del slots[0]; g.poll(); self.assertEqual(sorted(w.events), [('release', 'PAD_B'), ('release', 'PAD_DOWN')], 'unplugged while held: released')
+        self.assertEqual(sorted(w.events), [('press', 'PAD_B'), ('press', 'PAD_LS_DOWN')]); self.assertEqual(g.family(), 'XB')
+        w.events.clear(); del slots[0]; g.poll(); self.assertEqual(sorted(w.events), [('release', 'PAD_B'), ('release', 'PAD_LS_DOWN')], 'unplugged while held: released')
 
     def test_empty_slots_are_looked_at_every_two_seconds(self):
         w = FakeWindow(); slots = {}; calls = []; lib = self.library(slots); get = lambda slot: (calls.append(slot), lib(slot))[1]
@@ -201,7 +233,7 @@ class XInput(unittest.TestCase):
 
     def test_pyglet_xinput_controller_is_kept_when_the_library_is_missing(self):
         w = FakeWindow(); pad = FakePad(lefty=1.0); pad.guid = 'XINPUTCONTROLLER'; g = GP.Gamepad(w, FakeManager([pad]), xinput=None)
-        g.poll(); self.assertEqual(w.events, [('press', 'PAD_UP')], "pyglet's XInput y axis is positive upwards")
+        g.poll(); self.assertEqual(w.events, [('press', 'PAD_LS_UP')], "pyglet's XInput y axis is positive upwards")
 
     def test_loader_is_none_off_windows(self):
         if sys.platform != 'win32': self.assertIsNone(GP.load_xinput())
@@ -232,7 +264,7 @@ class Game(unittest.TestCase):
         self.assertEqual(got, [K.ESCAPE, PI.SYMBOL['PAD_A']], 'Start reaches the Esc menu as Esc; the other inputs keep their code (the menu finds their action)')
 
     def test_key_cells_ignore_gamepad_inputs(self):
-        from dq4_pc.menus import pause as PA
+        from dq456_pc.menus import pause as PA
         r = RG.Settings(None); p = types.SimpleNamespace(J=types.SimpleNamespace(reg=r), capture=('A', 0, False))
         PA.Pause._capture(p, PI.SYMBOL['PAD_B']); self.assertEqual((p.capture, r['keys']['A']), (('A', 0, False), ['SPACE', None]))
 
@@ -327,8 +359,8 @@ class StickMouse(unittest.TestCase):
 
     def test_the_mouse_stick_gives_no_input(self):
         pad = FakePad(rightx=1.0, leftx=1.0)
-        self.assertEqual(GP.strengths(pad, None, 'right')['PAD_RS_RIGHT'], 0.0); self.assertEqual(GP.strengths(pad, None, 'right')['PAD_RIGHT'], 1.0)
-        self.assertEqual(GP.strengths(pad, None, 'left')['PAD_RIGHT'], 0.0); self.assertEqual(GP.strengths(pad, None, 'off')['PAD_RS_RIGHT'], 1.0)
+        self.assertEqual(GP.strengths(pad, None, 'right')['PAD_RS_RIGHT'], 0.0); self.assertEqual(GP.strengths(pad, None, 'right')['PAD_LS_RIGHT'], 1.0)
+        self.assertEqual(GP.strengths(pad, None, 'left')['PAD_LS_RIGHT'], 0.0); self.assertEqual(GP.strengths(pad, None, 'off')['PAD_RS_RIGHT'], 1.0)
         pad.dpadx = 1.0; self.assertEqual(GP.strengths(pad, None, 'left')['PAD_RIGHT'], 1.0, 'the d-pad still moves')
 
     def test_touch_pad_click(self):
@@ -361,7 +393,7 @@ class CommandsColumn(unittest.TestCase):
     def test_capture_binds_a_gamepad_input_in_a_button_cell(self):
         J, p = TP.menu('controls'); p.capture = ('up', 0, True)
         p._capture(K.SPACE); self.assertEqual(p.capture, ('up', 0, True), 'a keyboard key does not fit a gamepad cell')
-        p._capture(PI.SYMBOL['PAD_B']); self.assertIsNone(p.capture); self.assertEqual((J.reg['gamepad']['up'], J.reg['gamepad']['B']), ('PAD_B', None), 'taken from "Annuler / Retour"')
+        p._capture(PI.SYMBOL['PAD_B']); self.assertIsNone(p.capture); self.assertEqual((J.reg['gamepad']['up'], J.reg['gamepad']['B']), (['PAD_B', 'PAD_UP'], None), 'taken from "Annuler / Retour" (in "Button 1": the stick\'s cell; the d-pad stays in "Button 2")')
         self.assertEqual(J.reg['keys']['up'][0], 'W', 'the keys are untouched')
         self.assertEqual(p.message[4][1], 'settings.cancel_back')          # (the message names the action that lost the input)
 

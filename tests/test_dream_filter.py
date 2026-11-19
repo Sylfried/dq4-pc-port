@@ -9,8 +9,8 @@ dream at mqout / mqtf3) load the 3D model c2000 (packet 31), which the port coul
 import os, shutil, sys, tempfile, unittest
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 import numpy as np
-from dq4_pc.world import fbx as FX
-from dq4_pc.world import data as DO
+from dq456_pc.world import fbx as FX
+from dq456_pc.world import data as DO
 
 APK = os.environ.get('DQ_APK', '')
 PACK = os.path.join(APK, 'split_UnityDataAssetPack.apk')
@@ -31,8 +31,8 @@ class Window(unittest.TestCase):
     def test_not_stretched(self):
         """one interface unit as wide as high; the effect's area (the transparent middle of the test picture: 192 / 512 of the plane each way, 337.5 x 375 units) takes the whole height of
         a 16:9 window (the rest, left and right, is the picture's white edge then the fill) and the whole width of a portrait window."""
-        from dq4_pc.window.helpers import screen_column
-        from dq4_pc.window.field import overlay_rects
+        from dq456_pc.window.helpers import screen_column
+        from dq456_pc.window.field import overlay_rects
         m = FX.ScreenOverlay(overlay()); self.assertEqual(m.plane((45.0, 1.0, 50.0)), (450.0, 500.0)); self.assertEqual(m.plane(), (900.0, 1000.0))
         np.testing.assert_allclose(m.area_uv, (0.3125, 0.3125, 0.6875, 0.6875))
         size, pos = m.area(); np.testing.assert_allclose(size, (337.5, 375.0)); np.testing.assert_allclose(pos, (0.0, 0.0, 0.0))
@@ -51,7 +51,7 @@ class Window(unittest.TestCase):
     def test_feathered_margin(self):
         """around the effect's area, a margin a quarter of its smaller side wide in which the alpha rises from the edge's own to opaque, never back down: no straight line where the scene
         stopped; farther out the edge is blurred, so an irregular edge does not leave streaks."""
-        from dq4_pc.window.field import feathered
+        from dq456_pc.window.field import feathered
         m = FX.ScreenOverlay(overlay()); a = m.tex.copy(); a[160:352, 160, 3] = np.linspace(100, 250, 192).astype(np.uint8)          # (a left edge that lets the scene through, more or less)
         out, uv = feathered(a, m.area_uv); k = 48                                                                                   # (192 texels: a margin of 48)
         self.assertEqual(out.shape[:2], (192 + 2 * k, 192 + 2 * k)); np.testing.assert_allclose(uv, (0.3125 - k / 512, 0.3125 - k / 512, 0.6875 + k / 512, 0.6875 + k / 512))

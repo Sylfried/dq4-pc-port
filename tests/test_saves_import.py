@@ -5,12 +5,12 @@ import os, shutil, struct, sys, tempfile, unittest, zipfile
 from unittest import mock
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from dq4_pc import language as LG
+from dq456_pc import language as LG
 LG.select_language('fr')          # (the expectations of this test are in French, whatever the language of the computer)
-from dq4_pc import paths as CH
-from dq4_pc.persistence import write_dir as EC
-from dq4_pc.persistence import logfile_format as FJ
-from dq4_pc.persistence import saves as S
+from dq456_pc import paths as CH
+from dq456_pc.persistence import write_dir as EC
+from dq456_pc.persistence import logfile_format as FJ
+from dq456_pc.persistence import saves as S
 SAVES = os.environ.get('DQ_SAVES', '')
 
 
@@ -110,7 +110,7 @@ class AtomicWrite(unittest.TestCase):
             self.assertIsNone(EC.atomic_write(p, b'de')); self.assertEqual(read(p), b'de'); self.assertEqual(os.listdir(os.path.dirname(p)), ['f.dat'])
 
     def test_engine_uses_same_function(self):
-        try: from dq4_pc.core import engine as ENGINE
+        try: from dq456_pc.core import engine as ENGINE
         except ImportError: self.skipTest('unicorn absent')
         self.assertIs(ENGINE.GameCore.atomic_write, EC.atomic_write)
 

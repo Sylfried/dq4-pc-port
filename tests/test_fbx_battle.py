@@ -14,12 +14,12 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..'))
-import _paths          # (test helper: finding the source code in the subfolders of dq4_pc)
+import _paths          # (test helper: finding the source code in the subfolders of dq456_pc)
 import pyglet
 pyglet.options['shadow_window'] = False
-from dq4_pc.world import fbx as FX
-from dq4_pc.window import field as FI
-from dq4_pc.window import game as GA
+from dq456_pc.world import fbx as FX
+from dq456_pc.window import field as FI
+from dq456_pc.window import game as GA
 
 APK = os.environ.get('DQ_APK', '')
 PACK = os.path.join(APK, 'split_UnityDataAssetPack.apk')
@@ -43,7 +43,7 @@ class Materials(unittest.TestCase):
         return FX.FbxModel(d)
 
     def test_targets(self):
-        from dq4_pc.world.data import material_target as T
+        from dq456_pc.world.data import material_target as T
         self.assertEqual(T(137, 'material._Color.a'), (-1, 'col', 3)); self.assertEqual(T(23, 'material._Color.r'), (-1, 'col', 0))
         self.assertEqual(T(21, '_Color.g'), (0, 'col', 1)); self.assertEqual(T(21, '[2]._Color.b'), (2, 'col', 2))
         self.assertEqual(T(21, '_MainTex.offset.y'), (0, 'st', 3)); self.assertEqual(T(21, '[1]._MainTex.scale.x'), (1, 'st', 0))
@@ -88,7 +88,7 @@ class AnimationEnd(unittest.TestCase):
     CLIPS = {'Take 001': {'dur': 1.0, 'wrap': 1}, 'Take 002': {'dur': 1.0, 'wrap': FX.LOOP}}
 
     def engine(self, clips, anim, frames):
-        from dq4_pc.core import engine as EN
+        from dq456_pc.core import engine as EN
         buf = bytearray(b'\xff\xff\xff\xff' + bytes(60)); head = bytearray(16)
         core = types.SimpleNamespace(inp=0, mem=lambda a, n: bytes(head[a - 0x1000:a - 0x1000 + n]) if a >= 0x1000 else bytes(buf[a:a + n]), mem_w=lambda a, b: buf.__setitem__(slice(a, a + len(b)), b))
         head[:8] = (0).to_bytes(8, 'little')                                               # [L + MESSAGE_BUFFER] = pointeur vers buf (0)
@@ -100,8 +100,8 @@ class AnimationEnd(unittest.TestCase):
 
     def test_no_message_while_the_clip_plays_then_one_at_its_end(self):
         e, buf = self.engine(self.CLIPS, [(100, 0, False)], 100 + 29)                      # 29 / 30 s: playback goes on
-        e._finish_fbx_anims(); self.assertEqual(e.fbx_playing, [2]); self.assertEqual(self.messages(buf)[0], -1)
-        e.frames = 130; e._finish_fbx_anims()                                              # 1 s : fini
+        e._send_messages(e._finish_fbx_anims() or b''); self.assertEqual(e.fbx_playing, [2]); self.assertEqual(self.messages(buf)[0], -1)          # (Engine.step: the frame's messages are written together)
+        e.frames = 130; e._send_messages(e._finish_fbx_anims() or b'')                     # 1 s: finished
         self.assertEqual(e.fbx_playing, []); self.assertEqual(self.messages(buf), [1, 0x1002, -1, 0]); self.assertTrue(e._messages_sent)
 
     def test_loop_never_ends_and_unknown_model_waits(self):
@@ -117,7 +117,7 @@ class AnimationEnd(unittest.TestCase):
 class LoadedTurned(unittest.TestCase):
     """NativeManager.cmd_fbx_load ends with FbxObject.SetRotation(0, 180, 0) (0xD13610); a packet 32 with bit 14 replaces it (the title dragon), the battle spells keep it."""
     def test_packet_31_turns_the_model(self):
-        from dq4_pc.core import engine as ENGINE
+        from dq456_pc.core import engine as ENGINE
         e = ENGINE.State(); e.apply([(31, [0, 13], [])], lambda: 'btl_pl_d')
         self.assertEqual(e.fbx[0]['rot'], (0.0, 180.0, 0.0))
         e.apply([(32, [0x2900], [1.5, 1.5, 1.5, 0.0, 3.5, -29.9])], lambda: 'btl_pl_d')            # scale + position, no rotation: the half turn stays
@@ -215,7 +215,7 @@ class BattleBranch(unittest.TestCase):
 class RealModels(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        from dq4_pc.world import data as DO
+        from dq456_pc.world import data as DO
         cls.cache = tempfile.mkdtemp(prefix='cache_test_fbx_combat_')
         cls.d = DO.Data(PACK, cls.cache, log=lambda *a: None)
 
@@ -237,7 +237,7 @@ class RealModels(unittest.TestCase):
 
     def test_all_combat_models_decode(self):
         """all the fbx that the engine effects request in battle (Glace c10 to c12, Mégaflamme c3, Gigaglace c13 to c15, Tornade c16, Gigalame c20, Explosion magique c42, c609...) decode, as Effect0, with no vertex outside the bones."""
-        from dq4_pc.world import data as DO
+        from dq456_pc.world import data as DO
         for no in DO.FBX_COMBAT:
             m = FX.FbxModel(self.d.fbx_model(no)); self.assertTrue(m.effect, no)
             self.assertTrue(len(m.groups) >= 1 and sum(len(t) for _, t in m.groups) == len(m.tri_indices) > 0, no)
@@ -294,7 +294,7 @@ class RealModels(unittest.TestCase):
         self.assertEqual(len(m609.tri_indices), 2)
 
     def test_combat_models_prepared_in_the_background(self):
-        from dq4_pc.world import data as DO
+        from dq456_pc.world import data as DO
         files = {f for _, _, f in self.d._elements({'maps': [], 'sheets': [], 'monsters': [], 'plans': [], 'effects': []})}
         for no in DO.FBX_COMBAT + (1018,): self.assertIn(DO.FBX_PREFIX + 'c%04d.pkl' % no, files, no)
 

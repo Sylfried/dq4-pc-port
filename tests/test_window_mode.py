@@ -8,9 +8,9 @@ import json, os, sys, tempfile, types, unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..'))
-from dq4_pc import language as _LANGUAGE; _LANGUAGE.select_language('fr')          # (these tests expect the French texts, whatever the computer's language)
-import _paths          # (test helper: finding the source code in the subfolders of dq4_pc)
-from dq4_pc.persistence import settings as RG
+from dq456_pc import language as _LANGUAGE; _LANGUAGE.select_language('fr')          # (these tests expect the French texts, whatever the computer's language)
+import _paths          # (test helper: finding the source code in the subfolders of dq456_pc)
+from dq456_pc.persistence import settings as RG
 
 
 def load(content):
@@ -74,14 +74,14 @@ class Shortcuts(unittest.TestCase):
     """F11 and Alt + Enter (real code of Game.on_key_press / on_key_release / _edges on a fake Game, no window): toggle, Enter swallowed, party chat (Alt) when Alt alone is released."""
     @classmethod
     def setUpClass(cls):
-        try: from dq4_pc.window import game as window; import pyglet; cls.WND = window; cls.K = pyglet.window.key; cls.pyglet = pyglet
+        try: from dq456_pc.window import game as window; import pyglet; cls.WND = window; cls.K = pyglet.window.key; cls.pyglet = pyglet
         except Exception as ex: raise unittest.SkipTest('window.py non importable ici (%r)' % (ex,))
 
     def fake_game(self):
         WND = self.WND
         j = types.SimpleNamespace(swallowed=set(), alt_cand=False, alt_tap=False, reg=RG.Settings(None), key_list=self.K.KeyStateHandler(), prev_action={}, n=0, _ready=True, combo=[False, False], _logo_touched=False, pause_presses=0, name_presses=0,
                                   pause=None, _toggling=False, post=object(), port_screen=None, license_panel=None, last_device='', bascules=0, cancellations=0, is_fullscreen=False,
-                                  mouse=(0, 0), mouse_guard=__import__('dq4_pc.window.inputs', fromlist=['MouseGuard']).MouseGuard())          # (mouse / mouse_guard: Game.on_key_press remembers the pointer position at each key)
+                                  mouse=(0, 0), mouse_guard=__import__('dq456_pc.window.inputs', fromlist=['MouseGuard']).MouseGuard())          # (mouse / mouse_guard: Game.on_key_press remembers the pointer position at each key)
         j.pause = types.SimpleNamespace(opened=False, capture=None, key_press=lambda sym, mods: setattr(j, 'pause_presses', j.pause_presses + 1))
         j.name_entry = types.SimpleNamespace(key_press=lambda sym, mods: setattr(j, 'name_presses', j.name_presses + 1))
         j.toggle_full_screen = lambda: setattr(j, 'bascules', j.bascules + 1)
@@ -233,7 +233,7 @@ class Toggle(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         try:
-            from dq4_pc.window import game as window; cls.WND = window
+            from dq456_pc.window import game as window; cls.WND = window
         except Exception as ex: raise unittest.SkipTest('window.py non importable ici (%r)' % (ex,))
 
     def failures(self):
@@ -260,7 +260,7 @@ class Toggle(unittest.TestCase):
 
     def test_window_manager_animations_off_before_the_hide(self):
         """(Windows, cannot be verified here): the DWM fade-out / fade-in are turned off BEFORE the window is hidden, otherwise they play around the switch."""
-        from dq4_pc.window import full_screen as FS
+        from dq456_pc.window import full_screen as FS
         old = FS.pause_transitions_dwm
         try:
             for target in (True, False):
@@ -272,7 +272,7 @@ class Toggle(unittest.TestCase):
 
     def test_pause_transitions_dwm_turns_them_off_then_back_on(self):
         import ctypes
-        from dq4_pc.window import helpers as H
+        from dq456_pc.window import helpers as H
         calls = []
         class Dwm:
             def DwmSetWindowAttribute(self, h, attr, ref, size_value): calls.append(ref._obj.value); return 0
@@ -408,7 +408,7 @@ class DisplayPage(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        try: from dq4_pc.menus import pause
+        try: from dq456_pc.menus import pause
         except Exception as ex: raise unittest.SkipTest('pause.py non importable ici (%r)' % (ex,))
         cls.PA = pause
 
@@ -455,7 +455,7 @@ class RemovedCode(unittest.TestCase):
     """Exclusive full screen, the sprite edge correction option and the texture smoothing option are nowhere in the code (only their debug switches remain: environment variables)."""
     @classmethod
     def setUpClass(cls):
-        try: from dq4_pc.window import game as window; cls.WND = window
+        try: from dq456_pc.window import game as window; cls.WND = window
         except Exception as ex: raise unittest.SkipTest('window.py non importable ici (%r)' % (ex,))
 
     def test_window(self):

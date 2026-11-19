@@ -18,7 +18,7 @@ import math, os, shutil, sys, tempfile, unittest
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import _saves as SV
-from dq4_pc.core import engine as ENGINE
+from dq456_pc.core import engine as ENGINE
 
 
 def spacing(a, b): return (a - b + 180.0) % 360.0 - 180.0

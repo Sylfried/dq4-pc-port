@@ -9,7 +9,7 @@ On the world map, world time (`status::g_Stage + 0xcc`, cycle of 0xd40) advances
 import os, sys, struct, shutil, unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from dq4_pc.core import encounters as RE
+from dq456_pc.core import encounters as RE
 
 
 class TestFormulas(unittest.TestCase):          # (`Passer` is still used for the play time, see test_play_time)
@@ -33,7 +33,7 @@ class TestFormulas(unittest.TestCase):          # (`Passer` is still used for th
 class TestRealEngine(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        from dq4_pc.core import engine as ENGINE
+        from dq456_pc.core import engine as ENGINE
         cls.ENGINE = ENGINE
         cls.wdir = '/tmp/sv_test_horloge_jour'; shutil.rmtree(cls.wdir, ignore_errors=True); os.makedirs(cls.wdir)
 

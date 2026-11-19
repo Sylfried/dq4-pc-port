@@ -9,9 +9,9 @@ files give the text back exactly (no text in the file), text requested again fro
 import json, os, shutil, sys, tempfile, types, unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from dq4_pc import language as LG
+from dq456_pc import language as LG
 LG.select_language('fr')
-from dq4_pc.core import history as HI
+from dq456_pc.core import history as HI
 
 
 ADVENTURE = '0123456789ab'          # (one history per adventure; the history of an adventure is what kept)
@@ -51,7 +51,7 @@ class TestRecent(unittest.TestCase):
         h2 = self.new()
         self.assertEqual([(e.name_str, e.text, e.fav) for e in h2.dialogues], [('Alena', 'Premier.', 1), (None, 'Second.', None)])
         self.assertEqual([(e.t, e.gold, e.fav) for e in h2.battles], [(900, 3, 2)])
-        self.assertFalse(h2.toggle_favorite(h2.dialogues[0])); h2.apply_removals(); self.assertEqual([f.type for f in h2.favorites], ['c'])      # the star read back is the real favorite: removing it works
+        self.assertFalse(h2.toggle_favorite(h2.dialogues[0])); self.assertEqual([f.type for f in h2.favorites], ['c'])      # the star read back is the real favorite: removing it works
 
     def test_hundred_per_category_favorite_kept(self):
         h = self.new(); first = h.add('Garde-moi.', None, 1); h.toggle_favorite(first)

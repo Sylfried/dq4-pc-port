@@ -5,37 +5,37 @@
   - name entry, license (title; the game's original text and the "Privacy Policy" do not change), names of the interface editor's items, sample dialogue texts, F1 info, notifications,
     location of the savestates, console messages of these modules;
   - in English: no French word remains (apart from the whitelist, short and justified); in French: exactly the previous texts;
-  - the catalog (dq4_pc/texts/<language>/menus.py) has no orphan key, and every key marked in these modules has its French and its English text.
+  - the catalog (dq456_pc/texts/<language>/menus.py) has no orphan key, and every key marked in these modules has its French and its English text.
 The catalog's general rules (same placeholders, same edges, no French in the English, no duplicates, every `tr('...')` / `N_('...')` in the code has its translation) are in tests/test_language.py.
 
     python3 tests/test_menu_language.py"""
-import ast, contextlib, io, os, shutil, sys, tempfile, types, unittest, zipfile
+import ast, contextlib, importlib, io, os, shutil, sys, tempfile, types, unittest, zipfile
 from unittest import mock
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.join(HERE, '..')
 sys.path.insert(0, ROOT)
 sys.path.insert(0, HERE)
-import _paths          # (test helper: finding the source code in the subfolders of dq4_pc)
+import _paths          # (test helper: finding the source code in the subfolders of dq456_pc)
 import pyglet
 pyglet.options['shadow_window'] = False                     # (no display needed: nothing is drawn)
-from dq4_pc import paths as CH
-from dq4_pc import language as LG
-from dq4_pc.battle import battle_history as HC
-from dq4_pc.window import menu_display as AM
-from dq4_pc.window import snapshots as IN
-from dq4_pc.window import title_screen as TI
-from dq4_pc.menus import pre_game as AP
-from dq4_pc.menus import saves_screen as ES
-from dq4_pc.menus import hud_mobile as HM
-from dq4_pc.menus import pause as PA
-from dq4_pc.menus import name_entry as SN
-from dq4_pc.menus import ui_history as UH
-from dq4_pc.menus import ui_menu as UM
-from dq4_pc.core import history as HI
-from dq4_pc.persistence import logfile_format as FJ
-from dq4_pc.persistence import settings as RG
-from dq4_pc.persistence import saves as S
+from dq456_pc import paths as CH
+from dq456_pc import language as LG
+from dq456_pc.battle import battle_history as HC
+from dq456_pc.window import menu_display as AM
+from dq456_pc.window import snapshots as IN
+from dq456_pc.window import title_screen as TI
+from dq456_pc.menus import pre_game as AP
+from dq456_pc.menus import saves_screen as ES
+from dq456_pc.menus import hud_mobile as HM
+from dq456_pc.menus import pause as PA
+from dq456_pc.menus import name_entry as SN
+from dq456_pc.menus import ui_history as UH
+from dq456_pc.menus import ui_menu as UM
+from dq456_pc.core import history as HI
+from dq456_pc.persistence import logfile_format as FJ
+from dq456_pc.persistence import settings as RG
+from dq456_pc.persistence import saves as S
 from test_language import french, catalog_by_file, keys_in_text
 import test_saves_import as TIS
 import test_history_key as THC
@@ -89,8 +89,9 @@ def without_screen(*modules):
     with contextlib.ExitStack() as st:
         for m in modules:
             if hasattr(m, 'gl'): st.enter_context(mock.patch.object(m, 'gl', mock.MagicMock()))
-        for name_str in ('Rectangle', 'BorderedRectangle', 'Star', 'Line', 'Box', 'Triangle'): st.enter_context(mock.patch('pyglet.shapes.' + name_str, mock.MagicMock()))
-        for name_str in ('glDisable', 'glEnable', 'glBlendFunc'): st.enter_context(mock.patch('pyglet.gl.' + name_str, mock.MagicMock()))
+        shapes, gl = importlib.import_module('pyglet.shapes'), importlib.import_module('pyglet.gl')          # (the real modules: before its first import, `pyglet.shapes` is a lazy proxy that mock.patch cannot restore)
+        for name_str in ('Rectangle', 'BorderedRectangle', 'Star', 'Line', 'Box', 'Triangle'): st.enter_context(mock.patch.object(shapes, name_str, mock.MagicMock()))
+        for name_str in ('glDisable', 'glEnable', 'glBlendFunc'): st.enter_context(mock.patch.object(gl, name_str, mock.MagicMock()))
         yield
 
 
@@ -305,9 +306,9 @@ class History(Language):
     def test_window_border(self):
         h = test_history()
         att = {'fr': ('Historique', ('Dialogues', 'Combats'), 'Favoris seulement',
-                      ['Haut / Bas : message précédent / suivant', 'Molette : défiler', 'Touches de caméra : onglet', 'Entrée : favori ★', 'Suppr : supprimer', 'F : favoris seulement', 'H : suite', 'Échap : fermer']),
+                      ['Haut / Bas : message précédent / suivant', 'Molette : défiler', 'Touches de caméra : onglet', 'Entrée : favori ★', 'Suppr : supprimer', 'F : favoris seulement', 'Échap : fermer']),
                'en': ('History', ('Dialogue', 'Battles'), 'Favorites only',
-                      ['Up / Down: previous / next message', 'Mouse wheel: scroll', 'Camera keys: tab', 'Enter: favorite ★', 'Delete: delete', 'F: favorites only', 'H: next', 'Esc: close'])}
+                      ['Up / Down: previous / next message', 'Mouse wheel: scroll', 'Camera keys: tab', 'Enter: favorite ★', 'Delete: delete', 'F: favorites only', 'Esc: close'])}
         for language in ('fr', 'en'):
             LG.select_language(language); title_screen, tabs, sieve, helptext = att[language]
             for with_font in (True, False):                                                                  # (the game's bitmap font, or fallback to the system font)
@@ -317,11 +318,10 @@ class History(Language):
         self.assert_no_french([t for t in rec if t not in ('Alena',)])
 
     def test_helptext_without_history_key(self):
-        """When the history key is removed, the "H : suite" line disappears (as before)."""
+        """No more History key: no "H : suite" line in the help, even with a key in an old settings file."""
         h = test_history()
         for language, line in (('fr', 'H : suite'), ('en', 'H: next')):
-            LG.select_language(language); v = self.make_view(h); self.assertIn(line, ' | '.join(self.draw_all(v)))
-            v = self.make_view(h); v.J.reg['keys']['history'] = [None, None]; self.assertNotIn(line, ' | '.join(self.draw_all(v)))
+            LG.select_language(language); v = self.make_view(h); v.J.reg['keys']['history'] = ['H', None]; self.assertNotIn(line, ' | '.join(self.draw_all(v)))
 
     def test_empty_entries_texts(self):
         h = HI.History(None, lambda: 1000.0)
@@ -430,10 +430,12 @@ class Other(Language):
         for language in ('fr', 'en'):
             LG.select_language(language); self.assertEqual(AP.License(None).text.replace('\n', ' ').count('This is an unofficial'), 1)
         self.assertFalse(french(AP.PROJECT_LICENSE))
+        txt = AP.License(None).text
+        self.assertIn('Dragon Quest IV PC port', txt); self.assertIn('engine (libdq4core.so)', txt); self.assertNotIn('{', txt)          # (the running game's name and engine: games.py)
 
     def test_interface_editor_element_names(self):
-        att = {'fr': {'map': 'Carte', 'menu': 'Commandes', 'chat': 'Discussion', HM.BATTLE: 'Vitesse de combat', HM.DPAD: 'Croix', HM.BAR: 'Barre de rotation'},
-               'en': {'map': 'Map', 'menu': 'Controls', 'chat': 'Talk', HM.BATTLE: 'Battle speed', HM.DPAD: 'D-pad', HM.BAR: 'Camera rotation bar'}}
+        att = {'fr': {'map': 'Carte', 'menu': 'Commandes', 'chat': 'Discussion', HM.EXTRA: 'Action du véhicule', HM.BATTLE: 'Vitesse de combat', HM.DPAD: 'Croix', HM.BAR: 'Barre de rotation'},
+               'en': {'map': 'Map', 'menu': 'Controls', 'chat': 'Talk', HM.EXTRA: 'Vehicle action', HM.BATTLE: 'Battle speed', HM.DPAD: 'D-pad', HM.BAR: 'Camera rotation bar'}}
         for language in ('fr', 'en'):
             LG.select_language(language); self.assertEqual({k: LG.tr(v) for k, v in HM.CAPTION.items()}, att[language], language)
             J = FakeGame(reg=RG.Settings(None), engine=types.SimpleNamespace(dpad_size=lambda: 1)); b = HM.Buttons(J)
@@ -466,8 +468,8 @@ class Other(Language):
 
     def test_f1_panel_lines(self):
         """The first two lines of the F1 panel (location, window, display settings, sound): English without French, French exactly as before."""
-        from dq4_pc.window import game as GA
-        from dq4_pc.core import engine as ENGINE
+        from dq456_pc.window import game as GA
+        from dq456_pc.core import engine as ENGINE
         def panel(language, part, game_map, field, fullscreen, mode, smoothing, msaa, sound_ok, sound_active):
             LG.select_language(language)
             lbl = lambda: types.SimpleNamespace(text='')
@@ -492,13 +494,13 @@ class Other(Language):
         self.assert_no_french([t for pair in en for t in pair], whitelist=())
 
     def test_notifications(self):
-        """Canceling a load (nothing to cancel, then canceled) and importing saves: the three messages the tool writes itself."""
-        for language, att in (('fr', ['Aucun chargement à annuler', 'Chargement annulé', 'Sauvegardes importées']), ('en', ['No load to undo', 'Load undone', 'Saves imported'])):
+        """Canceling a load (nothing to cancel: no message; then canceled) and importing saves: the messages the tool writes itself."""
+        for language, att in (('fr', ['Chargement annulé', 'Sauvegardes importées']), ('en', ['Load undone', 'Saves imported'])):
             LG.select_language(language); msgs = []
             def toast(text, duration=1.8):
                 j = types.SimpleNamespace(toasts=[]); AM.MenusMixin.toast(j, text, duration); msgs.append(j.toasts[0][0])
             j = types.SimpleNamespace(toast=toast, undo_state=None)
-            self.assertFalse(IN.SnapshotsMixin.cancel_loading(j))                                         # nothing to cancel
+            self.assertFalse(IN.SnapshotsMixin.cancel_loading(j))                                         # nothing to cancel (silent)
             j.undo_state = {'a': 1}; j._complete_savestate = lambda: {'b': 2}; j._apply_savestate = lambda d: None; self.assertTrue(IN.SnapshotsMixin.cancel_loading(j))
             j.port_screen = types.SimpleNamespace(needs_reload=True); j._after_import = lambda: TI.TitleMixin._after_import(j); TI.TitleMixin._close_port_screen(j)
             self.assertEqual(msgs, att, language)
@@ -509,7 +511,7 @@ class Other(Language):
 
     def test_savestates_location(self):
         """The location written in a savestate file is a catalog key (translated by the page that displays it), whatever the language."""
-        from dq4_pc.core import engine as ENGINE
+        from dq456_pc.core import engine as ENGINE
         cases = [(ENGINE.PART_CASINO, 'ev04', 'settings.casino_poker'), (ENGINE.PART_CASINO, 'ev05', 'settings.casino_slot_machine'), (ENGINE.PART_CASINO, 'ev99', 'settings.casino'), (ENGINE.PART_BESTIARY, 'x', 'settings.bestiary'),
                  (ENGINE.PART_FIELD, 'x', 'settings.world_map'), (ENGINE.PART_BATTLE, 'x', 'settings.battle'), (ENGINE.PART_TOWN, 'dnb1b2', 'dnb1b2')]
         for language in ('fr', 'en'):
@@ -526,7 +528,7 @@ class Other(Language):
 
     def test_module_console_messages(self):
         """The console messages of the screens and resources (called for real with a missing or broken game): English without French, French as before."""
-        from dq4_pc.menus import message_font as MF
+        from dq456_pc.menus import message_font as MF
         t = tempfile.mkdtemp(prefix='lm_cons_'); self.addCleanup(shutil.rmtree, t, True)
         def outage(*a, **kw): raise OSError('disque')
         for language in ('fr', 'en'):
@@ -551,10 +553,10 @@ SOURCES = ('menus/saves_screen.py', 'menus/language_screen.py', 'menus/ui_histor
 
 
 def marked_texts(files):
-    """{text: [file:line]} of the texts passed to tr(...) / N_(...) in these dq4_pc files."""
+    """{text: [file:line]} of the texts passed to tr(...) / N_(...) in these dq456_pc files."""
     out = {}
     for f in files:
-        with open(os.path.join(ROOT, 'dq4_pc', f), encoding='utf-8') as fh: tree = ast.parse(fh.read())
+        with open(os.path.join(ROOT, 'dq456_pc', f), encoding='utf-8') as fh: tree = ast.parse(fh.read())
         for n in ast.walk(tree):
             if isinstance(n, ast.Call) and getattr(n.func, 'id', None) in ('tr', 'N_') and n.args and isinstance(n.args[0], ast.Constant) and isinstance(n.args[0].value, str): out.setdefault(n.args[0].value, []).append('%s:%d' % (f, n.lineno))
     return out
@@ -573,7 +575,7 @@ class Catalog(Language):
     def test_each_entry_is_used(self):
         """No orphan entry: every key of the `menus` catalog appears in the code."""
         used = set()
-        for d, _, fs in os.walk(os.path.join(ROOT, 'dq4_pc')):
+        for d, _, fs in os.walk(os.path.join(ROOT, 'dq456_pc')):
             if os.sep + 'texts' in d: continue
             for f in fs:
                 if not f.endswith('.py'): continue

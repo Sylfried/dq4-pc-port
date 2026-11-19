@@ -19,8 +19,8 @@ def probe(out):
     import pyglet
     pyglet.options['shadow_window'] = False
     if sys.platform.startswith('linux') and not os.environ.get('DISPLAY'): pyglet.options['headless'] = True
-    from dq4_pc.window import game as F
-    from dq4_pc import main
+    from dq456_pc.window import game as F
+    from dq456_pc import main
     sys.argv = ['window.py', '--apk', APK, '--saves-read', SAVES, '--saves-write', tempfile.mkdtemp(prefix='sv_params_'), '--settings', os.path.join(tempfile.mkdtemp(prefix='rg_params_'), 'r.json'),
                 '--slot', '4', '--cache', _paths.ui_cache('/tmp/uicache_params'), '--msaa', '0', '--width', '1280', '--height', '720', '--no-preparation', '--no-sound', '--no-logos',
                 '--test-keys', '%d:RETURN' % OPEN, '--shot', os.path.join(tempfile.gettempdir(), 'params.png'), '--images', str(CHECK + 5)]
@@ -38,7 +38,7 @@ def probe(out):
             if row is not None: eng.send_menu(8, 1, row, 16); self.menu_to_release = 8          # (as Enter or a click does: the release goes on the next step; the closing waits for it)
             res['before'] = visible(eng)
         if n == CHECK:
-            res.update(pause=self.pause.opened, page=self.pause.screen_page if self.pause.opened else None, active=eng.active_menu(), after=visible(eng))
+            res.update(pause=self.pause.opened, stack=list(self.pause.stack) if self.pause.opened else None, active=eng.active_menu(), after=visible(eng))
             with open(out, 'w') as f: json.dump(res, f)
         return loop(self, dt)
     F.Game._loop = loop2
@@ -60,7 +60,7 @@ class ParamsClosesMenu(unittest.TestCase):
         self.assertTrue(len(self.r['before']) >= 3, self.r)
 
     def test_params_open_game_menu_closed(self):
-        self.assertTrue(self.r['pause']); self.assertEqual(self.r['page'], 'root')
+        self.assertTrue(self.r['pause']); self.assertEqual(self.r['stack'], ['root', 'display'])          # (the menu's root, Display open on the right, as Esc opens it)
         self.assertIsNone(self.r['active'], self.r); self.assertEqual(self.r['after'], [], self.r)
 
 

@@ -7,7 +7,7 @@ more steps per real second: the hook of `Engine._game_time_hooks` lets through o
 import os, sys, struct, shutil, unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from dq4_pc.core import encounters as RE
+from dq456_pc.core import encounters as RE
 
 
 class TestFormula(unittest.TestCase):
@@ -27,7 +27,7 @@ class TestFormula(unittest.TestCase):
 class TestRealEngine(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        from dq4_pc.core import engine as ENGINE
+        from dq456_pc.core import engine as ENGINE
         cls.ENGINE = ENGINE
         cls.wdir = '/tmp/sv_test_temps_de_jeu'; shutil.rmtree(cls.wdir, ignore_errors=True); os.makedirs(cls.wdir)
         cls.m = ENGINE.Engine(os.environ['DQ_APK'], os.environ['DQ_SAVES'], cls.wdir); cls.m.load_save(4)

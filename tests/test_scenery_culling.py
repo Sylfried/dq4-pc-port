@@ -14,10 +14,10 @@ import inspect, os, sys, unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..'))
-import _paths          # (test helper: finding the source code in the subfolders of dq4_pc)
+import _paths          # (test helper: finding the source code in the subfolders of dq456_pc)
 import pyglet
 pyglet.options['shadow_window'] = False
-from dq4_pc.window import game as F
+from dq456_pc.window import game as F
 
 
 class FakeGL:
@@ -53,9 +53,11 @@ class TestCulling(unittest.TestCase):
 class TestUsage(unittest.TestCase):
     def test_group_by_group_except_title_sky(self):
         src = inspect.getsource(F.Game._paint_scenery)
-        self.assertIn('self._scenery_culling(key != sky_key)', src)                                                    # each scenery group; never the title sky
+        group = 'if (key != sky_key) is not culled: culled = key != sky_key; self._scenery_culling(culled)'             # each scenery group (sent to the graphics card when it changes); never the title sky
+        self.assertIn(group, src)
         self.assertIn("sky_key = self.flat_sky['key'] if self.flat_sky is not None else (self.zoom_sky['key'] if self.zoom_sky is not None else None)", src)
-        i, j = src.index('self._scenery_culling(key != sky_key)'), src.index('self._scenery_culling(False)')
+        self.assertIn('self._scenery_culling(False); culled = False', src)                                             # (the mirrored copies switch it off: the next group sets it again)
+        i, j = src.index(group), src.rindex('self._scenery_culling(False)')
         self.assertLess(i, j)                                                                                         # culling off after the groups: the sky strips / copies and what follows keep their own setting
         self.assertLess(j, src.index('for tex, vl, key, start_idx, n, dx in self.ext_map'))
 

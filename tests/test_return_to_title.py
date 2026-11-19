@@ -16,9 +16,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..'))
 import pyglet
 pyglet.options['shadow_window'] = False                     # (no display needed: nothing is drawn)
-from dq4_pc.persistence import settings as RG
-from dq4_pc.menus import pause as PA
-from dq4_pc.core import engine as ENGINE
+from dq456_pc.persistence import settings as RG
+from dq456_pc.menus import pause as PA
+from dq456_pc.core import engine as ENGINE
 
 K = pyglet.window.key
 APK = os.environ.get('DQ_APK'); SAVES = os.environ.get('DQ_SAVES'); REST = sys.argv[1:]
@@ -42,6 +42,8 @@ class FakeGame:
     def window_names(self): return {}
     def pause_game(self, yes): self.calls.append(('pause_jeu', yes))
     def back_to_title(self): self.calls.append('titre')
+    def ask_quit(self): self.calls.append('quitter')
+    def quit_game(self): self.calls.append('quit')
     def back_to_title_possible(self): return self.possible
 
 
@@ -86,8 +88,17 @@ class MenuLine(unittest.TestCase):
     def test_active_when_possible(self):
         J, p = menu(possible=True); self.assertFalse(p._inactive(line(p)))
 
+    def test_quit_through_the_game_box(self):
+        """"Quit the game": where the game's box answers, the menu closes and the window asks the game's question (ask_quit: b0834000.mpt#96); elsewhere, the menu's Yes / No page."""
+        J, p = menu(possible=True); e = next(x for x in p._entries() if x['l'] == 'settings.quit_game'); e['ok']()
+        self.assertFalse(p.opened); self.assertEqual([a for a in J.calls if a in ('quitter', 'quit')], ['quitter'])
+        J, p = menu(possible=False); e = next(x for x in p._entries() if x['l'] == 'settings.quit_game'); e['ok']()
+        self.assertTrue(p.opened); self.assertEqual(p.screen_page, 'quit'); self.assertNotIn('quitter', J.calls)
+        from dq456_pc.window import game as F
+        self.assertIn('quit_app=True', inspect.getsource(F.Game.ask_quit)); self.assertIn('quit_requested', inspect.getsource(F.Game._step))
+
     def test_game_knows_when_possible(self):
-        from dq4_pc.window import game as F
+        from dq456_pc.window import game as F
         src = inspect.getsource(F.Game.back_to_title_possible)
         self.assertIn('PART_TOWN', src); self.assertIn('PART_FIELD', src); self.assertIn('TITLE_MAP', src); self.assertNotIn('PART_BATTLE', src)
         self.assertIn('request_return_to_title', inspect.getsource(F.Game.back_to_title))
@@ -108,7 +119,7 @@ class FakeCountdownCore:
 
 def simulated_engine(part=ENGINE.PART_TOWN):
     m = ENGINE.Engine.__new__(ENGINE.Engine); m.core = FakeCountdownCore(); m.E = lambda s: s; m._global = lambda: 0x7000
-    m.state = types.SimpleNamespace(part=part); m.back_to_title_state = None
+    m.state = types.SimpleNamespace(part=part, game_map='mak1f1'); m.back_to_title_state = None
     return m
 
 
@@ -117,7 +128,24 @@ def answer(m, v): m.core.memory[0x5000 + ENGINE.MESSAGE_RESULT] = struct.pack('<
 
 class ReturnMachine(unittest.TestCase):
     def test_original_menu_constants(self):
-        self.assertEqual(ENGINE.MSG_RETURN_TITLE, 0xcba2f); self.assertEqual(ENGINE.MESSAGE_RESULT, 0x10)
+        self.assertEqual(ENGINE.RETURN_TITLE_MESSAGES['dq4'], (0xcba2f, 0xcba33)); self.assertEqual(ENGINE.MESSAGE_RESULT, 0x10)
+        self.assertEqual((ENGINE.MSG_RETURN_TITLE, ENGINE.MSG_QUIT_APP), ENGINE.RETURN_TITLE_MESSAGES[ENGINE.GM.profile().key])
+
+    def test_each_game_asks_with_its_own_message(self):
+        """DQ V showed "ERROR 834095@" in the box: the question's number is DQ IV's; each game's b0834000.mpt has its own (the file's last message is the "quit the application" question)."""
+        self.assertEqual({k: tuple(n - 834003 for n in v) for k, v in ENGINE.RETURN_TITLE_MESSAGES.items()}, {'dq4': (92, 96), 'dq5': (75, 77), 'dq6': (48, 50)})
+
+    def test_box_of_dq6(self):
+        """DQ VI names its town message box gCommonMenuMessage (no gTownMenu_MESSAGE): the request crashed the step."""
+        m = simulated_engine(); m.core.export = lambda n: {'_ZN4menu18gCommonMenuMessageE': 0x6000}.get(n)
+        self.assertEqual(m._title_box(), 0x6000)
+
+    def test_camera_of_the_start_menu_after_a_return(self):
+        """DQ V's title only gives the camera a target: after a return to the title its start menu showed the scene from the last town's camera; the engine's starting position is put back."""
+        m = simulated_engine(); m.back_to_title_state = 'fading'; m._title_steps = 0; m.boot_cam_pos = (0.0, -100.0, 0.0)
+        m.state.cam_pos = (2.25, 28.9, -17.7); m._return_to_title_after(); self.assertEqual(m.state.cam_pos, (2.25, 28.9, -17.7))          # (still on the town's map)
+        m.state.game_map = ENGINE.TITLE_MAP; m._return_to_title_after()
+        self.assertIsNone(m.back_to_title_state); self.assertEqual(m.state.cam_pos, (0.0, -100.0, 0.0))
 
     def test_only_in_town_and_on_the_map(self):
         for part, expected in ((ENGINE.PART_TOWN, True), (ENGINE.PART_FIELD, True), (ENGINE.PART_BATTLE, False), (ENGINE.PART_CASINO, False), (ENGINE.PART_BESTIARY, False), (ENGINE.PART_INITIAL, False)):
@@ -132,7 +160,7 @@ class ReturnMachine(unittest.TestCase):
         self.assertEqual(m.core.names(), ['_ZN3cmn11GameManager12getSingletonEv', '_ZN3cmn13PlayerManager7setLockEb', '_ZN16TownMenu_MESSAGE18openMessageForMENUEv', '_ZN16TownMenu_MESSAGE10addMessageEi',
                                          '_ZN16TownMenu_MESSAGE8setYesNoEv', '_ZN16TownMenu_MESSAGE19setYesNoSuperCancelEb'])
         a = {x[0]: x[1] for x in m.core.calls if isinstance(x[0], str)}
-        self.assertEqual(a['_ZN3cmn13PlayerManager7setLockEb'], (1,)); self.assertEqual(a['_ZN16TownMenu_MESSAGE10addMessageEi'], (0x5000, 0xcba2f)); self.assertEqual(a['_ZN16TownMenu_MESSAGE19setYesNoSuperCancelEb'], (0x5000, 0))
+        self.assertEqual(a['_ZN3cmn13PlayerManager7setLockEb'], (1,)); self.assertEqual(a['_ZN16TownMenu_MESSAGE10addMessageEi'], (0x5000, ENGINE.MSG_RETURN_TITLE)); self.assertEqual(a['_ZN16TownMenu_MESSAGE19setYesNoSuperCancelEb'], (0x5000, 0))
         self.assertEqual(m.core.memory[0x5000 + ENGINE.MESSAGE_RESULT], bytes(4))
 
     def test_nothing_before_the_request(self):
@@ -150,10 +178,81 @@ class ReturnMachine(unittest.TestCase):
 
     def test_yes_erases_bank_4_then_launches_title(self):
         m = simulated_engine(); m.request_return_to_title(); m._return_to_title_before(); m.core.calls.clear(); answer(m, 1); m._return_to_title_after()
-        self.assertIsNone(m.back_to_title_state); n = m.core.names()
+        self.assertEqual(m.back_to_title_state, 'fading'); n = m.core.names()
         self.assertLess(n.index('_ZN7profile8SaveLoad8killbankEib'), n.index('_ZN6Global10startTitleEv')); self.assertEqual(n[-1], '_ZN6Global10startTitleEv')
         self.assertEqual([x[1] for x in m.core.calls if x[0] == '_ZN7profile8SaveLoad8killbankEib'], [(4, 0)])
         self.assertEqual([x[1] for x in m.core.calls if x[0] == '_ZN3cmn13PlayerManager7setLockEb'], [(1,)])
+
+    def test_the_return_lasts_until_the_title(self):
+        """"Yes": the return stays under way ('fading': no screen buttons, no second request, not yet "on the title") through the fade and the black screen, until the title's map; a safeguard ends it
+        TITLE_RETURN_STEPS steps later if the title never comes."""
+        m = simulated_engine(); m.request_return_to_title(); m._return_to_title_before(); answer(m, 1); m._return_to_title_after(); m.core.calls.clear()
+        for _ in range(40): m._return_to_title_after(); self.assertEqual(m.back_to_title_state, 'fading')
+        self.assertEqual(m.core.calls, []); self.assertFalse(m.request_return_to_title())
+        m.state.game_map = ENGINE.TITLE_MAP; m._return_to_title_after(); self.assertIsNone(m.back_to_title_state)
+        m = simulated_engine(); m.request_return_to_title(); m._return_to_title_before(); answer(m, 1); m._return_to_title_after()
+        for _ in range(ENGINE.TITLE_RETURN_STEPS): m._return_to_title_after()
+        self.assertEqual(m.back_to_title_state, 'fading'); m._return_to_title_after(); self.assertIsNone(m.back_to_title_state)
+
+    def test_no_screen_buttons_during_the_return(self):
+        """The screen buttons stay hidden from the game's box to the title: at the end of the fade the player was free again on the black screen for a step or two, and they flashed."""
+        from dq456_pc.menus import hud_mobile as HM
+        eng = types.SimpleNamespace(state=types.SimpleNamespace(effect=None, part=ENGINE.PART_TOWN), flags=lambda: 0x38, back_to_title_state=None)
+        b = HM.Buttons.__new__(HM.Buttons); b.J = types.SimpleNamespace(pause=types.SimpleNamespace(opened=False), engine=eng, reg={'buttons': True, 'dpad': True, 'rotation_bar': False, 'speed_button': True}, map_open=False)
+        self.assertIn(HM.DPAD, b.visible_ones()); self.assertTrue(b.allowed('menu'))
+        for st in ('requested', 'dialog', 'fading'): eng.back_to_title_state = st; self.assertEqual(b.visible_ones(), (), st); self.assertFalse(b.allowed('menu'), st)
+
+    def test_no_screen_buttons_on_the_title_and_the_start_menu(self):
+        """After a return to the title the engine's flags are still those of the place the player left (0x38: free, pad present, map allowed): DQ VI showed the buttons and the D-pad over its
+        title, DQ V over its start menu. The title's map in the town part and the start menu's part never show them."""
+        from dq456_pc.menus import hud_mobile as HM
+        st = types.SimpleNamespace(effect=None, part=ENGINE.PART_TOWN, game_map='mak1f1'); eng = types.SimpleNamespace(state=st, flags=lambda: 0x38, back_to_title_state=None)
+        b = HM.Buttons.__new__(HM.Buttons); b.J = types.SimpleNamespace(pause=types.SimpleNamespace(opened=False), engine=eng, reg={'buttons': True, 'dpad': True, 'rotation_bar': False, 'speed_button': True}, map_open=False)
+        self.assertIn(HM.DPAD, b.visible_ones())
+        st.game_map = ENGINE.TITLE_MAP; self.assertEqual(b.visible_ones(), ()); self.assertFalse(b.allowed('menu'))
+        st.part = ENGINE.PART_INITIAL; st.game_map = 'mak1f1'; self.assertEqual(b.visible_ones(), ()); self.assertFalse(b.allowed('map'))
+        st.part = ENGINE.PART_FIELD; st.game_map = ENGINE.TITLE_MAP; self.assertIn(HM.DPAD, b.visible_ones())          # (a game loaded straight onto the world map keeps the title's town map loaded)
+
+    def test_system_busy_flag_hides_the_buttons(self):
+        """DQ V / VI raise bit 0x80 of the global flag while a message, a menu, a shop or a map link has the hand (CommandObjectDefine*System::set*): Unity's TouchPad.IsEnable masks it
+        (0xC4 against DQ IV's 0x47); without it the buttons flashed during the fades around those moments. DQ IV has no such bit."""
+        from dq456_pc.menus import hud_mobile as HM
+        self.assertEqual(ENGINE.SYSTEM_BUSY_FLAG, 0x80 if ENGINE.ENGINE_V2 else 0); self.assertEqual(ENGINE.HUD_HIDDEN_FLAGS, 0x30047 | ENGINE.SYSTEM_BUSY_FLAG)
+        self.assertEqual(ENGINE.NOT_FREE_FLAGS, ENGINE.PLAYER_LOCKED_FLAG | ENGINE.SYSTEM_BUSY_FLAG)
+        st = types.SimpleNamespace(effect=None, part=ENGINE.PART_TOWN, game_map='mak1f1'); flags = [0x38]; eng = types.SimpleNamespace(state=st, flags=lambda: flags[0], back_to_title_state=None)
+        b = HM.Buttons.__new__(HM.Buttons); b.J = types.SimpleNamespace(pause=types.SimpleNamespace(opened=False), engine=eng, reg={'buttons': True, 'dpad': True, 'rotation_bar': False, 'speed_button': True}, map_open=False)
+        self.assertIn('menu', b.visible_ones())
+        flags[0] = 0x38 | ENGINE.HUD_HIDDEN_FLAGS & 0x80
+        self.assertEqual(bool(b.visible_ones()), not ENGINE.ENGINE_V2); self.assertEqual(b.allowed('menu'), not ENGINE.ENGINE_V2)
+
+    def test_no_screen_buttons_under_a_fade(self):
+        """DQ VI, map change: the exit fade ends (flags 0x78), the engine frees the player for one step on the black screen (0x38, no fade in progress), then the next map fades in (0x39).
+        The buttons appeared for that step. They stay hidden while a fade plane is on screen, held at black included, and during the black screen that waits for a scene."""
+        from dq456_pc.menus import hud_mobile as HM
+        gone = dict(a=0.0, step=0.0, n=0)
+        st = types.SimpleNamespace(effect=None, part=ENGINE.PART_TOWN, game_map='m01uk1f1', fade=dict(gone), background_fade=dict(gone), load_wait=None)
+        eng = types.SimpleNamespace(state=st, flags=lambda: 0x38, back_to_title_state=None)
+        b = HM.Buttons.__new__(HM.Buttons); b.J = types.SimpleNamespace(pause=types.SimpleNamespace(opened=False), engine=eng, reg={'buttons': True, 'dpad': True, 'rotation_bar': False, 'speed_button': True}, map_open=False)
+        self.assertIn(HM.DPAD, b.visible_ones()); self.assertTrue(b.allowed('menu'))
+        for plane in (dict(a=1.0, step=0.0, n=0), dict(a=0.5, step=-0.033, n=15), dict(a=0.0, step=0.033, n=30)):          # held at black, going back down, starting to rise
+            st.fade = plane; self.assertEqual(b.visible_ones(), (), plane); self.assertFalse(b.allowed('menu'), plane)
+        st.fade = dict(gone); st.background_fade = dict(a=0.3, step=0.0, n=0); self.assertEqual(b.visible_ones(), ())
+        st.background_fade = dict(gone); st.load_wait = {'n': 3}; self.assertEqual(b.visible_ones(), ())
+        st.load_wait = None; self.assertIn(HM.DPAD, b.visible_ones())
+
+    def test_quit_box(self):
+        """The same box asks to quit the application (MSG_QUIT_APP = b0834000.mpt#96: "Voulez-vous vraiment quitter l'application ?"): "Yes" closes it and asks the window to quit (nothing of the
+        return to the title: no killbank, no startTitle); "No" releases the player as for the title."""
+        self.assertEqual(ENGINE.RETURN_TITLE_MESSAGES['dq4'][1], 834003 + 96)
+        m = simulated_engine(); self.assertTrue(m.request_return_to_title(quit_app=True)); m._return_to_title_before()
+        self.assertEqual({x[0]: x[1] for x in m.core.calls if isinstance(x[0], str)}['_ZN16TownMenu_MESSAGE10addMessageEi'], (0x5000, ENGINE.MSG_QUIT_APP))
+        m.core.calls.clear(); answer(m, 1); m._return_to_title_after(); n = m.core.names()
+        self.assertTrue(m.quit_requested); self.assertIsNone(m.back_to_title_state); self.assertIn('_ZN8MenuBase5closeEv', n)
+        self.assertNotIn('_ZN6Global10startTitleEv', n); self.assertNotIn('_ZN7profile8SaveLoad8killbankEib', n)
+        m = simulated_engine(); m.request_return_to_title(quit_app=True); m._return_to_title_before(); m.core.calls.clear(); answer(m, 2); m._return_to_title_after()
+        self.assertFalse(m.quit_requested); self.assertEqual([x[1] for x in m.core.calls if x[0] == '_ZN3cmn13PlayerManager7setLockEb'], [(0,)])
+        m.request_return_to_title(); m._return_to_title_before()                                                     # (the next request is the return to the title again)
+        self.assertIn((0x5000, ENGINE.MSG_RETURN_TITLE), [x[1] for x in m.core.calls if x[0] == '_ZN16TownMenu_MESSAGE10addMessageEi'])
 
     def test_closed_box_without_answer_releases_player(self):
         m = simulated_engine(); m.request_return_to_title(); m._return_to_title_before(); m.core.calls.clear(); m.core.is_open = False; answer(m, 0); m._return_to_title_after()
@@ -172,7 +271,7 @@ class ReturnMachine(unittest.TestCase):
 class RealEngine(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        import unicorn; from dq4_pc.persistence import savestates as SS
+        import unicorn; from dq456_pc.persistence import savestates as SS
         cls.SS = SS; eng = cls.eng = ENGINE.Engine(APK, SAVES, tempfile.mkdtemp(prefix='sv_retour_titre_')); c = cls.c = eng.core
         eng.load_save(1)
         for _ in range(200): eng.step(0, 0)

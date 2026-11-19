@@ -10,8 +10,8 @@
 import os, re, sys, unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from dq4_pc.core import engine as ENGINE
-from dq4_pc.window import shaders as SH
+from dq456_pc.core import engine as ENGINE
+from dq456_pc.window import shaders as SH
 
 
 def send(e, *packets):

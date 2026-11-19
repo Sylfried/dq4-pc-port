@@ -6,7 +6,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 try:
-    from dq4_pc.window import battle_scene as SC
+    from dq456_pc.window import battle_scene as SC
 except Exception as ex: SC = None; REASON = repr(ex)
 
 

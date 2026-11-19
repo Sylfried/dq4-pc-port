@@ -16,9 +16,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..'))
 import pyglet
 pyglet.options['shadow_window'] = False
-from dq4_pc.window import game as F
-from dq4_pc.menus import pause as PA
-from dq4_pc.core import engine as ENGINE
+from dq456_pc.window import game as F
+from dq456_pc.menus import pause as PA
+from dq456_pc.core import engine as ENGINE
 
 
 def menu(screen_page, opened=True):
@@ -27,14 +27,14 @@ def menu(screen_page, opened=True):
 
 class TestTitle(unittest.TestCase):
     def test_root_is_called_settings(self):
-        src = inspect.getsource(PA.Pause.draw_all)
+        src = inspect.getsource(PA.Pause._draw_page)
         self.assertIn("'root': N_('settings.settings')", src, 'the title of the root page')                    # (N_ marks the text, translated at drawing)
         self.assertNotIn("'root': 'Pause'", src); self.assertNotIn("'root': N_('Pause')", src)
 
 
 class TestFrozenPages(unittest.TestCase):
     def test_settings_pages_let_game_run(self):
-        for page in ('root', 'display', 'sound', 'controls', 'interface', 'states', 'changes'):
+        for page in ('root', 'display', 'sound', 'controls', 'interface', 'states', 'difficulty', 'randomizer', 'cheats', 'achievements'):
             self.assertFalse(menu(page).freezes_game(), page)
 
     def test_history_and_quit_no_longer_stop_the_game(self):                                                      # "the history menu pauses the game, there must be no pause in any menu"

@@ -4,14 +4,14 @@
 # Set what you need before running; the rest has a default value:
 #   DQ_APK         folder of the patched APKs (without it, the real-engine tests are skipped)
 #   DQ_SAVES       folder of the saves, READ ONLY (the tests write to /tmp)
-#   DQ_MAP_CACHE   map cache (python3 -m dq4_pc.world.data <apk> <folder>, about 1 minute)
+#   DQ_MAP_CACHE   map cache (python3 -m dq456_pc.world.data <apk> <folder>, about 1 minute)
 #   DQ_APK_EN      folder of the English APKs (language tests)
 #   DQ_UI_CACHE    interface cache (ui_layout.json): without it, the layout tests are skipped (default: DQ_MAP_CACHE)
 #   DQ_REQUIRE_ALL 1 = a skipped test is a failure (for a machine that has every cache)
 # Each file goes through run_one.py: its skipped tests are listed at the end ("SKIPPED", one line per reason), so that a green suite cannot hide a hole.
 cd "$(dirname "$0")/.." || exit 1
 export PYGLET_HEADLESS=1 PYGLET_AUDIO=silent
-export DQ_MAP_CACHE="${DQ_MAP_CACHE:-/tmp/dq4_map_cache}"
+export DQ_MAP_CACHE="${DQ_MAP_CACHE:-/tmp/dq456_map_cache}"
 export DQ_UI_CACHE="${DQ_UI_CACHE:-$DQ_MAP_CACHE}"
 [ -z "$DQ_APK" ] && echo "DQ_APK is not set: the real-engine tests will be skipped."
 skips=$(mktemp); failed=0

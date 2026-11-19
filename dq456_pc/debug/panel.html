@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>DQ debug</title>
+<style>
+body { font: 13px/1.45 system-ui, sans-serif; margin: 0; background: #16181d; color: #dfe3ea; }
+header { display: flex; gap: 10px; align-items: center; padding: 8px 12px; background: #20232b; position: sticky; top: 0; flex-wrap: wrap; }
+header b { font-size: 15px; }
+button, input, select { font: inherit; background: #2c313c; color: #dfe3ea; border: 1px solid #444b59; border-radius: 4px; padding: 3px 8px; }
+button:hover { background: #3a4150; cursor: pointer; }
+button.on { background: #3d6b45; }
+nav { display: flex; gap: 2px; padding: 0 12px; background: #20232b; border-bottom: 1px solid #333; }
+nav a { padding: 6px 12px; cursor: pointer; color: #9aa3b2; }
+nav a.sel { color: #fff; border-bottom: 2px solid #7fb07f; }
+main { padding: 12px; }
+section { display: none; } section.sel { display: block; }
+table { border-collapse: collapse; } td, th { padding: 2px 8px; border-bottom: 1px solid #2b2f38; text-align: left; vertical-align: top; }
+th { color: #9aa3b2; font-weight: normal; }
+pre, .mono { font-family: Consolas, 'DejaVu Sans Mono', monospace; font-size: 12px; }
+pre { background: #101216; padding: 8px; overflow: auto; max-height: 60vh; }
+.dim { color: #8a93a3; } .warn { color: #ffcf6e; } .err { color: #ff8a8a; }
+.grid { display: grid; grid-template-columns: max-content 1fr; gap: 2px 14px; }
+.row { display: flex; gap: 8px; align-items: center; margin: 6px 0; flex-wrap: wrap; }
+.active { background: #26402b; }
+</style>
+</head>
+<body>
+<header>
+  <b id="title">DQ debug</b>
+  <span id="status" class="mono"></span>
+  <button id="b_pause"></button>
+  <button id="b_step1">+1</button><button id="b_step10">+10</button><button id="b_step60">+60</button>
+  <select id="speed"></select>
+  <button id="b_report"></button>
+  <span id="msg" class="warn"></span>
+</header>
+<nav id="tabs"></nav>
+<main>
+  <section id="t_state"><div class="grid" id="state"></div><h4 id="h_log"></h4><pre id="log"></pre></section>
+  <section id="t_scenes">
+    <h4 id="h_map"></h4><div class="row"><input id="sc_map" list="sc_maps" size="20"><datalist id="sc_maps"></datalist><button id="sc_go"></button><button id="sc_world"></button><span class="dim" id="sc_cur"></span></div>
+    <h4 id="h_step"></h4><div class="row"><select id="sc_step"></select><label><input type="checkbox" id="sc_step_go" checked> <span id="l_step_go"></span></label><button id="sc_apply"></button></div><p class="dim" id="sc_step_note"></p>
+    <h4 id="h_fight"></h4><div class="row"><select id="sc_boss"></select><input id="sc_row" size="6"><button id="sc_fight"></button><span class="dim" id="sc_fight_note"></span></div>
+    <h4 id="h_sw"></h4><p class="dim" id="sc_sw_note"></p><div class="row"><select id="sc_set"></select><input id="sc_n" size="6"><button id="sc_on"></button><button id="sc_off"></button></div><div id="sc_flags" class="mono"></div>
+  </section>
+  <section id="t_packets"><div class="row"><label><input type="checkbox" id="pk_follow" checked> <span id="l_follow"></span></label>
+    <input id="pk_filter" placeholder="types: 22 28 / !22 !28 !29" size="28"><span class="dim" id="pk_count"></span></div><pre id="packets"></pre></section>
+  <section id="t_menus"><div id="menus"></div></section>
+  <section id="t_objects"><div id="objects"></div></section>
+  <section id="t_memory"><div class="row"><input id="mem_where" placeholder="symbol, 0x... or +0x..." size="48"> <input id="mem_len" value="256" size="5">
+    <button id="mem_read"></button><span class="dim" id="mem_info"></span></div>
+    <div class="row"><input id="mem_bytes" placeholder="00 01 02 ..." size="48"><button id="mem_write"></button></div><pre id="memory"></pre></section>
+  <section id="t_states"><div id="states"></div></section>
+</main>
+<script>
+const T = {
+  fr: {state: 'État', packets: 'Paquets', menus: 'Menus', objects: 'Objets', memory: 'Mémoire', states: 'Sauvegardes d\'état',
+       pause: 'Pause (F3)', resume: 'Reprendre (F3)', report: 'Rapport de bug (F8)', follow: 'suivre', read: 'Lire', write: 'Écrire', log: 'Journal du moteur',
+       save: 'Sauver', load: 'Charger', empty: 'vide', paused: 'EN PAUSE', replay: 'REJEU', frame: 'image', part: 'partie', map: 'carte', flags: 'drapeaux',
+       fade: 'fondu avant', bfade: 'fondu arrière', menu: 'menu actif', message: 'message', pace: 'rythme', sprites: 'Personnages', meshes: 'Maillages', camera: 'caméra',
+       port: 'port', type: 'type', cursor: 'curseur', buttons: 'boutons', lines: 'lignes', yes: 'oui', no: 'non', confirm_write: 'Écrire dans la mémoire du moteur ?', loadq: 'Charger cette sauvegarde d\'état ?',
+       scenes: 'Scènes', maph: 'Carte', go: 'Y aller', world: 'Carte du monde', current: 'carte actuelle', step: 'Étape de l\'histoire', apply: 'Appliquer', step_go: 'aller sur sa carte',
+       step_note: 'Remet les interrupteurs globaux et l\'équipe de cette étape ; objets, niveaux et or ne changent pas. Le héros arrive par l\'entrée principale de la carte.',
+       fight: 'Combat', start_fight: 'Lancer le combat', row: 'ligne (vide : celle de l\'endroit)', bosses: 'boss', switches: 'Interrupteurs', on: 'Allumer', off: 'Éteindre',
+       sw_global: 'globaux', sw_area: 'de la zone', sw_local: 'de la carte', sw_note: 'Cliquer un numéro l\'éteint.', fight_note: 'Un boss se lance chez lui (sa carte d\'abord), avec son décor, depuis n\'importe où. Les autres combats : seulement là où le jeu permet les combats aléatoires à ce moment (jamais en ville, ni quand l\'histoire les coupe).'},
+  en: {state: 'State', packets: 'Packets', menus: 'Menus', objects: 'Objects', memory: 'Memory', states: 'Savestates',
+       pause: 'Pause (F3)', resume: 'Resume (F3)', report: 'Bug report (F8)', follow: 'follow', read: 'Read', write: 'Write', log: 'Engine log',
+       save: 'Save', load: 'Load', empty: 'empty', paused: 'PAUSED', replay: 'REPLAY', frame: 'frame', part: 'part', map: 'map', flags: 'flags',
+       fade: 'front fade', bfade: 'back fade', menu: 'active menu', message: 'message', pace: 'pace', sprites: 'Characters', meshes: 'Meshes', camera: 'camera',
+       port: 'port', type: 'type', cursor: 'cursor', buttons: 'buttons', lines: 'lines', yes: 'yes', no: 'no', confirm_write: 'Write into the engine\'s memory?', loadq: 'Load this savestate?',
+       scenes: 'Scenes', maph: 'Map', go: 'Go', world: 'World map', current: 'current map', step: 'Story step', apply: 'Apply', step_go: 'go to its map',
+       step_note: 'Puts back the global switches and the party of that step; items, levels and gold do not change. The hero arrives through the map\'s main entrance.',
+       fight: 'Fight', start_fight: 'Start the fight', row: 'row (empty: the place\'s)', bosses: 'bosses', switches: 'Switches', on: 'On', off: 'Off',
+       sw_global: 'global', sw_area: 'area', sw_local: 'map', sw_note: 'Click a number to turn it off.', fight_note: 'A boss is fought at its own place (its map first), with its backdrop, from anywhere. Other fights: only where the game allows random encounters at that moment (never in a town, nor when the story switches them off).'}};
+let L = T.en, lang = null, tab = 't_state', last = null, pkSince = -1, pkRows = [];
+const $ = id => document.getElementById(id);
+const TABS = ['state', 'scenes', 'packets', 'menus', 'objects', 'memory', 'states'];
+const esc = s => String(s).replace(/[&<>]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;'}[c]));
+async function get(path) { const r = await fetch(path); return r.json(); }
+async function cmd(c) { const r = await fetch('/api/cmd', {method: 'POST', body: JSON.stringify(c)}); const j = await r.json(); if (j.error) $('msg').textContent = j.error; return j; }
+function texts() {
+  $('tabs').innerHTML = TABS.map(t => `<a data-t="t_${t}" class="${'t_' + t === tab ? 'sel' : ''}">${L[t]}</a>`).join('');
+  for (const a of document.querySelectorAll('nav a')) a.onclick = () => { tab = a.dataset.t; texts(); show(); refresh(); };
+  for (const [id, k] of [['h_map', 'maph'], ['sc_go', 'go'], ['sc_world', 'world'], ['h_step', 'step'], ['l_step_go', 'step_go'], ['sc_apply', 'apply'], ['sc_step_note', 'step_note'],
+    ['h_fight', 'fight'], ['sc_fight', 'start_fight'], ['sc_fight_note', 'fight_note'], ['h_sw', 'switches'], ['sc_sw_note', 'sw_note'], ['sc_on', 'on'], ['sc_off', 'off']]) $(id).textContent = L[k];
+  $('sc_set').innerHTML = ['global', 'area', 'local'].map(k => `<option value="${k}">${L['sw_' + k]}</option>`).join(''); $('sc_row').placeholder = L.row;
+  $('b_report').textContent = L.report; $('l_follow').textContent = L.follow; $('mem_read').textContent = L.read; $('mem_write').textContent = L.write; $('h_log').textContent = L.log;
+}
+function show() { for (const s of document.querySelectorAll('section')) s.classList.toggle('sel', s.id === tab); }
+function fade(f) { return f ? `${(+f.a).toFixed(2)} → ${(+f.end).toFixed(2)} (${f.n})` : '-'; }
+function renderState(v) {
+  if (v.language !== lang) { lang = v.language; L = T[lang] || T.en; texts(); show(); }
+  $('title').textContent = v.game_name + ' — debug';
+  $('status').textContent = `${L.frame} ${v.frame} · x${v.speed}` + (v.paused ? ' · ' + L.paused : '') + (v.replaying ? ' · ' + L.replay : '');
+  $('b_pause').textContent = v.paused ? L.resume : L.pause; $('b_pause').classList.toggle('on', v.paused);
+  const sp = $('speed'); if (sp.options.length !== v.speeds.length) sp.innerHTML = v.speeds.map(s => `<option value="${s}">x${s}</option>`).join('');
+  if (document.activeElement !== sp) sp.value = v.speed;
+  const rows = [[L.frame, `${v.frame} (loop ${v.loop})`], [L.part, `${v.part_name} (0x${v.part.toString(16)})`], [L.map, v.map || '-'], [L.flags, '0x' + v.flags.toString(16)],
+    [L.fade, fade(v.fade)], [L.bfade, fade(v.background_fade)], [L.menu, v.menu || '-'], [L.message, v.message ? L.yes : L.no],
+    [L.pace, `${v.steps_per_s.toFixed(1)} steps/s · step ${v.step_ms.toFixed(1)} ms · draw ${v.draw_ms.toFixed(1)} ms`]];
+  $('state').innerHTML = rows.map(([k, x]) => `<span class="dim">${k}</span><span class="mono">${esc(x)}</span>`).join('');
+  $('log').textContent = (v.log || []).join('\n');
+}
+function pkFilter() {
+  const f = $('pk_filter').value.trim().split(/\s+/).filter(Boolean); const inc = f.filter(x => !x.startsWith('!')).map(Number), exc = f.filter(x => x.startsWith('!')).map(x => +x.slice(1));
+  return t => (!inc.length || inc.includes(t)) && !exc.includes(t);
+}
+async function refreshPackets() {
+  const rows = await get('/api/packets?since=' + pkSince); if (rows.length) { pkSince = rows[rows.length - 1][0]; pkRows = pkRows.concat(rows).slice(-240); }
+  const ok = pkFilter(); const out = [];
+  for (const [fr, pk] of pkRows) for (const [t, ints, fl, ni, nf] of pk) if (ok(t)) out.push(`${fr}  ${String(t).padStart(3)}  [${ints.join(', ')}${ni > ints.length ? ', …' + ni : ''}]` + (fl.length ? `  {${fl.join(', ')}${nf > fl.length ? ', …' + nf : ''}}` : ''));
+  $('pk_count').textContent = out.length + ' / ' + pkRows.reduce((a, r) => a + r[1].length, 0);
+  const pre = $('packets'); pre.textContent = out.slice(-600).join('\n'); if ($('pk_follow').checked) pre.scrollTop = pre.scrollHeight;
+}
+async function refreshMenus() {
+  const ms = await get('/api/menus');
+  $('menus').innerHTML = `<table><tr><th>${L.port}</th><th>${L.type}</th><th></th><th>${L.cursor}</th><th>grid</th><th>${L.buttons}</th><th>${L.lines}</th></tr>` + ms.map(m =>
+    `<tr class="${m.active ? 'active' : ''}"><td>${m.port}${m.visible ? '' : ' <span class=dim>(hidden)</span>'}</td><td>${m.type}</td><td class="mono">${esc(m.name || '')}</td><td>${m.cursor ?? '-'}${m.local_cursor != null ? ' / ' + m.local_cursor : ''}</td><td>${esc(JSON.stringify(m.grid))}</td>` +
+    `<td class="mono">${m.buttons.map(b => `${b[0]}:${b[1].toString(16)}@${b[2]},${b[3]}`).join(' ')}</td><td>${m.lines.map(esc).join('<br>')}</td></tr>`).join('') + '</table>';
+}
+async function refreshObjects() {
+  const o = await get('/api/objects');
+  $('objects').innerHTML = `<p>${L.map} ${esc(o.map || '-')} · ${L.camera} ${esc(JSON.stringify(o.camera))}</p><h4>${L.sprites}</h4><table><tr><th>slot</th><th>id</th><th>pos</th><th>visible</th><th>pose</th><th>dir</th><th>scale</th></tr>` +
+    o.sprites.map(s => `<tr><td>${s.slot}</td><td>${s.id}</td><td class="mono">${esc(JSON.stringify(s.pos))}</td><td>${s.visible}</td><td>${s.pose}</td><td>${s.dir}</td><td>${s.scale}</td></tr>`).join('') + '</table>' +
+    `<h4>${L.meshes}</h4><p class="mono">${o.meshes.map(m => `${m.slot}${m.visible ? '' : '(-)'}`).join(' ')}</p>`;
+}
+async function readMemory() {
+  const m = await get('/api/memory?where=' + encodeURIComponent($('mem_where').value) + '&len=' + encodeURIComponent($('mem_len').value));
+  if (m.error) { $('memory').textContent = m.error; return; }
+  $('mem_info').textContent = '0x' + m.address.toString(16) + (m.lib_offset != null ? ' (lib +0x' + m.lib_offset.toString(16) + ')' : ''); $('memory').textContent = m.lines.join('\n');
+}
+async function refreshStates() {
+  const ss = await get('/api/savestates');
+  $('states').innerHTML = '<table>' + ss.map(s => `<tr><td>${s.slot}</td><td>${s.info ? esc(`${s.info.date} · ${s.info.map} · ${L.frame} ${s.info.frames}`) : '<span class=dim>' + L.empty + '</span>'}</td>` +
+    `<td><button data-save="${s.slot}">${L.save}</button> ${s.info ? `<button data-load="${s.slot}">${L.load}</button>` : ''}</td></tr>`).join('') + '</table>';
+  for (const b of document.querySelectorAll('[data-save]')) b.onclick = async () => { await cmd({cmd: 'save_state', slot: +b.dataset.save}); refreshStates(); };
+  for (const b of document.querySelectorAll('[data-load]')) b.onclick = async () => { if (confirm(L.loadq)) await cmd({cmd: 'load_state', slot: +b.dataset.load}); };
+}
+let catalog = null;
+async function loadCatalog() {
+  catalog = await get('/api/catalog');
+  $('sc_maps').innerHTML = catalog.maps.map(m => `<option value="${m}">`).join('');
+  $('sc_step').innerHTML = catalog.steps.map(([n, name, map]) => `<option value="${n}">${n}${name ? ' — ' + esc(name) : ''}${map ? ' — ' + map : ''}</option>`).join('');
+  $('sc_boss').innerHTML = `<option value="">${L.bosses}…</option>` + catalog.bosses.map(([row, mons, map]) => `<option value="${row}">${esc(mons.join(', '))} — ${row}${map ? ' — ' + map : ''}</option>`).join('');
+  renderFlags(catalog);
+}
+function renderFlags(c) {
+  $('sc_cur').textContent = L.current + ' : ' + (c.map || '-');
+  $('sc_flags').innerHTML = ['global', 'area', 'local'].map(k => `<p><span class="dim">${L['sw_' + k]} (${(c.flags[k] || []).length})</span> ` +
+    (c.flags[k] || []).map(n => `<a data-set="${k}" data-n="${n}" style="cursor:pointer">${n}</a>`).join(' ') + '</p>').join('');
+  for (const a of document.querySelectorAll('#sc_flags a')) a.onclick = () => cmd({cmd: 'flag', set: a.dataset.set, n: +a.dataset.n, on: false}).then(refreshScenes);
+}
+async function refreshScenes() { if (!catalog) return loadCatalog(); renderFlags(await get('/api/catalog?only=flags')); }
+$('sc_go').onclick = () => cmd({cmd: 'goto_map', map: $('sc_map').value});
+$('sc_world').onclick = () => cmd({cmd: 'goto_world'});
+$('sc_apply').onclick = () => cmd({cmd: 'story_step', step: +$('sc_step').value, go: $('sc_step_go').checked}).then(refreshScenes);
+$('sc_boss').onchange = () => { $('sc_row').value = $('sc_boss').value; };
+$('sc_fight').onclick = () => cmd({cmd: 'battle', row: $('sc_row').value.trim()});
+$('sc_on').onclick = () => cmd({cmd: 'flag', set: $('sc_set').value, n: +$('sc_n').value, on: true}).then(refreshScenes);
+$('sc_off').onclick = () => cmd({cmd: 'flag', set: $('sc_set').value, n: +$('sc_n').value, on: false}).then(refreshScenes);
+const PAGES = {t_scenes: refreshScenes, t_packets: refreshPackets, t_menus: refreshMenus, t_objects: refreshObjects, t_states: refreshStates};
+async function refresh() {
+  try { const v = await get('/api/state'); if (v.error) throw new Error(v.error); last = v; renderState(v); $('msg').textContent = ''; } catch (e) { $('msg').textContent = String(e); }
+  if (PAGES[tab] && (tab !== 't_states' || !refresh.statesShown)) { try { await PAGES[tab](); } catch (e) { $('msg').textContent = String(e); } }
+  refresh.statesShown = tab === 't_states';
+}
+$('b_pause').onclick = () => cmd({cmd: last && last.paused ? 'resume' : 'pause'}).then(refresh);
+$('b_step1').onclick = () => cmd({cmd: 'step', n: 1}).then(refresh);
+$('b_step10').onclick = () => cmd({cmd: 'step', n: 10}).then(refresh);
+$('b_step60').onclick = () => cmd({cmd: 'step', n: 60}).then(refresh);
+$('speed').onchange = () => cmd({cmd: 'speed', value: +$('speed').value});
+$('b_report').onclick = () => cmd({cmd: 'report'});
+$('mem_read').onclick = readMemory;
+$('mem_write').onclick = () => { if (confirm(L.confirm_write)) cmd({cmd: 'write_memory', where: $('mem_where').value, bytes: $('mem_bytes').value}).then(readMemory); };
+texts(); show(); refresh(); setInterval(refresh, 500);
+</script>
+</body>
+</html>

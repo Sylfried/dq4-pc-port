@@ -55,8 +55,8 @@ def clean(text): return text.replace(';', '').replace('\xa0', ' ').strip()      
 class MartialColosseum(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        from dq4_pc.core import engine as ENGINE
-        from dq4_pc.persistence import savestates as SS
+        from dq456_pc.core import engine as ENGINE
+        from dq456_pc.persistence import savestates as SS
         cls.E, cls.SS = ENGINE, SS
 
         def make():

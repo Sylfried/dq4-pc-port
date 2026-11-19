@@ -13,7 +13,7 @@ APK = os.environ.get('DQ_APK', '')
 @unittest.skipUnless(os.path.exists(os.path.join(APK, 'split_config.arm64_v8a.apk')), 'no game APK')
 class TestOldSavestate(unittest.TestCase):
     def test_fixes_replayed(self):
-        from dq4_pc.core import engine as ENGINE; from dq4_pc.persistence import savestates
+        from dq456_pc.core import engine as ENGINE; from dq456_pc.persistence import savestates
         wdir = tempfile.mkdtemp(prefix='sv_test_etats_'); rdir = tempfile.mkdtemp(prefix='sv_test_lec_')
         try:
             m = ENGINE.Engine(APK, rdir, wdir)
@@ -41,7 +41,7 @@ class TestOldSavestate(unittest.TestCase):
 
     def test_session_lists_follow_the_state(self):
         """the 3D model animations the engine waits for (setMotionEnd) are those of the loaded state, not of the game before the load; the ending shortcut's wait is dropped."""
-        from dq4_pc.core import engine as ENGINE; from dq4_pc.persistence import savestates
+        from dq456_pc.core import engine as ENGINE; from dq456_pc.persistence import savestates
         wdir = tempfile.mkdtemp(prefix='sv_test_etats_'); rdir = tempfile.mkdtemp(prefix='sv_test_lec_')
         try:
             m = ENGINE.Engine(APK, rdir, wdir)

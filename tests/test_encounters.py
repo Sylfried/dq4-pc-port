@@ -9,7 +9,7 @@ The statistical simulation (real walking on the world map and in a dungeon, numb
 import os, sys, struct, shutil, unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from dq4_pc.core import encounters as RE
+from dq456_pc.core import encounters as RE
 
 
 class NoReduction(unittest.TestCase):
@@ -21,7 +21,7 @@ class NoReduction(unittest.TestCase):
 class TestRealEngine(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        from dq4_pc.core import engine as ENGINE
+        from dq456_pc.core import engine as ENGINE
         wdir = '/tmp/sv_test_rencontres'; shutil.rmtree(wdir, ignore_errors=True); os.makedirs(wdir)
         cls.m = ENGINE.Engine(os.environ['DQ_APK'], os.environ['DQ_SAVES'], wdir)
         cls.m.load_save(4)
@@ -40,8 +40,10 @@ class TestRealEngine(unittest.TestCase):
         for _ in range(n): self.c.call(self.cd, self.enc + 0x134)
         return counter - self.read()
 
-    def test_no_encounter_hook(self):
-        self.assertFalse(hasattr(self.m, '_encounter_hooks')); self.assertFalse(hasattr(self.m, 'encounters'))
+    def test_walking_speed_leaves_the_counter(self):
+        """The only hook on the counter is the one of "Random encounters" / "Encounter rate" (Cheats): at its default (x1) it leaves the game's step value as it is."""
+        self.assertEqual(self.m.encounter_rate, 1.0); self.assertFalse(hasattr(self.m, 'encounters'))
+        self.assertEqual(self.invoke(10, 1.0), 10 * 2 * 423)
 
     def test_counter_loss_does_not_depend_on_speed(self):
         for speed in (0.5, 1.0, 2.0, 3.0, 4.0, 8.0): self.assertEqual(self.invoke(100, speed), 100 * 2 * 423, speed)          # the game: 2 x [+0x10] per call, at all speeds
@@ -62,13 +64,13 @@ class TestRealEngine(unittest.TestCase):
 
 class ForcedMonsterConstants(unittest.TestCase):
     def test_hook_points(self):
-        from dq4_pc.core import engine as ENGINE
+        from dq456_pc.core import engine as ENGINE
         self.assertEqual((ENGINE.ENCOUNT_BREW_END, ENGINE.ENCOUNT_BREW_RET), (0x1c0, 0x200))
         self.assertEqual((ENGINE.ENCOUNT_MONSTERS, ENGINE.ENCOUNT_COUNTS), (0x34, 0x44))
         self.assertEqual((ENGINE.MOV_X0_X19, ENGINE.RET), (0xaa1303e0, 0xd65f03c0))
 
     def test_option_exists_and_is_off_by_default(self):
-        """(read from the source: importing dq4_pc.main opens a pyglet window, there is no screen in the CI)"""
+        """(read from the source: importing dq456_pc.main opens a pyglet window, there is no screen in the CI)"""
         sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))); import _paths
         self.assertIn("'--force-monster', type=int, default=0", _paths.source('main.py'))
         self.assertIn('self.engine.force_monster = args.force_monster', _paths.source('game.py'))
@@ -79,7 +81,7 @@ class ForcedMonster(unittest.TestCase):
     """`--force-monster N` (Engine.force_monster): `Encount::brew()` of the real engine gives a single monster N; at 0 the game is untouched."""
     @classmethod
     def setUpClass(cls):
-        from dq4_pc.core import engine as ENGINE
+        from dq456_pc.core import engine as ENGINE
         wdir = '/tmp/sv_test_monstre_force'; shutil.rmtree(wdir, ignore_errors=True); os.makedirs(wdir)
         cls.m = ENGINE.Engine(os.environ['DQ_APK'], os.environ['DQ_SAVES'], wdir)
         cls.m.load_save(4)

@@ -3,7 +3,7 @@ Windows window (`Win32Window`) already has a `_hidden = False` attribute: it sha
 Linux (tests, screenshots) does not have this attribute: nothing had caught it.
 
 This test reads pyglet's source code for ALL platforms (Windows, X11, macOS, Wayland, headless), so it runs everywhere, and rejects any game window name
-(method, class attribute, `self.x = ...` in the dq4_pc/window files) that is also a pyglet window name, except those written on purpose (list below).
+(method, class attribute, `self.x = ...` in the dq456_pc/window files) that is also a pyglet window name, except those written on purpose (list below).
 It also checks that a mouse click while the engine is loading (the logos) is ignored instead of reading `self.engine` before it exists.
 
     python3 tests/test_window_name_collisions.py
@@ -15,8 +15,8 @@ ROOT = os.path.join(HERE, '..')
 sys.path.insert(0, ROOT)
 import pyglet
 pyglet.options['shadow_window'] = False
-from dq4_pc.window import game as F
-from dq4_pc.window import keyboard_mouse as KM
+from dq456_pc.window import game as F
+from dq456_pc.window import keyboard_mouse as KM
 
 PYGLET_FILES = ('window/__init__.py', 'window/win32/__init__.py', 'window/xlib/__init__.py', 'window/cocoa/__init__.py',
                 'window/wayland/__init__.py', 'window/headless/__init__.py', 'event.py')
@@ -51,7 +51,7 @@ class WindowNames(unittest.TestCase):
                 for k in names_in(p): theirs.setdefault(k, []).append(f)
         self.assertIn('_hidden', theirs, "reading pyglet's code no longer finds Win32Window._hidden: this test checks nothing any more")
         ours = {}
-        for p in sorted(glob.glob(os.path.join(ROOT, 'dq4_pc', 'window', '*.py'))):
+        for p in sorted(glob.glob(os.path.join(ROOT, 'dq456_pc', 'window', '*.py'))):
             for k in names_in(p): ours.setdefault(k, []).append(os.path.basename(p))
         shared = sorted(k for k in set(ours) & set(theirs) if not k.startswith('__') and not k.startswith('on_') and k not in DELIBERATE)
         self.assertEqual(shared, [], 'names of the game window already taken by pyglet (see the files): ' + '; '.join(f'{k} {ours[k]} / {theirs[k]}' for k in shared))
@@ -63,7 +63,7 @@ class WindowNames(unittest.TestCase):
     def test_event_handlers_only_overridden_on_purpose(self):
         """The game's `on_*` must be real pyglet events (a typo would produce a useless handler)."""
         events = set(pyglet.window.BaseWindow.event_types)
-        for p in sorted(glob.glob(os.path.join(ROOT, 'dq4_pc', 'window', '*.py'))):
+        for p in sorted(glob.glob(os.path.join(ROOT, 'dq456_pc', 'window', '*.py'))):
             with open(p, encoding='utf-8') as fh: body = ast.parse(fh.read()).body
             for n in body:
                 if isinstance(n, ast.ClassDef) and n.name.endswith('Mixin'):

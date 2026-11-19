@@ -8,7 +8,7 @@ import os, sys, types, unittest
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 import pyglet
 pyglet.options['shadow_window'] = False
-from dq4_pc.persistence import settings as RG
+from dq456_pc.persistence import settings as RG
 
 SC = {a: sc for a, (sc, _) in RG.PHYSICAL_KEYS.items()}              # up W 0x11, left A 0x1E, down S 0x1F, right D 0x20, L Q 0x10
 

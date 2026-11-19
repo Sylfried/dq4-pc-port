@@ -49,7 +49,7 @@ def party(eng):
 
 def settle(eng, frames=250, limit=1500):
     """Lets the map load, closes the save's welcome message and gives control back to the player."""
-    from dq4_pc.core import engine as ENGINE
+    from dq456_pc.core import engine as ENGINE
     for _ in range(frames): eng.step(0, 0)
     n = 0
     while (eng.msg_visible or eng.active_menu() is not None) and n < limit:

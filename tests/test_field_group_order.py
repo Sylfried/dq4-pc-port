@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import _saves as SV
 import pyglet
 if sys.platform.startswith('linux') and not os.environ.get('DISPLAY'): pyglet.options['headless'] = True; pyglet.options['shadow_window'] = False
-from dq4_pc.window import game as F
+from dq456_pc.window import game as F
 
 APK, SAVES = os.environ.get('DQ_APK'), os.environ.get('DQ_SAVES')
 
@@ -62,7 +62,7 @@ class RealEngineLanding(unittest.TestCase):
         for i in range(n): eng.step(held, (held if decl is None else (decl if i == 0 else 0)))
 
     def test_landing_on_world_map(self):
-        from dq4_pc.core import engine as ENGINE
+        from dq456_pc.core import engine as ENGINE
 
         def to_the_village(eng):
             """Needs chapter 1, the Ragnar + Doc party and the village `maout` outdoors. The first two are forced; the third

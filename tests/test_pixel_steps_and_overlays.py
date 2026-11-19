@@ -13,10 +13,10 @@ import inspect, os, sys, types, unittest
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 import pyglet
 if sys.platform.startswith('linux') and not os.environ.get('DISPLAY'): pyglet.options['headless'] = True; pyglet.options['shadow_window'] = False
-from dq4_pc.core import engine as ENGINE
-from dq4_pc.window import game as F
-from dq4_pc.window import helpers as H
-from dq4_pc.window.constants import MODE_PP
+from dq456_pc.core import engine as ENGINE
+from dq456_pc.window import game as F
+from dq456_pc.window import helpers as H
+from dq456_pc.window.constants import MODE_PP
 
 PREV, CUR = (2485.967, 393.967, 200.0), (2483.967, 395.967, 200.0)          # hero on the world map, two engine steps (measured)
 
@@ -59,7 +59,7 @@ class DiagonalInPixelPerfect(unittest.TestCase):
     def test_half_pixels_drawn_evenly(self):
         """the drawing puts a position on a whole pixel with whole_pixels, never with round: Python's round takes halves to the even number (2496.5 -> 2496, 2497.5 -> 2498), so a
         camera or a character on a half pixel moved 0, 2, 0, 2 pixels while the other moved 1, 1, 1: the hero shook by one pixel. The world map camera and the sprites use the same rounding."""
-        from dq4_pc.window import camera as CAM
+        from dq456_pc.window import camera as CAM
         seen = []
         for x in (2496.5, 2497.5, 2498.5, 2499.5):
             fake = types.SimpleNamespace(mode=MODE_PP); e = types.SimpleNamespace(field={'cam': (x, 100.5)}, field_scale=1.0)
@@ -105,7 +105,7 @@ class RowAboveScreen(unittest.TestCase):
             w._row_above = False; calls.clear(); self.assertFalse(H.keep_row_above(w)); self.assertEqual(calls, [])
             w._row_above = True; w.fullscreen = False; self.assertFalse(H.keep_row_above(w)); self.assertEqual(calls, [])
         finally: sys.platform = old; del ctypes.windll
-        from dq4_pc.window import full_screen as FS
+        from dq456_pc.window import full_screen as FS
         self.assertIn('keep_row_above(self)', inspect.getsource(FS.FullScreenMixin.on_resize))
         self.assertIn('self._row_above = False', inspect.getsource(FS.FullScreenMixin._apply_full_screen))
 

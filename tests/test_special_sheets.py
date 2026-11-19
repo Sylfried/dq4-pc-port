@@ -5,7 +5,7 @@ import os, sys, unittest
 import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from dq4_pc.world import hd as HD
+from dq456_pc.world import hd as HD
 GUTTER = 2
 
 

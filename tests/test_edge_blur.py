@@ -11,12 +11,25 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
 import _paths
-from dq4_pc.render import screen_blur as SB
-from dq4_pc.persistence import settings as RG
+from dq456_pc.render import screen_blur as SB
+from dq456_pc.persistence import settings as RG
 
 APK, SAVES = os.environ.get('DQ_APK'), os.environ.get('DQ_SAVES')
 L, H = 1280, 720
 SHOT_OFF, SET_ON, SHOT_ON = 290, 292, 296
+
+
+class Sides(unittest.TestCase):
+    def test_column_sharp_sides_blurred(self):
+        inner = 0.5625 * 720 / 1280.0                                          # (DQ V's slime race, DQ VI's curling: the phone's column of a 16:9 window)
+        self.assertEqual(SB.side_weight(0.5, inner, 0.08), 0.0)
+        self.assertEqual(SB.side_weight(0.5 + inner / 2 - 0.01, inner, 0.08), 0.0, 'inside the column: sharp')
+        self.assertEqual(SB.side_weight(0.0, inner, 0.08), 1.0)
+        self.assertEqual(SB.side_weight(1.0, inner, 0.08), 1.0)
+
+    def test_sides_show_the_column_stretched(self):
+        inner = 0.3
+        self.assertAlmostEqual(SB.side_source(0.0, inner), 0.35); self.assertAlmostEqual(SB.side_source(1.0, inner), 0.65); self.assertAlmostEqual(SB.side_source(0.5, inner), 0.5)
 
 
 class Shape(unittest.TestCase):
@@ -41,14 +54,14 @@ class Setting(unittest.TestCase):
         self.assertEqual(RG.BOUNDS['edge_blur'], (0.0, 1.0))
 
     def test_line_just_under_the_vignette(self):
-        src = open(os.path.join(HERE, '..', 'dq4_pc', 'menus', 'pause.py'), encoding='utf-8').read()
+        src = open(os.path.join(HERE, '..', 'dq456_pc', 'menus', 'pause.py'), encoding='utf-8').read()
         lines = src[src.index('def _entries_display'):].split('\n')
         i = next(n for n, l in enumerate(lines) if "('settings.vignette_effect'" in l)
         self.assertIn("('settings.edge_blur'", lines[i + 1])
 
     def test_drawn_where_the_vignette_is(self):
         """After the scene (the interface stays sharp), not in battle, on the world map nor during the end credits (source read as text: no display needed)."""
-        src = open(os.path.join(HERE, '..', 'dq4_pc', 'window', 'game.py'), encoding='utf-8').read()
+        src = open(os.path.join(HERE, '..', 'dq456_pc', 'window', 'game.py'), encoding='utf-8').read()
         self.assertIn('if e.part != ENGINE.PART_BATTLE and not field and not staff: self._draw_vignette()', src)
         a = src.index('        self.post.end()\n'); b = src.index('self._blur_edges()', a)
         self.assertIn('if e.part != ENGINE.PART_BATTLE and not field and not staff: self._blur_edges()', src[a:b + 20])
@@ -60,8 +73,8 @@ def probe(out_dir):
     import pyglet
     pyglet.options['shadow_window'] = False
     if sys.platform.startswith('linux') and not os.environ.get('DISPLAY'): pyglet.options['headless'] = True
-    from dq4_pc.window import game as F
-    from dq4_pc import main
+    from dq456_pc.window import game as F
+    from dq456_pc import main
     sys.argv = ['window.py', '--apk', APK, '--saves-read', SAVES, '--saves-write', tempfile.mkdtemp(prefix='sv_flou_'), '--settings', os.path.join(tempfile.mkdtemp(prefix='rg_flou_'), 'r.json'),
                 '--slot', '1', '--cache', _paths.ui_cache('/tmp/uicache_flou'), '--msaa', '0', '--width', str(L), '--height', str(H), '--no-preparation', '--no-sound', '--no-logos',
                 '--shots-loop', '%d,%d' % (SHOT_OFF, SHOT_ON), '--shot', os.path.join(out_dir, 'f.png'), '--images', str(SHOT_ON + 40)]

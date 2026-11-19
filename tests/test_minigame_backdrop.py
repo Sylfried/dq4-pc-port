@@ -1,4 +1,5 @@
-"""the casino and the bestiary (screens made for the phone's portrait screen, on a black background) show the blurred scenery of the place just left instead of black; the game is
+"""the casino and the bestiary (screens made for the phone's portrait screen, on a black background) show the blurred scenery of the place just left instead of black (the bestiary always,
+whatever color the town left, with its parchment in front of it, as in the game); the game is
 blurred behind the port's own screens: "Settings" menu and its pages, history, saves and language screens, except the Interface and Display pages (and never behind the game's own in-game menu).
 
 1. Without APK: the rule (`black_background`), the blur, and when the copy is taken / the backdrop drawn (fake windows, no OpenGL call outside the cases).
@@ -16,12 +17,12 @@ import _paths
 import pyglet
 pyglet.options['shadow_window'] = False
 if sys.platform.startswith('linux') and not os.environ.get('DISPLAY'): pyglet.options['headless'] = True
-from dq4_pc.core import engine as ENGINE
-from dq4_pc.window import backdrop as BD
-from dq4_pc.render import screen_blur as SB
+from dq456_pc.core import engine as ENGINE
+from dq456_pc.window import backdrop as BD
+from dq456_pc.render import screen_blur as SB
 try:
-    from dq4_pc.window import game as F
-    from dq4_pc import main
+    from dq456_pc.window import game as F
+    from dq456_pc import main
 except Exception as ex:
     F = None; IMPORT_ERROR = ex
 
@@ -53,17 +54,17 @@ class MenuBlur(unittest.TestCase):
         self.assertTrue(all(a > b for a, b in zip(w, w[1:])), 'decroissants')
 
     def test_pages(self):
-        from dq4_pc.menus import pause as PA
-        for page, blurred in (('root', True), ('history', True), ('sound', True), ('controls', True), ('states', True), ('quit', True), ('changes', True), ('interface', False), ('display', False)):
+        from dq456_pc.menus import pause as PA
+        for page, blurred in (('root', True), ('history', True), ('sound', True), ('controls', True), ('states', True), ('quit', True), ('difficulty', True), ('cheats', True), ('interface', False), ('display', False)):
             p = types.SimpleNamespace(screen_page=page, SHARP_PAGES=PA.Pause.SHARP_PAGES)
             self.assertEqual(PA.Pause.blurs_game(p), blurred, page)
 
     def test_in_the_drawing(self):
         """The window blurs before drawing the menu (after the savestate thumbnail: it stays sharp), and before the title's Sauvegardes / language screens (source read as text: no display needed)."""
-        src = open(os.path.join(HERE, '..', 'dq4_pc', 'window', 'game.py'), encoding='utf-8').read()
+        src = open(os.path.join(HERE, '..', 'dq456_pc', 'window', 'game.py'), encoding='utf-8').read()
         i, j, k = src.index('self.pause.mini_tex = self._clone_thumbnail()'), src.index('if self.pause.blurs_game(): self._blur_window()'), src.index('self.pause.draw_all()')
         self.assertLess(i, j); self.assertLess(j, k)
-        t = open(os.path.join(HERE, '..', 'dq4_pc', 'window', 'title_screen.py'), encoding='utf-8').read()
+        t = open(os.path.join(HERE, '..', 'dq456_pc', 'window', 'title_screen.py'), encoding='utf-8').read()
         a = t.index('def _draw_saves'); self.assertLess(t.index('self._blur_window()', a), t.index('self.port_screen.draw_all', a))
 
 
@@ -71,6 +72,7 @@ class FakeWindow(BD.BackdropMixin):
     def __init__(self): self.calls = []
     def get_framebuffer_size(self): self.calls.append('fb'); raise AssertionError('no copy expected')
     def _backdrop_texture(self): self.calls.append('tex'); return None
+    def _paint_parchment(self): self.calls.append('parchment')
 
 
 class When(unittest.TestCase):
@@ -84,8 +86,28 @@ class When(unittest.TestCase):
         for part in (ENGINE.PART_TOWN, ENGINE.PART_FIELD, ENGINE.PART_BATTLE):
             w = FakeWindow(); w._draw_backdrop(self.e(part), (0.0, 0.0, 0.0), False); self.assertEqual(w.calls, [], part)
         for part in ENGINE.MINIGAME_PARTS:
+            if part == ENGINE.PART_BESTIARY: continue
             w = FakeWindow(); w._draw_backdrop(self.e(part), (0.3, 0.3, 0.3), False); self.assertEqual(w.calls, [], 'fond gris : %#x' % part)
             w = FakeWindow(); w._draw_backdrop(self.e(part), (0.0, 0.0, 0.0), False); self.assertEqual(w.calls, ['tex'], 'fond noir : %#x' % part)
+
+    def test_bestiary(self):
+        """The bestiary: the blurred scenery then the parchment, whatever the town left (its sky color, its BackColor gradient)."""
+        for background, gradient in (((0.0, 0.0, 0.0), False), ((0.45, 0.58, 1.0), False), ((0.0, 0.0, 0.0), True)):
+            w = FakeWindow(); w._draw_backdrop(self.e(ENGINE.PART_BESTIARY), background, gradient); self.assertEqual(w.calls, ['tex', 'parchment'], (background, gradient))
+
+    def test_parchment_quad(self):
+        """Over the interface column (450 units: the phone's width), 0.89 of its width in height, centered (window 1920 x 1080: column 607.5 px wide, parchment 540.7 px high)."""
+        w = FakeWindow(); w.width, w.height = 1920, 1080; w._ui_reference = lambda: (960.0, 540.0, 1080 / 800.0)
+        x0, y0, x1, y1 = w.parchment_quad()
+        self.assertAlmostEqual((x1 - x0) / 2 * 1920, 450 * 1080 / 800.0, places=3); self.assertAlmostEqual((y1 - y0) / 2 * 1080, 0.89 * 450 * 1080 / 800.0, places=3)
+        self.assertAlmostEqual(x0 + x1, 0.0, places=6); self.assertAlmostEqual(y0 + y1, 0.0, places=6)
+        w._ui_reference = lambda: (225 * 1080 / 800.0, 540.0, 1080 / 800.0)                  # (interface on the left)
+        x0, _y0, x1, _y1 = w.parchment_quad(); self.assertAlmostEqual(x0, -1.0, places=6)
+
+    def test_parchment_resource(self):
+        from dq456_pc.menus import pre_game as AP
+        self.assertEqual(AP.RESOURCES['ap_encyclopedia.png'], ('pack', 'Texture2D', 'encyclopedia'))
+        self.assertEqual(BD.PARCHMENT_HEIGHT, 0.89)
 
     def test_forget(self):
         w = FakeWindow(); w.backdrop_serial = 7; w._backdrop_forget(); self.assertEqual(w.backdrop_serial, 0)
@@ -137,9 +159,9 @@ def probe_menu(out_dir):
 
 
 def edges(path):
-    """Detail of the left quarter of a screenshot (outside the menu's panel): mean of the absolute differences between neighbouring pixels."""
+    """Detail of the left strip of a screenshot (outside the menu's panels: the root's list starts at 8 % of the width): mean of the absolute differences between neighbouring pixels."""
     from PIL import Image
-    a = np.asarray(Image.open(path).convert('L')).astype(float)[H // 6:5 * H // 6, :L // 4]
+    a = np.asarray(Image.open(path).convert('L')).astype(float)[H // 6:5 * H // 6, :int(L * 0.07)]
     return float(np.abs(np.diff(a, axis=0)).mean() + np.abs(np.diff(a, axis=1)).mean())
 
 

@@ -8,9 +8,9 @@ import numpy as np
 try:
     import pyglet
     pyglet.options['shadow_window'] = False
-    from dq4_pc.window.field import FieldMixin
-    from dq4_pc.window import game as G
-    from dq4_pc.core import engine as ENGINE
+    from dq456_pc.window.field import FieldMixin
+    from dq456_pc.window import game as G
+    from dq456_pc.core import engine as ENGINE
 except Exception as ex:          # (pyglet, numpy, unicorn...: the import alone is enough)
     FieldMixin = None; ERROR = ex
 
@@ -45,6 +45,34 @@ class MapObjects(unittest.TestCase):
 
 
 @unittest.skipIf(FieldMixin is None, 'window not importable here')
+class TurnedPanels(unittest.TestCase):
+    """DQ V, breaking a barrel made the other barrels blink once the camera had been turned: the panels facing the camera are re-placed when it turns, but the positions kept from the last step
+    (obj_shown) stayed those of the old orientation; the first change in their group (the broken barrel hidden) then saw every other panel as "moved" and drew it between the two orientations."""
+    def window(self):
+        a = np.array([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [5.0, 0.0, 0.0], [6.0, 0.0, 0.0], [5.0, 1.0, 0.0]], np.float32)          # two panels of one group
+        f = fake({'barrels': a.copy()}); turned = a.copy(); turned[:, 2] += turned[:, 0] * 0.3                                                     # the camera turns: both panels re-placed
+        def orient(yaw, base, pitch): f.objects.cur['barrels'] = turned.copy(); f.objects.dirty = {'barrels'}; return True
+        f.objects.orient = orient; f.objects.dirty = set()
+        f._orient_scenery = FieldMixin._orient_scenery.__get__(f)
+        return f, turned
+
+    def test_other_panels_stay_still_when_one_changes(self):
+        f, turned = self.window()
+        f._orient_scenery((np.array([1.0, 0, 0]), np.array([0, 1.0, 0]), np.array([0, 0, 1.0])))
+        np.testing.assert_allclose(f.obj_shown['barrels'], turned)                                   # (the reference follows the new orientation)
+        broken = turned.copy(); broken[:3] = 0.0                                                    # the first barrel is broken: its panel is hidden
+        f.objects.cur['barrels'] = broken; f._note_movements({'barrels'})
+        self.assertEqual(f.obj_moving, {}); f._smooth_objects(0.2)                                    # (nothing moves: the second barrel is drawn where it stands)
+
+    def test_a_moving_panel_keeps_its_interpolation(self):
+        f, turned = self.window()
+        old = f.objects.cur['barrels'].copy(); mask = np.array([True] * 3 + [False] * 3)
+        f.obj_moving = {'barrels': (old, old.copy(), mask)}
+        f._orient_scenery((np.array([1.0, 0, 0]), np.array([0, 1.0, 0]), np.array([0, 0, 1.0])))
+        np.testing.assert_allclose(f.obj_moving['barrels'][1], turned); np.testing.assert_allclose(f.obj_shown['barrels'], old)          # (ends on the new orientation; its step reference is untouched)
+
+
+@unittest.skipIf(FieldMixin is None, 'window not importable here')
 class FbxModels(unittest.TestCase):
     def test_position_and_rotation_between_two_steps(self):
         st = types.SimpleNamespace(part=ENGINE.PART_TOWN, game_map='mndoc', sprites={}, cam_pos=None, cam_target=None, field=None, loading=None,
@@ -55,6 +83,29 @@ class FbxModels(unittest.TestCase):
         saved = G.Game._interpolate(g)
         self.assertEqual(st.fbx[3]['pos'], (0.5, 0.0, 0.0)); self.assertAlmostEqual(st.fbx[3]['rot'][1] % 360.0, 0.0)          # (350 -> 10 by 0, not by 180)
         self.assertEqual(len(saved), 2)
+
+
+@unittest.skipIf(FieldMixin is None, 'window not importable here')
+class RisingIcons(unittest.TestCase):
+    """the item that rises out of a chest, a jar, a wardrobe (packets 19/20, Riseup: 0.25 up per step for 6 steps, then a fade) went up by jerks of 30 Hz: drawn between two steps now"""
+    def state(self, icons):
+        st = types.SimpleNamespace(part=ENGINE.PART_TOWN, game_map='dab1', sprites={}, cam_pos=None, cam_target=None, field=None, loading=None, fbx={}, icons=icons)
+        g = types.SimpleNamespace(engine=types.SimpleNamespace(state=st), mode=None); g._interpolate_camera = lambda pr, a: None
+        return st, g
+
+    def test_rise_and_fade_between_two_steps(self):
+        st, g = self.state({0: {'id': 111, 'pos': (2.5, 0.971, -9.318), 'alpha': 0.032}})
+        g.prev = G.Game._snapshot(g); st.icons[0] = {'id': 111, 'pos': (2.5, 1.218, -9.321), 'alpha': 0.613}; g.alpha = 0.5
+        saved = G.Game._interpolate(g)
+        p = st.icons[0]['pos']; self.assertAlmostEqual(p[1], (0.971 + 1.218) / 2); self.assertAlmostEqual(st.icons[0]['alpha'], (0.032 + 0.613) / 2)
+        for obj, name, old, attr in saved: obj[name] = old
+        self.assertEqual(st.icons[0], {'id': 111, 'pos': (2.5, 1.218, -9.321), 'alpha': 0.613}, 'put back after the drawing')
+
+    def test_new_or_other_icon_not_interpolated(self):
+        st, g = self.state({0: {'id': 188, 'pos': (0.0, 1.294, 0.0), 'alpha': 1.0}})
+        g.prev = G.Game._snapshot(g); st.icons[0] = {'id': 111, 'pos': (0.0, 0.971, 0.0), 'alpha': 0.032}; st.icons[1] = {'id': 111, 'pos': (1.0, 1.0, 1.0), 'alpha': 1.0}; g.alpha = 0.5
+        G.Game._interpolate(g)
+        self.assertEqual(st.icons[0]['pos'], (0.0, 0.971, 0.0)); self.assertEqual(st.icons[1]['pos'], (1.0, 1.0, 1.0))
 
 
 @unittest.skipIf(FieldMixin is None, 'window not importable here')
@@ -85,7 +136,7 @@ class EngineShadows(unittest.TestCase):
     def test_shadow_offset_drops_the_one_step_jump(self):
         """the engine moves the balloon's shadow one step late when the balloon turns: the offset jumps for one step and comes back; the median of three steps keeps it still."""
         import collections
-        from dq4_pc.window.helpers import shadow_offset
+        from dq456_pc.window.helpers import shadow_offset
         d = collections.deque(maxlen=3)
         seen = []
         for off in ((0, 32), (0, 32), (-3, 35), (0, 32), (0, 32), (3, 29), (0, 32)): d.append(off); seen.append(shadow_offset(d, off))
@@ -99,7 +150,7 @@ class EngineShadows(unittest.TestCase):
         """the shadows' vertices are written after the frame's first draws (the map, the scenery): unless the vertex buffers are bound and sent again, the GPU drew the previous frame's,
         so the balloon's shadow trailed its balloon (by its last move, a staircase in diagonal), and a walker's shadow its walker. Each shadow drawing now forces that (_linked_domain None)."""
         import types as T
-        from dq4_pc.window import field as FD
+        from dq456_pc.window import field as FD
         class SVL:
             def __init__(s): s.position = [0.0] * 18; s.tex_coords = [0.0] * 12; s.colors = [0.0] * 24
         stub = T.SimpleNamespace(glDepthMask=lambda *a: None, glDepthFunc=lambda *a: None, GL_FALSE=0, GL_TRUE=1, GL_LEQUAL=0, GL_LESS=0)

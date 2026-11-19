@@ -8,7 +8,7 @@ Source read as text (no display needed).
 import os, unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-WINDOW = os.path.join(HERE, '..', 'dq4_pc', 'window')
+WINDOW = os.path.join(HERE, '..', 'dq456_pc', 'window')
 
 
 def read(name): return open(os.path.join(WINDOW, name), encoding='utf-8').read()

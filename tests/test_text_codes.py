@@ -42,7 +42,7 @@ class InAPlate(unittest.TestCase):
 
 class History(unittest.TestCase):
     def test_battle_names_keep_it(self):
-        from dq4_pc.battle import battle_history as BH
+        from dq456_pc.battle import battle_history as BH
         import inspect
         src = inspect.getsource(BH.BattleSensor._engine_text)
         self.assertNotIn("'$'", src.split('"""')[-1])                                   # (the code after the docstring: the "$" is not replaced)

@@ -15,15 +15,15 @@ import inspect, os, sys, types, unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..'))
-from dq4_pc.window.constants import BTN_MAP, BTN_CHAT, BTN_MENU, SFX_BUTTON, button_sfx
-from dq4_pc.core import engine as ENGINE
+from dq456_pc.window.constants import BTN_MAP, BTN_CHAT, BTN_MENU, SFX_BUTTON, button_sfx
+from dq456_pc.core import engine as ENGINE
 
 try:
     import pyglet
     pyglet.options['shadow_window'] = False
-    from dq4_pc.menus import hud_mobile as HM
-    from dq4_pc.window import game as WND
-    from dq4_pc.menus import name_entry as SN
+    from dq456_pc.menus import hud_mobile as HM
+    from dq456_pc.window import game as WND
+    from dq456_pc.menus import name_entry as SN
     ERROR = None
 except Exception as ex:                       # no pyglet (CI) or window not importable: only the rule is tested
     pyglet = HM = WND = SN = None; ERROR = ex
@@ -118,6 +118,7 @@ class OnTheGame(unittest.TestCase):
         j._port_for_gamepad = lambda p, pad: p; j._is_start_menu = lambda p: False; j._keyboard_port = lambda p: p
         j._name_entry_in_progress = lambda: False; j._menu_hidden = lambda t: False
         j._bits_camera = lambda: 0; j._camera_forget = lambda: None            # (the game's camera has nothing to do with sound effects: test_entries.py and test_engine_camera.py)
+        j.slime_touch_click = lambda x, y: False; j.slime_touch_keys = lambda p, d: (p, d); j.curling_press = lambda x, y: False; j.curling_release = lambda: False; j.sugoroku_click = lambda x, y: False; j.sugoroku_held = lambda p: p          # (no Slime Touch, curling or T'n'T here: window/slime_touch.py, slime_curling.py, sugoroku.py)
         for name_str in ('_menu_input', '_step_entry', '_step_columns', '_active_step', '_neighbor', '_page_arrow', '_button_under', 'on_mouse_press', '_hud_sfx', '_entries', '_step_toward_hover', 'arena_back_shown', 'arena_abort_decl', 'arena_back_press', 'arena_back_release'):
             f = inspect.getattr_static(WND.Game, name_str, None)
             if isinstance(f, staticmethod): setattr(j, name_str, f.__func__)
@@ -168,6 +169,15 @@ class OnTheGame(unittest.TestCase):
         j._port_for_gamepad = lambda p, pad: 9 if pad in (4, 8) else p                       # the arrows are in another window
         j._menu_input(3, ENGINE.RIGHT); j._menu_input(3, ENGINE.LEFT)
         self.assertEqual(j.sound.sfx, []); self.assertEqual([e[:1] + e[-1:] for e in j.sent], [(9, 4), (9, 8)])
+
+    def test_page_arrows_by_place(self):
+        """DQ V / VI: ◀ sends 4 and ▶ 8 (bestiary sheet, Statut pages, shop list), DQ IV the other way round: left / right press the arrow on that side, with its own key."""
+        j = self.game(self.ENTRIES + [(-1, 4, 0, 0, 10, 10), (-1, 8, 20, 0, 30, 10)])
+        self.assertEqual(j._page_arrow(3, 8)[2], 4); self.assertEqual(j._page_arrow(3, 4)[2], 8)
+        j._port_for_gamepad = lambda p, pad: 9 if pad in (4, 8) else p
+        j.ui_g.f[9] = j.ui_g.f[3]
+        j._menu_input(3, ENGINE.RIGHT); j._menu_input(3, ENGINE.LEFT)
+        self.assertEqual([e[:1] + e[-1:] for e in j.sent], [(9, 8), (9, 4)])
 
     # ---- keyboard: numeric input (▲ ▼ columns, A to confirm)
     STEP = [(0, 2, 0, 50, 10, 60), (0, 1, 0, 0, 10, 10), (1, 2, 20, 50, 30, 60), (1, 1, 20, 0, 30, 10), (5, 0x10, 40, 20, 80, 40)]

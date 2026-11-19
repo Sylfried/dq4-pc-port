@@ -5,7 +5,7 @@ from unicorn import *
 from unicorn.arm64_const import *
 import tracer as t
 from tracer import *
-import disasm as d, reloc as rl
+import disasm as d, reloc as rl, addresses as A
 
 def norm(nm):
     nm = nm.replace('$$', '.')
@@ -14,7 +14,7 @@ def norm(nm):
     return nm
 
 class Tr2(t.Tr):
-    REAL = re.compile(r'^(MenuMessage\.SetCanvasMesh|MenuPortItemTable\.Sub_|eIndent\.|NotchFix\.|UIFix\.|MenuParts\.|MeshMaker\.|MenuPortItemTable\.(MonsterNamePlate|MonsterMarkList|BattleBar|ICityMap)\.)')
+    REAL = re.compile(r'^(MenuMessage\.SetCanvasMesh|MenuPortItemTable\.Sub_|eIndent\.|NotchFix\.|DisplayFix\.|UIFix\.|MenuParts\.|MeshMaker\.|MenuPortItemTable\.(MonsterNamePlate|MonsterMarkList|BattleBar|ICityMap|IBetText)\.)')
     NOREAL = re.compile(r'^(MenuParts\.(<>c|FuncIsHit|IBase\.(IntChanger|StringChanger)|IButton\.<>c))')
     def __init__(self):
         super().__init__()
@@ -28,7 +28,7 @@ class Tr2(t.Tr):
 
     def is_real(self, nm):
         if not self.REAL.match(nm) or self.NOREAL.match(nm): return False
-        if 'ctor' in nm and not nm.startswith(('MenuParts.', 'MeshMaker.', 'MenuPortItemTable.Monster', 'MenuPortItemTable.BattleBar')): return False
+        if 'ctor' in nm and not nm.startswith(('MenuParts.', 'MeshMaker.', 'MenuPortItemTable.Monster', 'MenuPortItemTable.BattleBar', 'MenuPortItemTable.IBetText')): return False
         return True
     def collect(self, fn, seen):
         if fn in seen: return
@@ -37,9 +37,9 @@ class Tr2(t.Tr):
         for ins in d.md.disasm(d.rd(fn, end - fn), fn):
             if ins.mnemonic in ('bl', 'b') and ins.operands[0].type == 2:
                 t_ = ins.operands[0].imm
-                if fn <= t_ < end or t_ in self.patched: continue
+                if fn <= t_ < end or t_ in self.patched or island(t_, fn, end): continue
                 nm = self.fname(t_)
-                if 0xc10000 <= t_ <= 0xc11000:
+                if A.HELPER_BLOCK[0] <= t_ <= A.HELPER_BLOCK[1]:
                     self.intercept(t_, lambda a: None); continue
                 if self.native_for(nm, t_) is None and self.is_real(nm):
                     self.observe(t_, nm); self.collect(t_, seen)
@@ -239,13 +239,20 @@ class Tr2(t.Tr):
             T.uc.mem_write(X[0] + 0x20, raw[:n * es])
         # binding tables of MenuPortItem (structured log for the export)
         def _tab(kind, **kw): T.tab.append(dict(kind=kind, **kw))
-        if addr == 0xd056a4: H[nm] = lambda X, F: (_tab('addparts', parts=X[1]), T.ret(len(T.plist) - 1 if T.plist.append(X[1]) is None else 0))[1]
-        if addr == 0xd05a30: H[nm] = lambda X, F: _tab('param', id=X[1] & 0xffff, no=X[2] & 0xffff, partsNo=X[3] & 0xffffffff, baseNo=X[4] & 0xffffffff)
-        if addr == 0xd05b04: H[nm] = lambda X, F: _tab('param_ibase', id=X[1] & 0xffff, no=X[2] & 0xffff, ibase=X[3])
-        if addr == 0xd05b74: H[nm] = lambda X, F: _tab('param_textcolor', id=X[1] & 0xffff, no=X[2] & 0xffff, parts=X[3])
-        if addr == 0xd057d4: H[nm] = lambda X, F: _tab('code_parts', id=X[1] & 0xffff, partsNo=X[2] & 0xffff)
-        if addr == 0xd05948: H[nm] = lambda X, F: _tab('code_func', id=X[1] & 0xffff, func=X[2])
-        @reg('sub_bf37a8')
+        def _add_parts(X, F):
+            _tab('addparts', parts=X[1]); T.plist.append(X[1])
+            lst = T.u(X[0] + 0x20, 8)                # MenuPortItem's parts list (+0x20): the Make_* code may read it back (DQ VI's Make_BlackSmithItemList: get_Item(i + 1))
+            if lst:
+                if not T.u(lst + 0x10, 8): T.list_init(lst, 8)
+                T.list_add_raw(lst, 8, struct.pack('<Q', X[1]))
+            T.ret(len(T.plist) - 1)
+        if addr == A.ADD_PARTS: H[nm] = _add_parts
+        if addr == A.TABLE_ITEM_PARAM: H[nm] = lambda X, F: _tab('param', id=X[1] & 0xffff, no=X[2] & 0xffff, partsNo=X[3] & 0xffffffff, baseNo=X[4] & 0xffffffff)
+        if addr == A.TABLE_ITEM_PARAM_IBASE: H[nm] = lambda X, F: _tab('param_ibase', id=X[1] & 0xffff, no=X[2] & 0xffff, ibase=X[3])
+        if addr == A.TABLE_TEXT_COLOR: H[nm] = lambda X, F: _tab('param_textcolor', id=X[1] & 0xffff, no=X[2] & 0xffff, parts=X[3])
+        if addr == A.TABLE_CODE_PARTS: H[nm] = lambda X, F: _tab('code_parts', id=X[1] & 0xffff, partsNo=X[2] & 0xffff)
+        if addr == A.TABLE_CODE_FUNC: H[nm] = lambda X, F: _tab('code_func', id=X[1] & 0xffff, func=X[2])
+        @reg('sub_%x' % A.RGCTX_INIT)
         def _(X, F):        # initialization of the rgctx of a generic method: AddComponent<MenuParts>() is put in it
             if T.kname.get(X[0], '').startswith('Method$') and 'Create' in T.kname.get(X[0], ''):
                 _fix_generic_menuparts(T, X, F)
@@ -269,14 +276,14 @@ class Tr2(t.Tr):
             cn = T.kname.get(kl, '?').replace('_TypeInfo', '')
             m_ = re.search(r'AddComponent<(.+)>\(\)$', cn)
             if m_:                      # token Method$...AddComponent<T>() -> class T
-                kk = T.klass_for_type(m_.group(1))
+                kk = T.klass_for_type(m_.group(1)) or (T.klass_named(m_.group(1)) if m_.group(1) != 'T' else None)          # (a Unity type: its class, so that a cast of the component to it succeeds, DQ VI's Make_BattleUpStatus)
                 if kk: kl = kk
                 cn = m_.group(1)
                 if cn == 'T':                # Create<T> (T = MenuParts or subclass): we take MenuParts
                     cn = 'MenuParts'; kl = T.klass_for_type('MenuParts') or kl
             cn = cn.replace('_var', '')
             c = T.new_obj(kl, fill=True)
-            if cn == 'MenuParts':       # fields initialized by MenuParts..ctor (0xd031d0)
+            if cn == 'MenuParts':       # fields initialized by MenuParts..ctor
                 T.list_init(c + 0, 8) if False else None
                 for off in (0x38, 0x58):
                     lo = T.alloc(0x30); T.w(lo, T.klass_for_type('MenuParts') or kl); T.obj[lo] = len(T.obj) + 1
@@ -488,7 +495,7 @@ def _fix_generic_menuparts(self, X, F):
     if not tok: return
     k = self.klass.get(tok[0]) or self.new_klass(tok[0]); self.w(tok[0], k)
     for mi in X[1:8]:
-        if 0x1c00000 < mi < 0x2000000 or self.kname.get(mi, '').startswith('Method$'):
+        if A.METHOD_INFOS[0] <= mi < A.METHOD_INFOS[1] or self.kname.get(mi, '').startswith('Method$'):
             blk = self.alloc(0x40); self.w(blk, k); self.w(blk + 8, k)
             self.w(mi + 0x38, blk)
 

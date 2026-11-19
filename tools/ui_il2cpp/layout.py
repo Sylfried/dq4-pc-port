@@ -1,13 +1,14 @@
 """Export of the menu layout: for each menu type, runs the original Make_* and describes nodes, parts (MenuParts),
 changers (IBase), binding tables (id,no) and the effects of the codes (movement / visibility)."""
 import sys, json, struct, copy
-import scene as S, runall2 as R, tracer as t, disasm as d, reloc as rl
+import scene as S, runall2 as R, tracer as t, disasm as d, reloc as rl, addresses as A
 T = S.T
 SIGADDR = {}
 for a, sg in t.SIG.items():
     SIGADDR[sg['cls'] + '.' + sg['name']] = a
     if '>' in sg['name'] and not sg['name'].startswith('<'): SIGADDR[sg['cls'] + '.<' + sg['name']] = a
-IB = {'MenuParts.IText': 'text', 'MenuParts.IIcon': 'icon', 'MenuParts.IButton': 'button', 'MenuParts.IFrame': 'frame', 'MenuParts.IBar': 'bar'}
+IB = {'MenuParts.IText': 'text', 'MenuParts.IIcon': 'icon', 'MenuParts.IButton': 'button', 'MenuParts.IFrame': 'frame', 'MenuParts.IBar': 'bar',
+      'MenuPortItemTable.IBetText': 'text'}          # (DQ V / VI betting lines: a TextMesh whose @0 to @7 codes become colors)
 CODES = (-1, 0, 1, 2, 3, 4, 5)
 from unicorn import UC_HOOK_CODE
 from unicorn.arm64_const import *
@@ -15,24 +16,24 @@ BUILDS = []
 def _hook_build(uc, a, sz, ud):
     r = lambda n: uc.reg_read(n)
     this = r(UC_ARM64_REG_X0)
-    if a == 0xd00f3c:     # Build(indent, screenIndent, x, y, z, parent)
+    if a == A.BUILD_XYZ:     # Build(indent, screenIndent, x, y, z, parent)
         fl = lambda q: struct.unpack('<f', struct.pack('<I', r(q) & 0xffffffff))[0]
         BUILDS.append(dict(this=this, indent=r(UC_ARM64_REG_X1) & 0xffffffff, scr=r(UC_ARM64_REG_X2) & 0xffffffff,
                            xyz=[fl(UC_ARM64_REG_S0), fl(UC_ARM64_REG_S1), fl(UC_ARM64_REG_S2)], parent=r(UC_ARM64_REG_X3)))
-    elif a == 0xcfb590:   # Build(indent, Vector3 pos, parent)
+    elif a == A.BUILD_POS:   # Build(indent, Vector3 pos, parent)
         fl = lambda q: struct.unpack('<f', struct.pack('<I', r(q) & 0xffffffff))[0]
         BUILDS.append(dict(this=this, indent=r(UC_ARM64_REG_X1) & 0xffffffff, scr=None,
                            xyz=[fl(UC_ARM64_REG_S0), fl(UC_ARM64_REG_S1), fl(UC_ARM64_REG_S2)], parent=r(UC_ARM64_REG_X2)))
-for _a in (0xd00f3c, 0xcfb590): T.uc.hook_add(UC_HOOK_CODE, _hook_build, None, _a, _a)
+for _a in (A.BUILD_XYZ, A.BUILD_POS): T.uc.hook_add(UC_HOOK_CODE, _hook_build, None, _a, _a)
 FCALLS = {}
 def _hook_frame(uc, a, sz, ud):   # IBase.Change(int): this = IBase
     v = uc.reg_read(UC_ARM64_REG_X1) & 0xffffffff
     FCALLS[uc.reg_read(UC_ARM64_REG_X0)] = v - (1 << 32) if v & 0x80000000 else v
-T.uc.hook_add(UC_HOOK_CODE, _hook_frame, None, 0xcfa704, 0xcfa704)      # MenuParts.IBase.Change(int)
+T.uc.hook_add(UC_HOOK_CODE, _hook_frame, None, A.IBASE_CHANGE_INT, A.IBASE_CHANGE_INT)      # MenuParts.IBase.Change(int)
 TCALLS = []
 def _hook_tc(uc, a, sz, ud):      # MenuParts.SetTextColor(this, code)
     TCALLS.append((uc.reg_read(UC_ARM64_REG_X0), uc.reg_read(UC_ARM64_REG_X1) & 0xffff))
-T.uc.hook_add(UC_HOOK_CODE, _hook_tc, None, 0xcfdaa0, 0xcfdaa0)
+T.uc.hook_add(UC_HOOK_CODE, _hook_tc, None, A.SET_TEXT_COLOR, A.SET_TEXT_COLOR)
 
 def r4(x): return round(x, 3)
 def cname(o):
@@ -61,6 +62,14 @@ def restore(snap):
     for o, e in snap.items():
         u = T.U[o]; T.set_world(u['tr'], e['pos']); u['active'] = e['act']
 
+def closure_field(tg, name):
+    """Address of the field `name` of the closure object tg (a delegate's target), or of the closure it is nested in (CS$<>8__locals1)."""
+    while tg:
+        cn = cname(tg); off = A.field(cn, name)
+        if off is not None: return tg + off
+        up = A.field(cn, 'CS$<>8__locals1'); tg = T.u(tg + up, 8) if up is not None else None
+    return None
+
 def describe_ibase(ib, node_of_parts, goid):
     k = cname(ib)
     kind = IB.get(k, 'other')
@@ -73,11 +82,10 @@ def describe_ibase(ib, node_of_parts, goid):
     elif kind == 'text':
         for dd in (ic, sc):
             if dd and dd[0]:
-                tg = dd[0]; nm = dd[1]
-                if 'DisplayClass1_0' in nm:
-                    e.update(go=goid(T.u(tg + 0x18, 8)), fsize=f32(tg + 0x20), variant=1)
-                else:
-                    e.update(go=goid(T.u(tg + 0x10, 8)), variant=0)
+                tm, fs = closure_field(dd[0], 'textMesh'), closure_field(dd[0], 'fsize')     # fsize: text fitted to a width
+                if tm is None: continue                                                         # (an int function of its own, DQ VI's Sub_ChangeNameButton: the text mesh is the string function's)
+                if fs: e.update(go=goid(T.u(tm, 8)), fsize=f32(fs), variant=1)
+                else: e.update(go=goid(T.u(tm, 8)), variant=0)
                 break
     elif kind == 'bar':
         e.update(vtx=T.u(ib + 0x30, 4), zero=f32(ib + 0x34), width=f32(ib + 0x38))
@@ -96,7 +104,7 @@ def export_type(typ):
     nm = R.tbl[typ]
     for o in [o for o, u in T.U.items() if u['kind'] == 'GameObject']: pass
     keep = set(T.U); T.tab = []; T.plist = []; T.deleg = {}; BUILDS.clear(); FCALLS.clear()
-    # CreateMenuPortItem (0xCE4294) calls the delegate with "type - Array.IndexOf(makeFuncList, delegate)" (0xCE43DC: sub w2, w21, w0):
+    # CreateMenuPortItem calls the delegate with "type - Array.IndexOf(makeFuncList, delegate)":
     # for the types that share the same Make_* (13..17 Make_Status, 22/23 Make_MapButton...) the argument is the rank in the group, not the type
     first_idx = min(t_ for t_ in range(len(R.tbl)) if R.tbl[t_] == nm)
     err = T.run(R.addr[nm[:-2]], [7, typ - first_idx])

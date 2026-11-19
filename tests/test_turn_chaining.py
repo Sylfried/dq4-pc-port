@@ -8,8 +8,8 @@ the duration of the animation itself does not change.
 import os, sys, tempfile, unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from dq4_pc.core import engine as ENGINE
-from dq4_pc.persistence import settings as RG
+from dq456_pc.core import engine as ENGINE
+from dq456_pc.persistence import settings as RG
 
 APK, SAVES = os.environ.get('DQ_APK'), os.environ.get('DQ_SAVES')
 

@@ -1,10 +1,10 @@
 import sys, json, struct
 import runall2 as R, tracer as t
-import disasm as d, menusys as M
+import disasm as d, menusys as M, addresses as A
 import os
 T = R.make()
 _H = int(os.environ.get('DQ_UI_H', '800')); T.screen = (450, _H); T.aspect = 450.0 / _H
-T.run(0xd2370c)
+T.run(A.EINDENT_INIT)
 M.system_init(T)
 _k0 = set(T.U)
 M.make_message(T)

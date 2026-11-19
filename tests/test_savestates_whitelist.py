@@ -5,9 +5,9 @@ Without APK: crafted pickles (including traps: os.system, eval, subprocess, dott
 import collections, os, pickle, struct, sys, tempfile, unittest, zlib
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from dq4_pc import language as _LANGUAGE; _LANGUAGE.select_language('fr')          # (these tests expect the French texts, whatever the computer's language)
+from dq456_pc import language as _LANGUAGE; _LANGUAGE.select_language('fr')          # (these tests expect the French texts, whatever the computer's language)
 import numpy as np
-from dq4_pc.persistence import savestates as SS
+from dq456_pc.persistence import savestates as SS
 APK, SAVES = os.environ.get('DQ_APK'), os.environ.get('DQ_SAVES')
 
 
@@ -30,31 +30,41 @@ class Readable(unittest.TestCase):
             self.assertEqual(r['a'], d['a']); self.assertTrue((r['tab'] == d['tab']).all()); self.assertEqual(r['sc'], d['sc']); self.assertEqual(r['od'], d['od']); self.assertEqual(r['dq'], d['dq']); self.assertEqual(dict(r['dd']), {1: [2]})
 
     def test_port_classes(self):
-        from dq4_pc.core import engine as ENGINE
+        from dq456_pc.core import engine as ENGINE
         e = ENGINE.State(); e.game_map = 'ev01'; e.sprites = {1: {'pos': np.zeros(3, np.float32), 'id': 7}}
         r = SS._load(pickle.dumps({'etat': e}, protocol=pickle.HIGHEST_PROTOCOL))['etat']
         self.assertIsInstance(r, ENGINE.State); self.assertEqual(r.game_map, 'ev01'); self.assertEqual(r.sprites[1]['id'], 7)
 
     def test_old_module_names(self):
         """A state from before the tidy-up says `engine.State`: read again (the name is translated first, then the whitelist applies)."""
-        from dq4_pc.core import engine as ENGINE
-        raw_value = pickle.dumps(ENGINE.State(), protocol=3); self.assertIn(b'cdq4_pc.core.engine\nState\n', raw_value)
-        old = raw_value.replace(b'cdq4_pc.core.engine\nState\n', b'cmoteur\nEtat\n')
+        from dq456_pc.core import engine as ENGINE
+        raw_value = pickle.dumps(ENGINE.State(), protocol=3); self.assertIn(b'cdq456_pc.core.engine\nState\n', raw_value)
+        old = raw_value.replace(b'cdq456_pc.core.engine\nState\n', b'cmoteur\nEtat\n')
         self.assertIsInstance(SS._load(old), ENGINE.State)
 
     def test_names_before_the_english_rename(self):
         """A state recorded before the switch to English says `dq4_pc.noyau.moteur.Etat` and keeps the old attribute names (`carte`, `partie`, `fondu`...): read again, it carries the current names."""
-        from dq4_pc.core import engine as ENGINE
+        from dq456_pc.core import engine as ENGINE
         new_state = ENGINE.State(); new_state.game_map = 'ev01'; new_state.part = 12; new_state.fade['n'] = 3
         inverse = {v: k for k, v in ENGINE.OLD_ATTRIBUTES.items()}
         old_state = ENGINE.State.__new__(ENGINE.State); old_state.__dict__.update({inverse.get(k, k): v for k, v in new_state.__dict__.items()})        # (without going through __setstate__: the object keeps the old names)
         self.assertIn('carte', old_state.__dict__); self.assertNotIn('game_map', old_state.__dict__)
-        raw_value = pickle.dumps(old_state, protocol=3).replace(b'cdq4_pc.core.engine\nState\n', b'cdq4_pc.noyau.moteur\nEtat\n')
+        raw_value = pickle.dumps(old_state, protocol=3).replace(b'cdq456_pc.core.engine\nState\n', b'cdq4_pc.noyau.moteur\nEtat\n')
         r = SS._load(raw_value)
         self.assertIsInstance(r, ENGINE.State); self.assertEqual((r.game_map, r.part, r.fade['n']), ('ev01', 12, 3)); self.assertNotIn('carte', r.__dict__); self.assertNotIn('partie', r.__dict__)
         self.assertEqual(r.__dict__.keys(), new_state.__dict__.keys())
         ui = ENGINE.Interface(); ui.damage.append((1, 2, 3)); old_ui = ENGINE.Interface.__new__(ENGINE.Interface); old_ui.__dict__.update({inverse.get(k, k): v for k, v in ui.__dict__.items()})
         r_ui = SS._load(pickle.dumps(old_ui, protocol=3)); self.assertEqual(r_ui.damage, [(1, 2, 3)]); self.assertNotIn('degats', r_ui.__dict__)
+
+    def test_names_before_the_package_rename(self):
+        """A state recorded when the package was called `dq4_pc` (DQ4 only) is read with the current package."""
+        from dq456_pc.core import engine as ENGINE
+        st = ENGINE.State(); st.game_map = 'mak1f1'
+        raw_value = pickle.dumps(st, protocol=3)
+        self.assertIn(b'cdq456_pc.core.engine\nState\n', raw_value)
+        r = SS._load(raw_value.replace(b'cdq456_pc.core.engine\nState\n', b'cdq4_pc.core.engine\nState\n'))
+        self.assertIsInstance(r, ENGINE.State); self.assertEqual(r.game_map, 'mak1f1')
+        with self.assertRaises(pickle.UnpicklingError): SS._load(pickle.dumps(ENGINE.Engine, protocol=3).replace(b'cdq456_pc.core.engine\n', b'cdq4_pc.core.engine\n'))      # (still the allowlist)
 
     def test_complete_file_write_read(self):
         d = {'version': SS.VERSION, 'lib': [(3, b'\x00' * 8)], 'heap': b'abc', 'python': pickle.dumps({'etat': None}), 'viewer': pickle.dumps({'k': np.ones(2)})}
@@ -91,14 +101,14 @@ class Refused(unittest.TestCase):
         self.verify(lambda f: Trap(np.load, f), 'numpy')
 
     def test_port_classes_off_allowlist(self):
-        from dq4_pc.core import engine as ENGINE
+        from dq456_pc.core import engine as ENGINE
         self.verify(lambda f: Trap(ENGINE.Engine, f, f, f), 'Engine')                          # (the engine constructor must not be callable by a file)
         self.verify(lambda f: Trap(ENGINE.GameCore), 'GameCore')
 
     def test_names_with_dot_on_allowed_module(self):
-        """Protocol 4: `STACK_GLOBAL` accepts "os.system" as a name in the module `dq4_pc.core.engine` (which imports os); the whitelist compares the whole name: refuses."""
+        """Protocol 4: `STACK_GLOBAL` accepts "os.system" as a name in the module `dq456_pc.core.engine` (which imports os); the whitelist compares the whole name: refuses."""
         f = control()
-        for module, name_str in (('dq4_pc.core.engine', 'os.system'), ('collections', 'sys.modules'), ('builtins', 'eval.__self__')):
+        for module, name_str in (('dq456_pc.core.engine', 'os.system'), ('collections', 'sys.modules'), ('builtins', 'eval.__self__')):
             raw = (b'\x80\x04\x95' + struct.pack('<Q', 0)) if False else None
             raw_value = b'\x80\x04' + b'\x8c' + bytes([len(module)]) + module.encode() + b'\x8c' + bytes([len(name_str)]) + name_str.encode() + b'\x93' + b'.'          # PROTO 4, SHORT_BINUNICODE, SHORT_BINUNICODE, STACK_GLOBAL, STOP
             with self.assertRaises(pickle.UnpicklingError): SS._load(raw_value)
@@ -137,7 +147,7 @@ class RealSavestates(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         import unicorn
-        from dq4_pc.core import engine as ENGINE
+        from dq456_pc.core import engine as ENGINE
         cls.ENGINE, cls.unicorn = ENGINE, unicorn
         cls.wdir = tempfile.mkdtemp(prefix='sv_liste_blanche_')
         cls.eng = ENGINE.Engine(APK, SAVES, cls.wdir); cls.c = cls.eng.core

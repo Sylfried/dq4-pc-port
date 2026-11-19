@@ -13,11 +13,11 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..'))
 import pyglet
 pyglet.options['shadow_window'] = False
-from dq4_pc.menus import hud_mobile as HM
-from dq4_pc.core import engine as ENGINE
+from dq456_pc.menus import hud_mobile as HM
+from dq456_pc.core import engine as ENGINE
 
 try:
-    from dq4_pc.window import game as WND
+    from dq456_pc.window import game as WND
 except Exception as ex:          # window.py needs pyglet, numpy, unicorn... (the import alone is enough, no window is created)
     WND = None; ERROR_WND = ex
 
@@ -64,6 +64,13 @@ class Dpad(unittest.TestCase):
     def test_small_movements_in_dead_zone_remain_touch(self):
         self.press_state(); self.b.dpad_drag(self.cx + 0.05 * self.r, self.cy - 0.06 * self.r); self.assertFalse(self.b.dpad_dragging); self.assertTrue(self.b.dpad_release())
 
+    def test_click_anywhere_on_the_ball_is_a_touch(self):
+        """The whole ball (a quarter of the radius), not only the dead zone: a click on its edge is the action key, and gives no step while it is held."""
+        self.press_state(0.2, 0.0); self.assertFalse(self.b.dpad_dragging); self.assertIsNone(self.b.dpad_sector()); self.assertEqual(self.b.dpad_bits(), 0)
+        self.assertTrue(self.b.dpad_release())
+        self.press_state(0.0, 0.2); self.b.dpad_drag(self.cx, self.cy + 0.3 * self.r); self.assertTrue(self.b.dpad_dragging); self.assertEqual(self.b.dpad_sector(), 0)          # (out of the ball: a direction)
+        self.assertFalse(self.b.dpad_release())
+
     def test_a_slide_is_not_a_touch(self):
         self.press_state(); self.b.dpad_drag(self.cx + 0.5 * self.r, self.cy); self.assertTrue(self.b.dpad_dragging); self.assertEqual(self.b.dpad_sector(), 2)         # direction: right
         self.assertFalse(self.b.dpad_release())
@@ -76,7 +83,7 @@ class Dpad(unittest.TestCase):
         self.press_state(0.0, 0.6); self.assertTrue(self.b.dpad_dragging); self.assertEqual(self.b.dpad_sector(), 0); self.assertFalse(self.b.dpad_release())                # up
 
     def test_directions_unchanged(self):
-        from dq4_pc.core import engine as M
+        from dq456_pc.core import engine as M
         for (dx, dy), bits in (((0.5, 0.0), M.RIGHT), ((-0.5, 0.0), M.LEFT), ((0.0, 0.5), M.UP), ((0.0, -0.5), M.DOWN), ((0.5, 0.5), M.UP | M.RIGHT)):
             self.b.dpad_drop(); self.press_state(dx, dy); self.assertEqual(self.b.dpad_bits(), bits, (dx, dy))
         self.b.dpad_drop(); self.press_state(); self.assertEqual(self.b.dpad_bits(), 0)                                      # (the center circle alone sends no direction)
@@ -166,6 +173,7 @@ class InWindow(unittest.TestCase):
         j.hud = HM.Buttons(j); j.sound = types.SimpleNamespace(play_sfx=lambda *a: None); j.mouse_guard = types.SimpleNamespace(click=lambda: None, keyboard=lambda s: None)
         j.last_device = None; j.mouse = None; j.click_a = j.click_b = False; j.press_state = None; j.wheel = types.SimpleNamespace(cancel=lambda: None, in_progress=False)
         j.bar_gesture = types.SimpleNamespace(cancel=lambda: None, in_progress=False); j.arena_pressed = False; j.arena_zone = None
+        j.slime_touch_click = lambda x, y: False; j.slime_touch_keys = lambda p, d: (p, d); j.curling_press = lambda x, y: False; j.curling_release = lambda: False; j.sugoroku_click = lambda x, y: False; j.sugoroku_held = lambda p: p          # (no Slime Touch, curling or T'n'T here: window/slime_touch.py, slime_curling.py, sugoroku.py)
         for name_str in ('_terrain_free', 'on_mouse_press', 'on_mouse_release', 'arena_back_shown', 'arena_back_press', 'arena_back_release'): setattr(j, name_str, types.MethodType(getattr(WND.Game, name_str), j))
         j._map_ports = lambda: {}; j.ref_effect = None
         return j

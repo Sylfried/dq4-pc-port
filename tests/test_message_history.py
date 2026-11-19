@@ -1,4 +1,4 @@
-"""Test (no window or engine) of the history: dq4_pc/historique.py (pure data, favorites, pages of a message, engine hook with a fake emulator) and ui_history.py (tabs, H key, star, scrolling).
+"""Test (no window or engine) of the history: dq456_pc/core/history.py (pure data, favorites, pages of a message, engine hook with a fake emulator) and ui_history.py (tabs, H key, star, scrolling).
 
     python3 tests/test_message_history.py
 
@@ -12,14 +12,14 @@ Single box size (the game's dialogue box: 1, 2 or 3 lines, dialogue or battle; o
 import inspect, json, os, shutil, struct, sys, tempfile, types, unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-import _paths          # (test helper: finding the source code in the subfolders of dq4_pc)
+import _paths          # (test helper: finding the source code in the subfolders of dq456_pc)
 import pyglet
 pyglet.options['shadow_window'] = False                     # (no display needed: nothing is drawn)
-from dq4_pc import language as LG
+from dq456_pc import language as LG
 LG.select_language('fr')          # (the expectations of this test are in French, whatever the language of the computer)
-from dq4_pc.core import history as HI
-from dq4_pc.persistence import settings as RG
-from dq4_pc.menus import ui_history as UH
+from dq456_pc.core import history as HI
+from dq456_pc.persistence import settings as RG
+from dq456_pc.menus import ui_history as UH
 
 
 class Clock:
@@ -193,15 +193,14 @@ class TestFavorites(unittest.TestCase):
 
     def test_removal(self):
         h = new(self.legacy); d, c = self.filled(h); h.toggle_favorite(d); h.toggle_favorite(c)
-        self.assertFalse(h.toggle_favorite(d)); self.assertFalse(h.is_favorite(d)); self.assertEqual(len(h.favorites), 2)       # second press on the star: only marked
-        h.apply_removals()                                                                                     # the window is left: removed
+        self.assertFalse(h.toggle_favorite(d)); self.assertFalse(h.is_favorite(d))                             # second press on the star: removed at once
         self.assertIsNone(d.fav); self.assertEqual([e.fav for e in h.favorites], [2]); self.assertEqual(c.fav, 2)
         self.assertEqual([e['id'] for e in self.read()], [2])
         h2 = new(self.legacy); self.assertEqual([e.fav for e in h2.favorites], [2])
 
     def test_removal_from_the_favorites_tab(self):
         h = new(self.legacy); d, _ = self.filled(h); h.toggle_favorite(d)
-        copied = h.favorites[0]; self.assertFalse(h.toggle_favorite(copied)); h.apply_removals()                     # "unstar" the favorite itself, then leave the window
+        copied = h.favorites[0]; self.assertFalse(h.toggle_favorite(copied))                                        # "unstar" the favorite itself
         self.assertEqual(h.favorites, []); self.assertIsNone(d.fav)                                                  # the session's item loses its star too
         self.assertEqual(self.read(), [])
 
@@ -383,15 +382,10 @@ class TestSensor(unittest.TestCase):
 
 
 class TestKey(unittest.TestCase):
-    def test_default_key(self):
+    def test_no_history_key(self):
+        """No more History key (the history is a line of the Esc menu): H belongs to no action, the gamepads neither."""
         reg = RG.Settings(None)
-        self.assertEqual(reg['keys']['history'], ['H', None])
-        ts = {a: [n for n in l if n] for a, l in reg['keys'].items()}
-        others = [n for a, l in ts.items() if a != 'history' for n in l]
-        self.assertNotIn('H', others)                                                                          # no conflict with another action
-        self.assertTrue(all(n not in RG.RESERVED for n in ts['history']))
-        self.assertEqual(reg.action_of(pyglet.window.key.H), 'history')
-        self.assertEqual(dict(RG.ACTIONS)['history'], 'settings.history')
+        self.assertNotIn('history', reg['keys']); self.assertIsNone(reg.action_of(pyglet.window.key.H)); self.assertNotIn('history', dict(RG.ACTIONS))
 
 
 def fill(h):
@@ -471,7 +465,7 @@ class TestBox(unittest.TestCase):
         self.assertEqual((UH.Box.from_ml(None).WIDTH, UH.Box.from_ml(object()).UP), (452.0, 126.0))               # (layout missing or unusable: measured values)
 
     def test_dimensions_of_real_borders(self):
-        import test_dialogue_name as N; from dq4_pc.menus import ui_menu as UM
+        import test_dialogue_name as N; from dq456_pc.menus import ui_menu as UM
         l, c = os.path.join(N.CACHE, 'ui_layout.json'), os.path.join(N.CACHE, 'ui_frameData.bin')
         if not (os.path.exists(l) and os.path.exists(c)): self.skipTest('cache d\'interface absent')
         B = UH.Box.from_ml(UM.PageLayout(l, c)); d = UH.Box()
@@ -547,7 +541,7 @@ class TestBox(unittest.TestCase):
 
     def test_stretched_game_border(self):
         """With the real layout: the frame of a 5-line battle is 2 lines taller (56 units), its corners keep their size, a dialogue's frame is untouched."""
-        import test_dialogue_name as N; from dq4_pc.menus import ui_menu as UM
+        import test_dialogue_name as N; from dq456_pc.menus import ui_menu as UM
         l, c = os.path.join(N.CACHE, 'ui_layout.json'), os.path.join(N.CACHE, 'ui_frameData.bin')
         if not (os.path.exists(l) and os.path.exists(c)): self.skipTest('cache d\'interface absent')
         ml = UM.PageLayout(l, c); v = make_view(0); v.J.ui_render = types.SimpleNamespace(ml=ml)
@@ -746,7 +740,7 @@ class TestView(unittest.TestCase):
 
     def test_no_graying_on_chosen_message(self):
         """Exception to the menus' general rule: neither lightened nor grayed on hover or choice (mouse or keyboard), only the small arrow marks the chosen message. The box is drawn the same way whether chosen or not."""
-        import inspect; from dq4_pc.menus import hud_mobile as HM
+        import inspect; from dq456_pc.menus import hud_mobile as HM
         self.assertNotIn('choisi', inspect.signature(UH.HistoryView._draw_box).parameters)
         drawings = []; v = make_view(); B = UH.Box(); orig = (pyglet.shapes.Rectangle, HM.border)
         class Fake:
@@ -779,13 +773,10 @@ class TestView(unittest.TestCase):
         v.key_press(K.LEFT); self.assertEqual(v.tab, UH.O_BATTLES)
         v.key_press(K.D); v.key_press(K.A); self.assertEqual(v.tab, UH.O_BATTLES)                               # the movement keys (right, left) go through the messages only, never the tabs
 
-    def test_h_key_cycles(self):
+    def test_h_key_does_nothing(self):
+        """No more History key: H changes neither the tab nor closes the window."""
         K = pyglet.window.key; v = make_view(n=3, battles=2)
-        self.assertEqual(v.tab, UH.O_DIALOGUES)
-        self.assertTrue(v.key_press(K.H)); self.assertEqual(v.tab, UH.O_BATTLES); self.assertNotIn('fermer', v.calls)       # 2nd press: the battles
-        self.assertTrue(v.key_press(K.H)); self.assertEqual(v.calls[-1], 'fermer')                                              # 3rd press: closes everything
-        v.toggle_filter(); self.assertTrue(v.key_press(K.H)); self.assertEqual(v.calls.count('fermer'), 2)                      # "Favorites only" checked: the H cycle does not change (here on the battles: closes)
-        v.change_tab(UH.O_DIALOGUES); v.key_press(K.H); self.assertEqual((v.tab, v.favorites_only, v.calls.count('fermer')), (UH.O_BATTLES, True, 2))
+        self.assertTrue(v.key_press(K.H)); self.assertEqual(v.tab, UH.O_DIALOGUES); self.assertNotIn('fermer', v.calls)
 
     def test_closing(self):
         K = pyglet.window.key; v = make_view()
@@ -841,7 +832,7 @@ class TestView(unittest.TestCase):
         v.zone_ret = (60, 0, 70, 10); v.click(65, 5, M.LEFT); self.assertEqual(v.calls.count('retour'), 2)
 
     def test_favorites_only_filter(self):
-        """"Favorites only" checkbox: keeps, in the open tab, only its favorites; an unstarred item stays in the filtered list (empty star) until the window is left; the checkbox stays checked when the tab changes."""
+        """"Favorites only" checkbox: keeps, in the open tab, only its favorites; an unstarred item leaves the filtered list at once (the session's item keeps an empty star); the checkbox stays checked when the tab changes."""
         K = pyglet.window.key; v = make_view(n=3, battles=2); h = v.J.history
         self.assertFalse(v.favorites_only)
         v.star(0); v.star(2); v.change_tab(UH.O_BATTLES); v.star(1); v.change_tab(UH.O_DIALOGUES)       # two dialogues and one battle as favorites
@@ -850,15 +841,10 @@ class TestView(unittest.TestCase):
         self.assertEqual([(e.type, e.fav) for e in v.elements], [('d', 1), ('d', 2)]); self.assertEqual((v.selected, v.pos), (1, 0.0))      # the tab's favorites, in the order they were added
         v.change_tab(UH.O_BATTLES)                                                                            # the filter is kept from one tab to the other
         self.assertTrue(v.favorites_only); self.assertEqual([(e.type, e.fav) for e in v.elements], [('c', 3)])
-        v.change_tab(UH.O_DIALOGUES); v.key_press(K.RETURN)                                                       # star removed: only marked, the item stays in the filtered list
-        self.assertEqual([e.fav for e in v.elements], [1, 2]); self.assertEqual(v.selected, 1); self.assertEqual(len(h.favorites), 3)
-        self.assertFalse(h.is_favorite(v.elements[1])); self.assertFalse(h.is_favorite(h.dialogues[2]))           # (empty star, here and on the session's item)
-        v.key_press(K.RETURN); self.assertTrue(h.is_favorite(v.elements[1])); self.assertEqual([f.fav for f in h.favorites], [1, 2, 3])
-        self.assertEqual([e.fav for e in v.elements], [1, 2])                                                       # starred again: the same favorite, same place
-        v.change_tab(UH.O_BATTLES); v.change_tab(UH.O_DIALOGUES); v.key_press(K.RETURN); v.toggle_filter(); v.toggle_filter()
-        self.assertEqual([e.fav for e in v.elements], [1, 2])                                                       # changing tab or filter is not leaving: still listed, still marked
-        v.leave(); v.reload(); self.assertEqual([e.fav for e in v.elements], [1]); self.assertIsNone(h.dialogues[2].fav)       # left: removed (and the session's item loses its star)
-        v.go_to(0); v.key_press(K.RETURN); v.leave(); v.reload(); self.assertEqual((v.elements, v.selected), ([], 0)); self.assertEqual([f.type for f in h.favorites], ['c'])
+        v.change_tab(UH.O_DIALOGUES); v.key_press(K.RETURN)                                                       # star removed: out of the filtered list at once
+        self.assertEqual([e.fav for e in v.elements], [1]); self.assertEqual(v.selected, 0); self.assertEqual([f.fav for f in h.favorites], [1, 3])
+        self.assertIsNone(h.dialogues[2].fav)                                                                     # (the session's item loses its star)
+        v.go_to(0); v.key_press(K.RETURN); self.assertEqual((v.elements, v.selected), ([], 0)); self.assertEqual([f.type for f in h.favorites], ['c'])
         v.key_press(K.RETURN); self.assertFalse(v.star())                                                           # empty list: nothing to toggle
         self.assertFalse(v.toggle_filter()); self.assertEqual(len(v.elements), 3)                                # checkbox unchecked: the whole session again
 
@@ -896,7 +882,7 @@ class TestView(unittest.TestCase):
         self.assertEqual((len(v.elements), v.current_item().text, any(e.fav for e in v.elements)), (HI.MAX_DIALOGUES, 'Plus tard %d.' % (HI.MAX_DIALOGUES - 1), False))
         v.key_press(pyglet.window.key.F); self.assertEqual([(e.name_str, e.text, e.fav) for e in v.elements], [('Alena', 'Hier.', 1)])
         v.change_tab(UH.O_BATTLES); self.assertEqual([(e.type, e.fav) for e in v.elements], [('c', 2)])
-        v.key_press(pyglet.window.key.RETURN); self.assertEqual([e.type for e in v.elements], ['c']); v.leave()                    # star removed: still listed until the window is left
+        v.key_press(pyglet.window.key.RETURN); self.assertEqual(v.elements, [])                                                    # star removed: out of the list at once
         self.assertEqual([e.type for e in P.J.history.favorites], ['d'])
 
     def test_empty_with_the_filter(self):
@@ -911,7 +897,7 @@ class TestView(unittest.TestCase):
 
     def test_play_time_and_next_tabs(self):
         self.assertEqual(UH.game_time(60 * (3600 + 5 * 60 + 12)), '1:05:12'); self.assertEqual(UH.game_time(-5), '0:00:00')
-        self.assertEqual((UH.next_key(UH.O_DIALOGUES), UH.next_key(UH.O_BATTLES)), (UH.O_BATTLES, None))
+        self.assertFalse(hasattr(UH, 'next_key'))
         self.assertEqual((UH.next_tab(1), UH.next_tab(0, -1)), (0, 1))
 
 
@@ -959,7 +945,7 @@ class TestFollowTheGame(unittest.TestCase):
         v = make_view(n=2); v.J.history = None; self.assertFalse(v.follow_game())
 
     def test_pause_update_runs_every_frame_on_history_page(self):
-        from dq4_pc.menus import pause as PA
+        from dq456_pc.menus import pause as PA
         src = inspect.getsource(PA.Pause.do_update)
         self.assertIn("self.hist.follow_game()", src)                          # only when the history is accessible (otherwise the page closes)
         self.assertIn("if self.screen_page == 'history':", src)
@@ -1044,7 +1030,7 @@ class TestPersistence(unittest.TestCase):
 class TestPause(unittest.TestCase):
     """The history in the Pause menu: root entry, opening by the key (direct page), H key cycle, back, line of the "Controls" page."""
     def game(self):
-        from dq4_pc.menus import pause as PA
+        from dq456_pc.menus import pause as PA
         h = new(None); h.add('Bonjour.', 'Alena', 200); h.add_battle(battle())
         self.pauses = []
         J = types.SimpleNamespace(reg=RG.Settings(None), history=h, width=1280, height=720, mouse=None, args=types.SimpleNamespace(cache='/inexistant'),
@@ -1052,20 +1038,19 @@ class TestPause(unittest.TestCase):
         J.reg.store = lambda: None; J.set_fade = lambda v: None; J.set_battle_speed = lambda v: None; J.apply_text = lambda: None          # (the Display page holds the "Text scrolling" section)
         return J, PA.Pause(J)
 
-    def test_h_opens_then_battles_then_closes(self):
+    def test_h_does_nothing_camera_keys_change_tab(self):
+        """No more History key: H does nothing in the history; the camera keys change its tab."""
         K = pyglet.window.key; J, p = self.game()
-        p.open_menu('history')
-        self.assertTrue(p.opened); self.assertEqual((p.screen_page, p.hist.tab, self.pauses), ('history', UH.O_DIALOGUES, [True]))      # 1st press: the messages, the engine is stopped
-        self.assertEqual(len(p.hist.elements), 1)
-        self.assertTrue(p.key_press(K.H, 0)); self.assertTrue(p.opened); self.assertEqual((p.hist.tab, len(p.hist.elements), p.hist.elements[0].type), (UH.O_BATTLES, 1, 'c'))      # 2nd: the battles
-        self.assertTrue(p.key_press(K.H, 0)); self.assertFalse(p.opened); self.assertEqual(self.pauses, [True, False])                                                         # 3rd: everything is closed
-        p.open_menu('history'); self.assertEqual(p.hist.tab, UH.O_DIALOGUES)                                                        # (reopened: on the messages again)
+        p.open_history()
+        self.assertTrue(p.opened); self.assertEqual((p.stack, p.hist.tab, self.pauses), (['root', 'history'], UH.O_DIALOGUES, [True]))
+        self.assertTrue(p.key_press(K.H, 0)); self.assertTrue(p.opened); self.assertEqual(p.hist.tab, UH.O_DIALOGUES)
+        p.key_press(K.RIGHT, 0); self.assertEqual((p.hist.tab, p.hist.elements[0].type), (UH.O_BATTLES, 'c'))
 
     def test_clear_question_over_the_history(self):
-        """the choices of "Clear all" are answered on the history page itself: Esc closes them, not the menu; the battles' tab preselects "Clear the battles";
+        """the choices of "Clear all" are answered on the history page itself: Backspace closes them, not the menu (Esc closes everything); the battles' tab preselects "Clear the battles";
         the movement keys go through the three choices (in a loop), Enter chooses."""
         K = pyglet.window.key; J, p = self.game(); p.open_menu('history'); p.hist.change_tab(UH.O_BATTLES)
-        p.hist.ask_clear(); p.key_press(K.ESCAPE, 0); self.assertTrue(p.opened); self.assertIsNone(p.popup)
+        p.hist.ask_clear(); p.key_press(K.BACKSPACE, 0); self.assertTrue(p.opened); self.assertIsNone(p.popup)
         p.hist.ask_clear(); self.assertEqual(p.popup['choice'], 1)
         p._popup_key(None, 'down'); p._popup_key(None, 'down'); self.assertEqual(p.popup['choice'], 0); p._popup_key(None, 'up'); self.assertEqual(p.popup['choice'], 2)
         p.key_press(K.RETURN, 0); self.assertIsNone(p.popup); self.assertEqual((J.history.battles, J.history.dialogues), ([], []))
@@ -1092,12 +1077,11 @@ class TestPause(unittest.TestCase):
         e['ok'](); self.assertEqual(p.screen_page, 'history'); self.assertEqual(len(p.hist.elements), 1)
         p.key_press(K.BACKSPACE, 0); self.assertEqual(p.screen_page, 'root'); self.assertTrue(p.opened)                  # back to the Pause menu, not to the game
         self.assertEqual(p._entries_history(), [])
-        e['ok'](); p.key_press(K.H, 0); p.key_press(K.H, 0); self.assertFalse(p.opened)                                  # from the menu: H, H also closes the whole menu
+        e['ok'](); p.key_press(K.H, 0); self.assertTrue(p.opened); self.assertEqual(p.screen_page, 'history')            # (H: no more History key)
 
     def test_commands_line(self):
         J, p = self.game(); p.open_menu('controls')
-        e = next(x for x in p._entries() if x.get('act') == 'history')
-        self.assertEqual((e['l'], e['v'][0]), ('settings.history', 'H'))
+        self.assertFalse([x for x in p._entries() if x.get('act') == 'history'])          # (no more History key to choose)
 
     def test_neither_click_nor_wheel_breaks(self):
         M = pyglet.window.mouse; J, p = self.game(); p.open_menu('history')

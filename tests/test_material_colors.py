@@ -14,8 +14,8 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..'))
 import _paths          # (test helper)
-from dq4_pc.world import fld
-from dq4_pc.world import map_objects as OC
+from dq456_pc.world import fld
+from dq456_pc.world import map_objects as OC
 
 APK = os.environ.get('DQ_APK', '')
 PACK = os.path.join(APK, 'split_UnityDataAssetPack.apk')
@@ -204,7 +204,7 @@ class RealMaps(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        from dq4_pc.world import data as DO
+        from dq456_pc.world import data as DO
         cls.cache = tempfile.mkdtemp(prefix='cache_test_material_colors_')
         cls.d = DO.Data(PACK, cls.cache, log=lambda *a: None)
 
@@ -261,10 +261,10 @@ class RealMaps(unittest.TestCase):
 
     def test_zwrite_group_drawn_with_depth_mask(self):
         import inspect
-        from dq4_pc.window import field
+        from dq456_pc.window import field
         src = inspect.getsource(field.FieldMixin._paint_scenery)
         self.assertIn("glDepthMask(gl.GL_TRUE if len(key) == 4 else gl.GL_FALSE)", src)
-        from dq4_pc.world import map_tint as TC
+        from dq456_pc.world import map_tint as TC
         self.assertTrue(TC.group_tz(('tr', 12, 202, 'z'), {202})); self.assertFalse(TC.group_tz(('tr', -1, 303, 'z'), {202}))
 
 

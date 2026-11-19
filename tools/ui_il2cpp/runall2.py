@@ -1,5 +1,5 @@
 import tracer as t, tracer2 as t2, json, collections, sys, re, struct
-import disasm as d, reloc as rl
+import disasm as d, reloc as rl, addresses as A
 from unicorn.arm64_const import *
 tbl = []          # menu number -> name of the Make_* function (filled by make(): the game's MenuPortItemTable.makeFuncList array)
 addr = {}
@@ -13,13 +13,13 @@ def statics(T, cn):
     return T.u(k[0] + 0xb8, 8) if k else None
 def make():
     T = t2.Tr2()
-    for cls in ('MenuParts', 'MenuMessage', 'MenuPortItem', 'MenuPortItemTable', 'Global', 'NotchFix', 'UIFix', 'MeshMaker', 'eIndent'):
+    for cls in ('DisplayFix', 'MenuParts', 'MenuMessage', 'MenuPortItem', 'MenuPortItemTable', 'Global', 'NotchFix', 'UIFix', 'MeshMaker', 'eIndent'):
         if cls in cctor:
             err = T.run(cctor[cls])
             if err: print('cctor', cls, err)
     # sheets: PartsInfo ready
     st = statics(T, 'MenuParts')
-    arr = T.u(st + 0x30, 8); n = T.u(arr + 0x18, 8)
+    arr = T.u(st + A.field('MenuParts', 's_info'), 8); n = T.u(arr + 0x18, 8)
     T.info = []
     for i in range(n):
         o = T.u(arr + 0x20 + 8 * i, 8)
@@ -32,7 +32,7 @@ def make():
         T.uc.mem_write(o + 0x40, struct.pack('<ii', W // ps, sx // ps))
         T.info.append(dict(i=i, texNo=texNo, sx=sx, sy=sy, ps=ps, dps=dps, W=W))
     st = statics(T, 'MenuPortItemTable')              # makeFuncList: one delegate per menu type
-    arr = T.u(st + 0, 8); n = T.u(arr + 0x18, 8)
+    arr = T.u(st + A.field('MenuPortItemTable', 'makeFuncList'), 8); n = T.u(arr + 0x18, 8)
     del tbl[:]
     for i in range(n):
         dl = T.deleg.get(T.u(arr + 0x20 + 8 * i, 8))
@@ -41,5 +41,5 @@ def make():
 if __name__ == '__main__':
     T = make()
     print(T.info[:3])
-    err = T.run(0xd2370c); print('eIndent.Init', err)
+    err = T.run(A.EINDENT_INIT); print('eIndent.Init', err)
     es = statics(T, 'eIndent'); print('eIndent statics', struct.unpack('<ff', T.uc.mem_read(es, 8)))

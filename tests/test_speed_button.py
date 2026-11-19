@@ -14,12 +14,12 @@ import _paths
 import pyglet
 pyglet.options['shadow_window'] = False
 if sys.platform.startswith('linux') and not os.environ.get('DISPLAY'): pyglet.options['headless'] = True
-from dq4_pc.persistence import settings as RG
-from dq4_pc.core import engine as ENGINE
-from dq4_pc.menus import hud_mobile as HM
+from dq456_pc.persistence import settings as RG
+from dq456_pc.core import engine as ENGINE
+from dq456_pc.menus import hud_mobile as HM
 try:
-    from dq4_pc.window import game as F
-    from dq4_pc import main
+    from dq456_pc.window import game as F
+    from dq456_pc import main
 except Exception as ex:
     F = None; IMPORT_ERROR = ex
 
@@ -76,7 +76,7 @@ class Border(unittest.TestCase):
         """On the real layout: command frame x default size = action message frame (to within half a unit)."""
         lay = os.path.join(_paths.ui_cache('/tmp/uicache47_vitesse'), 'ui_layout.json')
         if not os.path.exists(lay): self.skipTest('ui_layout.json absent')
-        from dq4_pc.menus import ui_menu as UI
+        from dq456_pc.menus import ui_menu as UI
         ml = UI.PageLayout(lay, os.path.join(os.path.dirname(lay), 'ui_frameData.bin')); names = {}
         for num, t in ml.types.items():
             if t.get('err') in (None, 'None') and t.get('nodes'): names.setdefault(t.get('name', '').replace('Make_', '').replace('()', ''), []).append(int(num))

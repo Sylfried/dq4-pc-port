@@ -15,15 +15,17 @@ import functools, os, sys, types, unittest
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 import pyglet
 if sys.platform.startswith('linux') and not os.environ.get('DISPLAY'): pyglet.options['headless'] = True; pyglet.options['shadow_window'] = False
-from dq4_pc.core import engine as ENGINE
-from dq4_pc.window import game as F
-from dq4_pc.menus import ui_menu as UI
+from dq456_pc.core import engine as ENGINE
+from dq456_pc.window import game as F
+from dq456_pc.menus import ui_menu as UI
 
 
 class Constants(unittest.TestCase):
     def test_parts(self):
         self.assertEqual((ENGINE.PART_CASINO, ENGINE.PART_BESTIARY), (0xf, 0x10))
-        self.assertEqual(set(ENGINE.MINIGAME_PARTS), {ENGINE.PART_CASINO, ENGINE.PART_BESTIARY})
+        self.assertEqual(set(ENGINE.MINIGAME_PARTS), {ENGINE.PART_CASINO, ENGINE.PART_BESTIARY, ENGINE.PART_CURLING})          # (DQ VI's slime curling: 0x100 + its part 0xb)
+        self.assertEqual(ENGINE.PART_CURLING, 0x10b)
+        self.assertEqual(set(ENGINE.PHONE_SCENE_PARTS), {0x109, 0x10b})          # (DQ V's slime race and DQ VI's curling: the window shows the phone's whole height, the sides blurred)
         self.assertFalse({ENGINE.PART_INITIAL, ENGINE.PART_TOWN, ENGINE.PART_BATTLE, ENGINE.PART_FIELD} & set(ENGINE.MINIGAME_PARTS))
 
 
@@ -201,7 +203,7 @@ class ArenaBackButton(unittest.TestCase):
         """Code read as text: the mixin is a base of Game, the engine ignores the type, the window is neither drawn nor listed in the interface editor, the click and B key go through the button."""
         import inspect
         self.assertTrue(issubclass(F.Game, F.ArenaAbortMixin)); self.assertEqual(F.ARENA_ABORT, 71)
-        from dq4_pc.persistence import settings as RG
+        from dq456_pc.persistence import settings as RG
         self.assertIn('FightStadiumAbort', RG.REMOVED_WINDOWS)
         self.assertIn('ignored_types = (ARENA_ABORT,)', inspect.getsource(F.Game._start_engine))
         self.assertIn('arena_back_press', inspect.getsource(F.Game.on_mouse_press)); self.assertIn('arena_back_release', inspect.getsource(F.Game.on_mouse_release))

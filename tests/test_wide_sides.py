@@ -9,8 +9,8 @@ import numpy as np
 import pyglet
 if sys.platform.startswith('linux') and not os.environ.get('DISPLAY'): pyglet.options['headless'] = True; pyglet.options['shadow_window'] = False
 from pyglet import gl
-from dq4_pc.window import menu_display as MD
-from dq4_pc.window import game as F
+from dq456_pc.window import menu_display as MD
+from dq456_pc.window import game as F
 
 W, H = 420, 120          # 3.5:1
 
@@ -35,7 +35,8 @@ class WideSides(unittest.TestCase):
         a, _ = r; base = H * 16 / 9; inner = int((W - base) / 2)
         self.assertEqual(tuple(a[H // 2, W // 2][:3]), (255, 255, 255))                  # the 16:9 base is untouched
         self.assertEqual(tuple(a[H // 2, inner + 1][:3]), (255, 255, 255))               # ... up to its edge
-        self.assertEqual(tuple(a[H - 1, 0][:3]), (0, 0, 255)); self.assertEqual(tuple(a[0, W - 1][:3]), (255, 0, 0))      # window edges: the background itself (top / bottom colors)
+        near = lambda px, want: max(abs(int(x) - y) for x, y in zip(px[:3], want)) <= 2                # (the edge pixel's center is half a pixel inside the gradient: a software renderer rounds it to 1 / 254)
+        self.assertTrue(near(a[H - 1, 0], (0, 0, 255)), tuple(a[H - 1, 0][:3])); self.assertTrue(near(a[0, W - 1], (255, 0, 0)), tuple(a[0, W - 1][:3]))      # window edges: the background itself (top / bottom colors)
         row = a[H // 2, :inner, 1].astype(int)
         self.assertTrue(all(x <= y for x, y in zip(row, row[1:])), 'the fade grows steadily toward the edge')
 

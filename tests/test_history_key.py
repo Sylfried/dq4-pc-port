@@ -12,9 +12,9 @@ requested again from the engine (TextAPI::extractText), so a message modified in
 import json, os, shutil, sys, tempfile, types, unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from dq4_pc import language as LG
+from dq456_pc import language as LG
 LG.select_language('fr')          # (the expectations of this test are in French, whatever the language of the computer)
-from dq4_pc.core import history as HI
+from dq456_pc.core import history as HI
 
 RAW_SIMPLE = "Il était une fois, dans un pays lointain.\n"
 RAW_PAGES = "*: Vous êtes née dans cette ville, n'est-ce pas\xa0?\nIl ne manquerait plus que je vous fasse\npayer.\n㈡\n*: Alors, vous restez\xa0?\n"
@@ -163,7 +163,7 @@ class TestFavoritesPerKey(Base):
         d = self.file()['favorites'][0]; self.assertNotIn('text', d); self.assertNotIn('Nouveau', self.raw_value())
 
     def test_favorite_removal(self):
-        h = self.hist({2002: RAW_SIMPLE}); e = h.add(HI.clean(RAW_SIMPLE), None, 1, 2002); h.toggle_favorite(e); self.assertFalse(h.toggle_favorite(e)); h.apply_removals()
+        h = self.hist({2002: RAW_SIMPLE}); e = h.add(HI.clean(RAW_SIMPLE), None, 1, 2002); h.toggle_favorite(e); self.assertFalse(h.toggle_favorite(e))
         self.assertEqual(self.file()['favorites'], [])
 
     def test_before_engine_text_waits_then_arrives(self):
@@ -271,7 +271,7 @@ class TestRealEngine(unittest.TestCase):
     """The start of a prologue save with the real engine (save 1: messages 2002 to 2011 of file b0002000): numbers captured, favorite stored by key, read again in a second engine."""
     @classmethod
     def setUpClass(cls):
-        from dq4_pc.core import engine as ENGINE
+        from dq456_pc.core import engine as ENGINE
         cls.ENGINE = ENGINE; cls.folder = tempfile.mkdtemp(prefix='hist_cle_mo_')
 
     @classmethod

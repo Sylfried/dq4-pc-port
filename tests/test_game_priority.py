@@ -12,12 +12,12 @@ import argparse, os, sys, tempfile, types, unittest
 
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-import _paths          # (test helper: finding the source code in the subfolders of dq4_pc)
+import _paths          # (test helper: finding the source code in the subfolders of dq456_pc)
 import pyglet
 if sys.platform.startswith('linux') and not os.environ.get('DISPLAY'): pyglet.options['headless'] = True; pyglet.options['shadow_window'] = False
-from dq4_pc.core import game_priority as PJ
-from dq4_pc.core import engine as ENGINE
-from dq4_pc.window import game as F
+from dq456_pc.core import game_priority as PJ
+from dq456_pc.core import engine as ENGINE
+from dq456_pc.window import game as F
 
 ARGS = None
 

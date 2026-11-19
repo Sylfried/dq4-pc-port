@@ -5,7 +5,7 @@ import os, sys, unittest
 import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from dq4_pc.battle import full_screen_effects as EPE
+from dq456_pc.battle import full_screen_effects as EPE
 
 QUAD = np.array([[-6.45, -6.45, 5.0], [6.45, -6.45, 5.0], [6.45, 6.45, 5.0], [-6.45, 6.45, 5.0]], np.float32)       # quad of 12.9 x 12.9, 5 units in front of the camera
 

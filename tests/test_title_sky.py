@@ -1,4 +1,4 @@
-"""Test of the pure logic of the title screen sky in wide format (`dq4_pc/title_sky.py`: without a window, without the engine, without an APK):
+"""Test of the pure logic of the title screen sky in wide format (`dq456_pc/title_sky.py`: without a window, without the engine, without an APK):
 
 1. portrait area (middle 9:16 column): 1280 x 720 -> 405 px wide, centered; 720 x 1280 -> whole window; normalized half-width;
 2. texture deformation: G(0) = 0, slope 1 at the edge, slope always between 0.52 and 1.48 (never a flip), overall scale preserved, deterministic, different on the left and on the right,
@@ -21,7 +21,7 @@ import math, os, sys, unittest
 import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from dq4_pc.render import title_sky as CT
+from dq456_pc.render import title_sky as CT
 
 
 def matrix(cam, target, fov, aspect, n=1.0, f=200.0, topmost=(0, 1, 0)):

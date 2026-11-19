@@ -23,7 +23,7 @@ import os, sys, unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..'))
-from dq4_pc.core import emu_core
+from dq456_pc.core import emu_core
 
 BORROWED = ('malloc', 'free', 'heap_rewind', 'heap_used', 'heap_live')
 
@@ -132,7 +132,7 @@ class WiredUp(unittest.TestCase):
 
     def test_loading_a_state_rewinds_the_reserve(self):
         import inspect
-        from dq4_pc.persistence import savestates as SS
+        from dq456_pc.persistence import savestates as SS
         self.assertIn('heap_rewind', inspect.getsource(SS.apply))
 
 

@@ -1,4 +1,4 @@
-"""Test of the game's message font (dq4_pc/menus/message_font.py): the one the engine uses to draw dialogues (and that the history reuses).
+"""Test of the game's message font (dq456_pc/menus/message_font.py): the one the engine uses to draw dialogues (and that the history reuses).
 
     python3 tests/test_message_font.py                                      (rules, with a synthetic font: without pyglet or engine)
     DQ_APK=<patched APK folder> DQ_SAVES=<saves folder> python3 tests/test_message_font.py     (in addition: the real font, compared with the real engine)
@@ -12,9 +12,9 @@ glyphs; the lines of `MessageFont.wrap_text` are those of `AutoReturn` on game m
 import os, struct, sys, tempfile, unittest, zipfile
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-import _paths          # (test helper: finding the source code in the subfolders of dq4_pc)
+import _paths          # (test helper: finding the source code in the subfolders of dq456_pc)
 import numpy as np
-from dq4_pc.menus.message_font import MessageFont, extract_message_font, TABLE_SIZE, TABLE_START, DATA_START, CODE_DEFAULT
+from dq456_pc.menus.message_font import MessageFont, extract_message_font, TABLE_SIZE, TABLE_START, DATA_START, CODE_DEFAULT
 
 H = 24
 
@@ -224,7 +224,7 @@ APK, SAVES = os.environ.get('DQ_APK'), os.environ.get('DQ_SAVES')
 class TestRealEngine(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        from dq4_pc.core import engine as ENGINE
+        from dq456_pc.core import engine as ENGINE
         cls.tmp = tempfile.mkdtemp()
         assert extract_message_font(APK, cls.tmp, print), 'font not found in the data pack'
         cls.mp = MessageFont(os.path.join(cls.tmp, 'ui_messages.font'))

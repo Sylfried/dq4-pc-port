@@ -13,7 +13,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
 import _paths
-from dq4_pc.persistence import settings as RG
+from dq456_pc.persistence import settings as RG
 
 APK, SAVES = os.environ.get('DQ_APK'), os.environ.get('DQ_SAVES')
 SHOT = 215
@@ -43,17 +43,17 @@ class Settings(unittest.TestCase):
     def test_motion_blur_kept_at_zero(self):
         """"Motion blur" has no line, and a value set while the line existed goes back to 0."""
         self.assertEqual(self.load({'keys_version': 7, 'motion_blur': 1.0})['motion_blur'], 0.0)
-        src = open(os.path.join(HERE, '..', 'dq4_pc', 'menus', 'pause.py'), encoding='utf-8').read()
+        src = open(os.path.join(HERE, '..', 'dq456_pc', 'menus', 'pause.py'), encoding='utf-8').read()
         self.assertNotIn("'Flou de mouvement'", src)
 
 
 class Filters(unittest.TestCase):
     def test_same_names_as_the_settings(self):
-        src = open(os.path.join(HERE, '..', 'dq4_pc', 'render', 'postfx.py'), encoding='utf-8').read()
+        src = open(os.path.join(HERE, '..', 'dq456_pc', 'render', 'postfx.py'), encoding='utf-8').read()
         for k in RG.COLOR_FILTERS: self.assertIn("'%s':" % k, src, k)
 
     def test_matrices(self):
-        src = open(os.path.join(HERE, '..', 'dq4_pc', 'render', 'postfx.py'), encoding='utf-8').read()
+        src = open(os.path.join(HERE, '..', 'dq456_pc', 'render', 'postfx.py'), encoding='utf-8').read()
         self.assertIn("'none': None", src)
         self.assertIn('if (filtered > 0.5) c = clamp(cmat * c, 0.0, 1.0);', src)
         self.assertIn('c = clamp((c - 0.5) * (1.0 + contrast) + 0.5, 0.0, 1.0);', src)
@@ -61,7 +61,7 @@ class Filters(unittest.TestCase):
 
 class CameraShift(unittest.TestCase):
     def setUp(self):
-        from dq4_pc.window import motion_blur as MB
+        from dq456_pc.window import motion_blur as MB
         self.MB = MB
 
     def test_still_camera(self):
@@ -84,7 +84,7 @@ def probe(out_dir, reg):
     import pyglet
     pyglet.options['shadow_window'] = False
     if sys.platform.startswith('linux') and not os.environ.get('DISPLAY'): pyglet.options['headless'] = True
-    from dq4_pc import main
+    from dq456_pc import main
     rg = os.path.join(tempfile.mkdtemp(prefix='rg_aff_'), 'r.json')
     with open(rg, 'w') as f: json.dump(dict(json.loads(reg), keys_version=7, language='fr'), f)
     script = ','.join('%d:4' % i for i in range(150, 400))                                       # (left held: the hero walks, the world map scrolls)

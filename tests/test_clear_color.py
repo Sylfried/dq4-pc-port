@@ -12,8 +12,8 @@ import os, sys, types, unittest
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 import pyglet
 if sys.platform.startswith('linux') and not os.environ.get('DISPLAY'): pyglet.options['headless'] = True; pyglet.options['shadow_window'] = False
-from dq4_pc.core import engine as ENGINE
-from dq4_pc.window import game as F
+from dq456_pc.core import engine as ENGINE
+from dq456_pc.window import game as F
 
 LIST = (0.1, 0.2, 0.3)           # color read from the list of backgrounds (FETC of the loaded scenery)
 SCENERY = (0.4, 0.5, 0.6)        # estimate made on the scenery pixels (field.py)

@@ -10,8 +10,8 @@ import numpy as np
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import _saves as SV
-from dq4_pc.core import engine as ENGINE
-from dq4_pc.core import lying_pose as PC
+from dq456_pc.core import engine as ENGINE
+from dq456_pc.core import lying_pose as PC
 
 
 def map_name(): return 'carte_test'

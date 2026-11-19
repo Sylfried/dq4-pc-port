@@ -7,12 +7,12 @@ The menu is driven with a fake "game" (real settings, simulated sound and window
 import os, sys, tempfile, types, unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-import _paths          # (test helper: finding the source code in the subfolders of dq4_pc)
+import _paths          # (test helper: finding the source code in the subfolders of dq456_pc)
 import pyglet
 pyglet.options['shadow_window'] = False                     # (no display needed: nothing is drawn)
-from dq4_pc.persistence import settings as RG
-from dq4_pc.menus import pause as PA
-from dq4_pc import language as LG
+from dq456_pc.persistence import settings as RG
+from dq456_pc.menus import pause as PA
+from dq456_pc import language as LG
 
 K = pyglet.window.key
 SOUND_LABELS = ['settings.general', 'settings.music', 'settings.jingles_fanfares', 'settings.sound_effects', 'settings.interface']
@@ -79,14 +79,59 @@ class Root(unittest.TestCase):
     def test_entries(self):
         _, p = menu('root'); libs = [e['l'] for e in p._entries()]
         for old in ('Vitesse de défilement du texte', 'Texte et défilement'): self.assertNotIn(old, libs)             # no more text page: its two options are in Commandes
-        self.assertEqual(libs, ['settings.resume', 'settings.history', 'settings.save_states', 'settings.display', 'settings.sound', 'settings.controls', 'settings.modifiers', 'settings.return_title_screen', 'settings.quit_game'])
+        self.assertEqual(libs, ['settings.resume', 'settings.display', 'settings.sound', 'settings.controls', 'settings.save_states', 'settings.history', 'settings.achievements', 'settings.difficulty', 'settings.cheats', 'settings.randomizer', 'settings.return_title_screen', 'settings.quit_game'])
         rows = {e['l']: e for e in p._entries()}; self.assertFalse(rows['settings.quit_game'].get('sub'))                                                      # no chevron on "Quit the game", even though the line opens the confirmation
-        self.assertTrue(all(rows[l].get('sub') for l in ('settings.history', 'settings.save_states', 'settings.display', 'settings.sound', 'settings.controls', 'settings.modifiers')))             # (the real sub-pages keep theirs)
-        self.assertNotIn('Jeu', libs); self.assertNotIn('Modifications', libs); self.assertEqual(libs.index('settings.modifiers'), libs.index('settings.controls') + 1)                # "Modifiers" (ex-"Changes", ex-"Game") : juste sous "Controls"
+        self.assertTrue(all(rows[l].get('sub') for l in ('settings.history', 'settings.save_states', 'settings.display', 'settings.sound', 'settings.controls', 'settings.difficulty', 'settings.randomizer', 'settings.cheats', 'settings.achievements')))             # (the real sub-pages keep theirs)
+        self.assertNotIn('Jeu', libs); self.assertNotIn('Modifications', libs); self.assertEqual(libs.index('settings.difficulty'), libs.index('settings.achievements') + 1)
+        self.assertEqual(libs.index('settings.randomizer'), libs.index('settings.cheats') + 1); self.assertNotIn('settings.extras', libs)
+        _, p = menu('achievements'); self.assertEqual([(e['t'], e['l']) for e in p._entries()], [('sep', 'settings.no_achievement_yet')]); self.assertTrue(p._entries()[0]['gray'])          # ("Achievements": none yet)
         self.assertFalse(hasattr(p, '_e_texte'))
+
+    def test_dq5_dq6_randomizer(self):
+        """DQ V / VI: Achievements, Difficulty, Cheats and the Randomizer (all its settings); the new game's panel has no gender
+        line (the hero is a boy) and "Start the adventure" only needs a name; the Difficulty page has all its lines."""
+        from dq456_pc.core import engine as ENGINE
+        from dq456_pc.randomizer import seed as SD
+        old = ENGINE.ENGINE_V2; ENGINE.ENGINE_V2 = True
+        try:
+            _, p = menu('root'); libs = [e['l'] for e in p._entries()]
+            _, d = menu('difficulty'); rows = [e['l'] for e in d._entries()]
+            J, n = menu('root'); n.new_game = True; panel = [e['l'] for e in n._entries()]
+            J, r = menu('randomizer'); r.new_game = True; r.randomizer_on = True; r.draft_seed = SD.new_code(number=5); rnd = [e['l'] for e in r._entries()]
+        finally: ENGINE.ENGINE_V2 = old
+        self.assertEqual(libs, ['settings.resume', 'settings.display', 'settings.sound', 'settings.controls', 'settings.save_states', 'settings.history', 'settings.achievements', 'settings.difficulty', 'settings.cheats', 'settings.randomizer', 'settings.return_title_screen', 'settings.quit_game'])
+        self.assertIn('settings.casino_tokens_won', rows); self.assertIn('settings.experience_gained', rows); self.assertIn('settings.encounter_rate', rows)
+        self.assertNotIn('settings.hero_gender', panel); self.assertIn('settings.hero_name', panel); self.assertIn('settings.randomizer', panel)
+        self.assertEqual(rnd[2:], [k for _k, k, _h in PA.Pause.RANDOMIZER_SETTINGS])
+
+    def test_opens_on_the_last_page(self):
+        """Esc (or the game's "Settings" button) opens the menu on the page open on the right when it was last closed (kept in settings.json, the same for every game); Display the
+        first time, or when that page cannot be opened now; the panel of a new game does not change it."""
+        J, p = menu('root'); p.opened = False
+        self.assertEqual(p.last_page(), 'display')
+        p.open_menu(side=p.last_page()); p._switch_side(next(i for i, x in enumerate(p._entries_root()) if x.get('page') == 'sound')); self.assertEqual(p.stack, ['root', 'sound'])
+        p.shutdown(); self.assertEqual(J.reg['settings_page'], 'sound'); self.assertEqual(RG.Settings(J.reg.path)['settings_page'], 'sound')
+        p.open_menu(side=p.last_page()); self.assertEqual(p.stack, ['root', 'sound']); p.shutdown()
+        p.open_menu(page='quit'); p.shutdown(); self.assertEqual(J.reg['settings_page'], 'sound')                  # (the "Quit" question: not a page to open on)
+        J.history_possible = lambda: False; J.reg['settings_page'] = 'history'; self.assertEqual(p.last_page(), 'display')
+        J.reg.v['settings_page'] = 'nothing'; J.reg.store(); self.assertEqual(RG.Settings(J.reg.path)['settings_page'], 'display')
+
+    def test_esc_opens_on_display_and_closes_everything(self):
+        J, p = menu('root'); p.opened = False; p.open_menu(side='display')                          # (Esc in the game: the Display page, the root's line chosen)
+        self.assertEqual(p.stack, ['root', 'display']); self.assertEqual(p._entries_root()[p.selected['root']]['l'], 'settings.display')
+        p.key_press(pyglet.window.key.ESCAPE); self.assertFalse(p.opened)
+
+
+class DisplayPage(unittest.TestCase):
+    def test_fullscreen_has_no_default_button(self):
+        """No round "default value" button on "Fullscreen": No (windowed) stays only the setting's default (settings.DEFAULT); the other choices keep theirs."""
+        J, p = menu('display'); e = by_caption(p, 'settings.fullscreen')
+        self.assertNotIn('default', e); self.assertNotIn('is_default', e); self.assertEqual(RG.DEFAULT['window_mode'], 0)
+        self.assertIn('default', by_caption(p, 'settings.language'))
 
 
 class SoundPage(unittest.TestCase):
+
     def test_one_line_per_sound(self):
         _, p = menu('sound'); e = p._entries()
         self.assertEqual([x['l'] for x in e], SOUND_LABELS)
@@ -167,8 +212,8 @@ class ScrollSection(unittest.TestCase):
         i = ls.index(('sep', 'settings.camera')); j = ls.index(('sep', 'settings.speeds'))
         self.assertEqual(ls.count(('sep', 'settings.camera')), 1); self.assertNotIn('Caméra au clavier', [l for _, l in ls]); self.assertNotIn('Caméra à la souris', [l for _, l in ls])
         group = ls[i + 1:j]
-        self.assertEqual(group, [('key', 'settings.camera_left'), ('key', 'settings.camera_right'), ('choice', 'settings.invert_left_right'),
-                                  ('sep', 'settings.hold_middle_click_move'), ('sep', 'settings.middle_click')])
+        self.assertEqual(group, [('key', 'settings.camera_left'), ('key', 'settings.camera_right'),
+                                  ('sep', 'settings.hold_middle_click_move'), ('sep', 'settings.middle_click'), ('choice', 'settings.invert_left_right')])          # (the inversion under "Middle click": it reverses the mouse drag)
         self.assertNotIn('Vitesse de caméra', [l for _, l in ls])                                                                          # (no more camera speed setting)
         self.assertEqual(ls.index(('key', 'settings.camera_left')) > ls.index(('key', 'settings.right')), True)                                  # (the group comes after movement)
         info = {x['l']: x.get('v') for x in e if x['t'] == 'sep' and x.get('v')}
@@ -194,15 +239,21 @@ class ScrollSection(unittest.TestCase):
         vt['default'](); self.assertEqual(J.reg['text_speed'], 4.0); self.assertEqual(J.calls[-1], 'texte'); self.assertTrue(vt['is_default']())
         self.assertTrue(vt.get('hint'))
 
+    def test_drop_down_list_is_drawn_on_the_controls_page(self):
+        """the list of "Battle speed" opened but was never drawn on the Controls page: the key cells reused the name `n` (number of pictures) of the number of lines, and the list
+        is only drawn for a line below that number"""
+        src = _paths.source('pause.py'); i = src.index("fam = self._family(); pad_mode = self.controls_pad"); j = src.index('self._draw_tooltip(e, n, lines', i)
+        self.assertNotIn(' n = ', src[i:j]); self.assertNotIn('; n = ', src[i:j])
+
     def test_choice_changes_speed_and_scroll(self):
-        """"Battle speed": the menu notifies the window (which also imposes the scrolling: 4 in "Manual", 2 otherwise); the list loops; ↺ resets to Normal (on the keyboard: the line is chosen in the Controls page)."""
+        """"Battle speed": the menu notifies the window (which also imposes the scrolling: 4 in "Manual", 2 otherwise); the list loops; ↺ resets to Manual, the default (on the keyboard: the line is chosen in the Controls page)."""
         J, p = menu('controls'); cb = by_caption(p, 'settings.battle_speed')
-        self.assertEqual((cb['get'](), cb['v']()), (1.0, 'settings.normal')); self.assertTrue(cb['is_default']())
-        p.selected['controls'] = [x['l'] for x in p._entries()].index('settings.battle_speed'); p.key_press(K.D); self.assertEqual(J.reg['battle_speed'], 2.0)          # (Commandes: the arrows are the camera keys there, D = right)
-        p.key_press(K.D); self.assertEqual(J.reg['battle_speed'], 3.0)
-        p.key_press(K.D); self.assertEqual(J.reg['battle_speed'], 0.0)                                       # (the list wraps around) Very fast -> Manual
-        self.assertEqual(J.calls[-1], ('battle', 4)); self.assertFalse(cb['is_default']())
-        cb['default'](); self.assertEqual(J.reg['battle_speed'], 1.0); self.assertEqual(J.calls[-1], ('battle', 0)); self.assertTrue(cb['is_default']())      # ↺ : Normal
+        self.assertEqual((cb['get'](), cb['v']()), (0.0, 'settings.manual')); self.assertTrue(cb['is_default']())
+        p.selected['controls'] = [x['l'] for x in p._entries()].index('settings.battle_speed'); p.key_press(K.D); self.assertEqual(J.reg['battle_speed'], 1.0)          # (Commandes: the arrows are the camera keys there, D = right)
+        self.assertEqual(J.calls[-1], ('battle', 0)); self.assertFalse(cb['is_default']())
+        p.key_press(K.D); p.key_press(K.D); self.assertEqual(J.reg['battle_speed'], 3.0)
+        p.key_press(K.D); self.assertEqual(J.reg['battle_speed'], 0.0); self.assertEqual(J.calls[-1], ('battle', 4))          # (the list wraps around) Very fast -> Manual
+        p.key_press(K.D); cb['default'](); self.assertEqual(J.reg['battle_speed'], 0.0); self.assertEqual(J.calls[-1], ('battle', 4)); self.assertTrue(cb['is_default']())      # ↺ : Manual
         self.assertTrue(cb.get('hint')); self.assertNotIn('x2', cb['hint'])
 
     def test_no_old_setting(self):
@@ -210,25 +261,138 @@ class ScrollSection(unittest.TestCase):
         for old in ('Défilement automatique', 'Vitesse de défilement', 'Messages en combat', 'Rétablir le réglage du jeu'): self.assertNotIn(old, ls)
 
 
+class SaveStatesPage(unittest.TestCase):
+    def test_choice_on_the_slot(self):
+        """No more "Action" list at the top: one line per slot; an empty slot receives a new state at once; a slot holding one opens, beside it, the list of what to do with it
+        (load, create in its place, delete: through the confirmation window), Esc closes it without doing anything."""
+        J, p = menu('states'); done = []
+        J.state_info = lambda n: [{'date': '2026-11-15 01:00:00', 'map': 'f'}] if n == 2 else None
+        J.save_state = lambda n, png: done.append(('save', n)); J._png_thumbnail = lambda tex: b''; J.load_state = lambda n: done.append(('load', n))
+        e = p._entries(); self.assertEqual([x['t'] for x in e], ['slot'] * PA.SAVESTATE_COUNT); self.assertFalse(hasattr(p, 'state_action'))
+        p.selected['states'] = 0; p.key_press(pyglet.window.key.RETURN); self.assertEqual(done, [('save', 1)]); self.assertIsNone(p.open_dropdown)
+        p.selected['states'] = 1; p.key_press(pyglet.window.key.RETURN); self.assertEqual(p.open_dropdown, [1, 0]); self.assertEqual(p._entries()[1]['vals'], ['load', 'create', 'delete'])
+        self.assertEqual([p._value_name(p._entries()[1]['list_label'], v) for v in p._entries()[1]['vals']], ['settings.load_save_state', 'settings.create_save_state', 'settings.delete_a_save_state'])
+        p.key_press(pyglet.window.key.BACKSPACE); self.assertIsNone(p.open_dropdown); self.assertEqual(done, [('save', 1)]); self.assertTrue(p.opened)          # (Backspace: the list only)
+        p.key_press(pyglet.window.key.ENTER); self.assertIsNotNone(p.open_dropdown); p.key_press(pyglet.window.key.ESCAPE); self.assertFalse(p.opened)          # (Esc: the whole menu, list included)
+        p.key_press(pyglet.window.key.RETURN); p.key_press(pyglet.window.key.RETURN); self.assertIn(('load', 2), done)                                      # (Charger)
+        p.opened = True; p.stack = ['states']; p.selected['states'] = 1; p.key_press(pyglet.window.key.RETURN); p.open_dropdown[1] = 2; p.key_press(pyglet.window.key.RETURN)
+        self.assertIsNotNone(p.popup)                                                                                                                       # (Supprimer: the confirmation)
+
+
 class ChangesPage(unittest.TestCase):
     LIB = 'settings.hp_mp_restored_level_up'
+    LIB_BATTLE = 'settings.hp_mp_restored_battle_end'
 
     def test_option_disabled_by_default_with_restoration(self):
         """"Modifiers" page (formerly "Changes", formerly "Game"), "Difficulty" category: a Yes / No switch, No by default (as in the game), which notifies the window; ↺ resets it to No."""
-        J, p = menu('changes'); x = by_caption(p, self.LIB)
+        J, p = menu('difficulty'); x = by_caption(p, self.LIB)
         self.assertEqual(x['vals'], [True, False]); self.assertFalse(J.reg['level_up_heal']); self.assertTrue(x['is_default']())
         x['set'](True); self.assertTrue(J.reg['level_up_heal']); self.assertEqual(J.calls[-1], 'jeu'); self.assertFalse(x['is_default']())
         x['default'](); self.assertFalse(J.reg['level_up_heal']); self.assertEqual(J.calls[-1], 'jeu'); self.assertTrue(x['is_default']())
         self.assertTrue(x.get('hint'))
 
-    def test_three_categories_and_entry_of_the_root(self):
-        """three categories (subheadings) in the order Difficulty, Modifier, Cheats; the existing option is in "Difficulty", the other two have no line yet."""
-        J, p = menu('changes'); e = p._entries()
-        self.assertEqual([(x['t'], x['l']) for x in e], [('sep', 'settings.difficulty'), ('choice', self.LIB), ('sep', 'settings.modifier'), ('sep', 'settings.cheats')])
-        p.stack = ['root']; e = next(e for e in p._entries() if e['l'] == 'settings.modifiers'); e['ok'](); self.assertEqual(p.screen_page, 'changes')
-        self.assertFalse(hasattr(p, '_e_jeu')); self.assertNotIn('Jeu', [e['l'] for e in p._entries()])
+    def test_battle_end_option(self):
+        """"HP and MP restored after a battle", right below the level-up one: a Yes / No switch, No by default (as in the game), which notifies the window; ↺ resets it to No; stored like the others."""
+        J, p = menu('difficulty'); x = by_caption(p, self.LIB_BATTLE)
+        self.assertEqual(x['vals'], [True, False]); self.assertFalse(J.reg['battle_end_heal']); self.assertTrue(x['is_default']())
+        x['set'](True); self.assertTrue(J.reg['battle_end_heal']); self.assertEqual(J.calls[-1], 'jeu'); self.assertFalse(x['is_default']())
+        self.assertFalse(J.reg['level_up_heal'])                                                                       # (the two options are independent)
+        x['default'](); self.assertFalse(J.reg['battle_end_heal']); self.assertTrue(x['is_default']())
+        self.assertTrue(x.get('hint'))
+        J = FakeGame(); J.reg['battle_end_heal'] = True; J.reg.store(); self.assertTrue(RG.Settings(J.reg.path)['battle_end_heal'])
+        J.reg.v['battle_end_heal'] = 1; J.reg.store(); self.assertFalse(RG.Settings(J.reg.path)['battle_end_heal'])      # not a boolean: back to the default (No)
+
+    def test_three_pages_and_entry_of_the_root(self):
+        """"Difficulty", "Modifier", "Cheats": three pages of the root (no tabs): "Difficulty" has the existing options, "Modifier" no line yet, "Cheats" "Random encounters"."""
+        J, p = menu('difficulty'); e = p._entries()
+        self.assertEqual([(x['t'], x['l']) for x in e], [('choice', self.LIB), ('choice', self.LIB_BATTLE), ('slider', 'settings.difficulty_level'), ('slider', 'settings.experience_gained'), ('slider', 'settings.gold_gained'),
+                                                         ('slider', 'settings.casino_tokens_won'), ('slider', 'settings.damage_taken_party'), ('slider', 'settings.damage_taken_enemies'), ('slider', 'settings.encounter_rate')])
+        self.assertFalse(hasattr(PA.Pause, 'CHANGES_TABS')); self.assertFalse(hasattr(PA.Pause, 'switch_tab'))
+        _, p = menu('randomizer'); self.assertEqual([(x['t'], x['l'], x.get('gray')) for x in p._entries()], [('sep', 'settings.game_without_randomizer', True)])          # (no game rules: no seed; see test_game_rules)
+        _, p = menu('cheats'); self.assertEqual([x['l'] for x in p._entries()], ['settings.random_encounters'])
+        for label, page in (('settings.difficulty', 'difficulty'), ('settings.randomizer', 'randomizer'), ('settings.cheats', 'cheats')):
+            _, p = menu('root'); e = next(e for e in p._entries() if e['l'] == label); e['ok'](); self.assertEqual(p.screen_page, page)
         with open(PA.__file__, encoding='utf-8') as f: src = f.read()
-        self.assertIn("titles['changes'] = N_('settings.modifiers')", src); self.assertNotIn("_go('jeu')", src)                                          # page title: "Modifiers"
+        self.assertIn("titles.update(difficulty=N_('settings.difficulty'), randomizer=N_('settings.randomizer'), cheats=N_('settings.cheats')", src); self.assertNotIn("_go('jeu')", src)                                          # page title: "Modifiers"
+
+    def test_five_notches(self):
+        """"Experience gained", "Gold gained", "Casino tokens won", "Damage taken by the party", "Damage taken by enemies": sliders of 5 notches, Much less (x0.5), Less (x0.75), Normal (x1, the default: the game),
+        More (x1.25), Much more (x1.5); only the names are shown (never the factor); each one notifies the window, ↺ goes back to Normal; stored."""
+        names = ['settings.rate_much_less', 'settings.rate_less', 'settings.normal', 'settings.rate_more', 'settings.rate_much_more']
+        for label, key in (('settings.experience_gained', 'exp_rate'), ('settings.gold_gained', 'gold_rate'), ('settings.casino_tokens_won', 'casino_rate'), ('settings.damage_taken_party', 'party_damage_rate'), ('settings.damage_taken_enemies', 'enemy_damage_rate'),
+                           ('settings.encounter_rate', 'encounter_rate')):
+            J, p = menu('difficulty'); J.reg['difficulty'] = RG.DIFFICULTY_CUSTOM; x = by_caption(p, label)          # (Custom: the lines are set by hand)
+            self.assertEqual((J.reg[key], x['v']()), (1.0, 'settings.normal')); self.assertTrue(x['is_default']()); self.assertAlmostEqual(x['fraction'](), 0.5)
+            x['minus'](); self.assertEqual((J.reg[key], x['v']()), (0.75, 'settings.rate_less')); self.assertEqual(J.calls[-1], 'jeu'); self.assertFalse(x['is_default']())
+            x['minus'](); self.assertEqual((J.reg[key], x['v']()), (0.5, 'settings.rate_much_less')); x['minus'](); self.assertEqual(J.reg[key], 0.5)             # (no notch below)
+            for v, n in ((0.75, 1), (1.0, 2), (1.25, 3), (1.5, 4)): x['plus'](); self.assertEqual((J.reg[key], x['v']()), (v, names[n]))
+            x['plus'](); self.assertEqual(J.reg[key], 1.5)
+            x['set_fraction'](0.1); self.assertEqual(J.reg[key], 0.5); x['set_fraction'](0.3); self.assertEqual(J.reg[key], 0.75); x['set_fraction'](0.7); self.assertEqual(J.reg[key], 1.25)         # (a click on the bar: the nearest notch)
+            self.assertEqual((x['notches'], x['notch_names']), ([0.0, 0.25, 0.5, 0.75, 1.0], names))
+            x['default'](); self.assertEqual(J.reg[key], 1.0); self.assertTrue(x['is_default']()); self.assertIn('settings.normal_as_original_game_rewards', x['hint'])
+            self.assertNotIn('(x', LG.tr(x['v']()))
+            J.reg[key] = 1.25; J.reg.store(); self.assertEqual(RG.Settings(J.reg.path)[key], 1.25)
+            for bad in (2.0, 0.6, True, 'x', None): J.reg.v[key] = bad; J.reg.store(); self.assertEqual(RG.Settings(J.reg.path)[key], 1.0, bad)          # (anything but a notch: Normal)
+
+    def test_notched_values_are_never_typed(self):
+        """The difficulty level and its notched lines show only the notch's name: neither Enter nor a click on the value starts typing it, and their help does not offer it (a volume still can)."""
+        J, p = menu('difficulty'); J.reg['difficulty'] = RG.DIFFICULTY_CUSTOM
+        for i, x in enumerate(p._entries()):
+            if x['t'] != 'slider': continue
+            self.assertTrue(x.get('notches'), x['l'])
+            p.selected['difficulty'] = i; p.key_press(K.RETURN); self.assertIsNone(p.entry, x['l'])
+            self.assertNotIn('settings.click_value_type', p._line_helptext(x), x['l'])
+        J2, p2 = menu('display'); x = by_caption(p2, 'settings.brightness'); self.assertIn('settings.click_value_type', p2._line_helptext(x))
+
+    def test_random_encounters_switch_in_cheats(self):
+        """"Random encounters" (tab "Cheats"): a Yes / No switch, Yes by default (as in the game); No does not gray "Encounter rate" (tab "Difficulty"): it stays settable; each change notifies the window."""
+        J, p = menu('cheats'); J.reg['difficulty'] = RG.DIFFICULTY_CUSTOM; x = by_caption(p, 'settings.random_encounters'); p.stack = ['difficulty']; f = by_caption(p, 'settings.encounter_rate')
+        self.assertEqual(x['vals'], [True, False]); self.assertTrue(J.reg['random_encounters']); self.assertTrue(x['is_default']()); self.assertFalse(p._inactive(f))
+        f['plus'](); self.assertEqual(J.reg['encounter_rate'], 1.25)
+        x['set'](False); self.assertFalse(J.reg['random_encounters']); self.assertEqual(J.calls[-1], 'jeu'); self.assertFalse(p._inactive(f)); self.assertEqual(J.reg['encounter_rate'], 1.25)
+        f['plus'](); self.assertEqual(J.reg['encounter_rate'], 1.5)
+        x['default'](); self.assertTrue(J.reg['random_encounters']); self.assertFalse(p._inactive(f)); self.assertTrue(x.get('hint'))
+        J.reg['random_encounters'] = False; J.reg.store(); self.assertFalse(RG.Settings(J.reg.path)['random_encounters'])
+        J.reg.v['random_encounters'] = 0; J.reg.store(); self.assertTrue(RG.Settings(J.reg.path)['random_encounters'])          # (not a boolean: back to the default)
+
+    RATE_LABELS = ('settings.experience_gained', 'settings.gold_gained', 'settings.casino_tokens_won', 'settings.damage_taken_party', 'settings.damage_taken_enemies', 'settings.encounter_rate')
+
+    def test_difficulty_levels(self):
+        """"Difficulty", right above the notched lines: 6 notches, Dragon egg, Dragonling, Dragon (the default: the game), Dragon chief, Dragon god, Custom. A level sets the 5 notched lines
+        (the easier, the more experience, gold and damage on the monsters, the less damage on the party and the fewer encounters) and grays them; Custom puts them back to their default and lets them be set by hand."""
+        names = ['settings.dragon_egg', 'settings.dragonling', 'settings.dragon', 'settings.dragon_chief', 'settings.dragon_god', 'settings.custom']
+        J, p = menu('difficulty'); e = p._entries(); d = by_caption(p, 'settings.difficulty_level')
+        self.assertEqual([x['l'] for x in e].index('settings.difficulty_level') + 1, [x['l'] for x in e].index('settings.experience_gained'))
+        self.assertEqual((J.reg['difficulty'], d['v']()), (2, 'settings.dragon')); self.assertTrue(d['is_default']()); self.assertEqual(d['notch_names'], names)
+        self.assertEqual(d['notches'], [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]); self.assertIn('settings.dragon_as_original_game', d['hint'])
+        rates = lambda: {k: J.reg[k] for k in RG.RATE_KEYS}; lines = lambda: [by_caption(p, l) for l in self.RATE_LABELS]
+        self.assertTrue(all(p._inactive(x) for x in lines())); self.assertTrue(all('settings.set_by_difficulty_choose_custom' in x['hint'] for x in lines()))
+        self.assertEqual(rates(), dict.fromkeys(RG.RATE_KEYS, 1.0))
+        d['minus'](); self.assertEqual((J.reg['difficulty'], d['v']()), (1, 'settings.dragonling')); self.assertEqual(J.calls[-1], 'jeu')
+        self.assertEqual(rates(), {'exp_rate': 1.25, 'gold_rate': 1.25, 'casino_rate': 1.25, 'party_damage_rate': 0.75, 'enemy_damage_rate': 1.25, 'encounter_rate': 0.75})
+        d['minus'](); self.assertEqual(rates(), {'exp_rate': 1.5, 'gold_rate': 1.5, 'casino_rate': 1.5, 'party_damage_rate': 0.5, 'enemy_damage_rate': 1.5, 'encounter_rate': 0.5})          # (Dragon egg: the easiest)
+        d['set_fraction'](0.8); self.assertEqual((J.reg['difficulty'], d['v']()), (4, 'settings.dragon_god'))
+        self.assertEqual(rates(), {'exp_rate': 0.5, 'gold_rate': 0.5, 'casino_rate': 0.5, 'party_damage_rate': 1.5, 'enemy_damage_rate': 0.5, 'encounter_rate': 1.5})
+        self.assertEqual([x['v']() for x in lines()], ['settings.rate_much_less', 'settings.rate_much_less', 'settings.rate_much_less', 'settings.rate_much_more', 'settings.rate_much_less', 'settings.rate_much_more'])          # (the lines show the level's notches)
+        d['plus'](); self.assertEqual((J.reg['difficulty'], d['v']()), (5, 'settings.custom')); self.assertEqual(rates(), dict.fromkeys(RG.RATE_KEYS, 1.0))          # (Custom: every notch back to its default)
+        self.assertFalse(any(p._inactive(x) for x in lines())); self.assertFalse(any('settings.set_by_difficulty_choose_custom' in x['hint'] for x in lines()))
+        by_caption(p, 'settings.experience_gained')['plus'](); self.assertEqual(J.reg['exp_rate'], 1.25)
+        d['plus'](); self.assertEqual(J.reg['exp_rate'], 1.25)                                                       # (already on Custom: its settings stay)
+        J.reg['random_encounters'] = False; self.assertFalse(p._inactive(by_caption(p, 'settings.encounter_rate'))); J.reg['random_encounters'] = True          # (no random encounter: the rate can still be set)
+        d['default'](); self.assertEqual(J.reg['difficulty'], 2); self.assertEqual(rates(), dict.fromkeys(RG.RATE_KEYS, 1.0))
+
+    def test_difficulty_stored(self):
+        """Stored; a level decides the notches when read again (whatever the file says); a file from before the setting gets the level of its notches, otherwise Custom."""
+        J = FakeGame(); J.reg['difficulty'] = 3; J.reg['exp_rate'] = 1.5; J.reg.store(); r = RG.Settings(J.reg.path)
+        self.assertEqual((r['difficulty'], r['exp_rate'], r['party_damage_rate']), (3, 0.75, 1.25))
+        J.reg['difficulty'] = 5; J.reg.store(); r = RG.Settings(J.reg.path); self.assertEqual((r['difficulty'], r['exp_rate']), (5, 1.5))
+        for bad in (6, -1, 2.5, True, 'x', None): J.reg.v['difficulty'] = bad; J.reg.store(); self.assertEqual(RG.Settings(J.reg.path)['difficulty'], 2, bad)          # (anything but a notch: Dragon)
+        import json
+        for rates, level in ((dict.fromkeys(RG.RATE_KEYS, 1.0), 2), (RG.difficulty_rates(1), 1), (dict(RG.difficulty_rates(2), exp_rate=1.25), 5)):
+            with open(J.reg.path, encoding='utf-8') as f: v = json.load(f)
+            v.pop('difficulty', None); v.update(rates)
+            with open(J.reg.path, 'w', encoding='utf-8') as f: json.dump(v, f)
+            r = RG.Settings(J.reg.path); self.assertEqual(r['difficulty'], level, rates); self.assertEqual({k: r[k] for k in RG.RATE_KEYS}, rates)
 
     def test_setting_stored(self):
         J = FakeGame(); J.reg['level_up_heal'] = True; J.reg.store()
@@ -303,7 +467,7 @@ class InterfaceEntries(unittest.TestCase):
         self.assertEqual((R['speed_button_pos'], R['speed_button_size'], R['speed_button'], R['buttons_pos']), ([], 1.0, True, {'map': [1, 1]}))      # the reset only touches the button
 
     def test_editor_shows_the_right_element(self):
-        from dq4_pc.menus import hud_mobile as HM
+        from dq456_pc.menus import hud_mobile as HM
         self.assertEqual(HM.editor_names(RG.SCREEN_TARGET), ('map', 'menu', 'chat', HM.DPAD, HM.BAR)); self.assertEqual(HM.editor_names(RG.SPEED_TARGET), (HM.BATTLE,)); self.assertEqual(HM.editor_names('msg'), ())
         self.assertNotIn(HM.BATTLE, HM.editor_names(RG.SCREEN_TARGET))                                                               # no longer in "On-screen buttons and D-pad"
 

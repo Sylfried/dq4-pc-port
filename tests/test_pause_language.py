@@ -8,7 +8,7 @@ for capturing a key and entering a value, the title bar tooltip, the confirmatio
 
 Rules: (1) no catalog key is ever drawn as such (a key on screen = a missing `tr`), in either language; (2) in English, no drawn text is French; (3) every drawn French
 text comes from the French catalog (whitelist: words identical in both languages) and its English text is drawn in the English walkthrough; (4) the menu DATA (labels, value
-names, key names, messages) hold keys, translated when drawn; (5) no unused key and no empty or identical translation in dq4_pc/texts/*/settings.py; (6) control mutations:
+names, key names, messages) hold keys, translated when drawn; (5) no unused key and no empty or identical translation in dq456_pc/texts/*/settings.py; (6) control mutations:
 a removed key, a `tr` removed from several places, an emptied translation or one left in French make the check fail."""
 import contextlib, inspect, io, os, re, sys, tempfile, textwrap, time, types, unittest
 
@@ -18,18 +18,20 @@ import pyglet
 if sys.platform.startswith('linux') and not os.environ.get('DISPLAY'): pyglet.options['headless'] = True; pyglet.options['shadow_window'] = False
 import test_pause_pages as TP
 import test_language as TL
-from dq4_pc import language as LG
-from dq4_pc.persistence import settings as RG, savestates as SS, pad_inputs as PI
-from dq4_pc.menus import pause as PA
-from dq4_pc.texts.fr import settings as FR_SETTINGS
-from dq4_pc.texts.en import settings as EN_SETTINGS
+from dq456_pc import language as LG
+from dq456_pc.persistence import settings as RG, savestates as SS, pad_inputs as PI
+from dq456_pc.menus import pause as PA
+from dq456_pc.persistence import game_rules as GR
+from dq456_pc.randomizer import seed as SD
+from dq456_pc.texts.fr import settings as FR_SETTINGS
+from dq456_pc.texts.en import settings as EN_SETTINGS
 
 K = pyglet.window.key
-PAGES = ('root', 'display', 'sound', 'controls', 'changes', 'states', 'quit', 'interface')
+PAGES = ('root', 'display', 'sound', 'controls', 'difficulty', 'randomizer', 'cheats', 'achievements', 'states', 'quit', 'interface')
 # Words identical in French and English, or technical names: drawn as is in both languages, with no catalog entry
 # (an identical entry would duplicate those in the other files).
-NEUTRAL = {'Interface', 'Casino', 'Menu', 'Normal', 'Action', 'Shader', 'Antialiasing', 'Tab', 'Alt Gr', 'EPX x8', 'Pixel perfect', 'x2', 'x4', 'x8',
-           'RS ←', 'RS →', 'RS ↑', 'RS ↓', 'Select', 'Start', 'Create', 'Options', 'UnknownWindow'}          # (the fake name that the fake game gives to a window the tool does not know)
+NEUTRAL = {'Interface', 'Casino', 'Menu', 'Normal', 'Dragon', 'Randomizer', 'Action', 'Shader', 'Antialiasing', 'Tab', 'Alt', 'Alt Gr', 'EPX x8', 'Pixel perfect', 'x2', 'x4', 'x8',
+           'RS ←', 'RS →', 'RS ↑', 'RS ↓', 'LS ←', 'LS →', 'LS ↑', 'LS ↓', 'Select', 'Start', 'Create', 'Options', 'UnknownWindow'}          # (the fake name that the fake game gives to a window the tool does not know)
 _win = []
 
 
@@ -113,7 +115,7 @@ class FrozenClock:
     def time(): return 1000.0
 
 
-PAGE_METHODS = {'root': 'root', 'display': 'display', 'sound': 'sound', 'controls': 'commands', 'changes': 'changes', 'states': 'savestates', 'quit': 'quit', 'interface': 'interface'}      # page identifier (string) -> end of the name of the `page_...` method of Visite
+PAGE_METHODS = {'root': 'root', 'display': 'display', 'sound': 'sound', 'controls': 'commands', 'difficulty': 'difficulty', 'randomizer': 'randomizer', 'cheats': 'cheats', 'achievements': 'achievements', 'states': 'savestates', 'quit': 'quit', 'interface': 'interface'}      # page identifier (string) -> end of the name of the `page_...` method of Visite
 PARTS = tuple('page_' + PAGE_METHODS[n] for n in PAGES) + ('messages', 'key_list')
 
 
@@ -138,6 +140,7 @@ class Visit:
         for entry in p._entries():
             if entry['t'] == 'choice':
                 for v in entry['vals']: p._label(p._value_name(entry['l'], v), 12.0)
+            for name_str in entry.get('notch_names', ()): p._label(name_str, 12.0)          # (a slider with notches: the name of each notch)
         J.moment = 'hint'
         for entry in p._entries():
             text = p._line_helptext(entry)
@@ -155,14 +158,27 @@ class Visit:
         return J, p
 
     def page_root(self): self.page('root')
-    def page_changes(self): self.page('changes')
+    def page_difficulty(self): self.page('difficulty')
+    def page_randomizer(self):
+        self.page('randomizer')                                                             # (a game started without the randomizer)
+        J = FakeGame(); J.game_rules = GR.GameRules(tempfile.mkdtemp(prefix='rules_lang_')); J.game_rules.rules = {'randomizer': {'seed': SD.new_code(number=1)}}; J.set_clipboard_text = lambda t: None
+        J, p = self.page('randomizer', J); p._entries()[0]['ok'](); self.image(J, p, 'message')          # the game's seed, copied
+        self.page('root', new_game=True, draft_seed=SD.new_code(number=2))                  # the rules panel of a new game
+        self.page('randomizer', new_game=True)                                                # (randomizer mode off: the switch alone)
+        J, p = self.page('randomizer', new_game=True, draft_seed=SD.new_code(number=3), randomizer_on=True); p.selected['randomizer'] = 1; p._start_text_entry(); self.image(J, p, 'infobulle')      # typing a seed: its prompt
+        p.text('12'); p._end_entry(True); self.image(J, p, 'message')                       # "Invalid seed"
+        J, p = menu('root', new_game=True, draft_seed=SD.new_code(number=4)); p.stack = ['root', 'gender']; p._help_zone = lambda *a: None
+        self.image(J, p); p.hero_gender = 1; self.image(J, p)                              # the gender page: Masculin chosen, then Féminin (the root's line shows it)
+        J.moment = 'hint'; p._helptext_lines(PA.GENDER_HINT, 520.0, 12.0); J.moment = 'page'; self.note(J, p)          # (its help, in the help zone: wrapped like a tooltip's)
+        J, p = menu('root', new_game=True, draft_seed=SD.new_code(number=5), hero_gender=0); J.name_entry = types.SimpleNamespace(text='Solo'); self.image(J, p); self.lines(J, p)          # (name and gender chosen: "Start the adventure" active)
+    def page_cheats(self): self.page('cheats')
+    def page_achievements(self): self.page('achievements')
     def page_quit(self): self.page('quit')
 
     def page_savestates(self):
-        for action in ('create', 'load', 'delete'):
-            J, p = self.page('states', state_action=action)
-            if action == 'create':
-                for i in range(1, 6): p.selected['states'] = i; self.image(J, p)             # each kind of slot: thumbnail and date, date only, nothing, empty ("No thumbnail", "Empty slot")
+        J, p = self.page('states')
+        for i in range(0, 5): p.selected['states'] = i; self.image(J, p)                  # each kind of slot: thumbnail and date, date only, nothing, empty ("No thumbnail", "Empty slot")
+        p.selected['states'] = 0; p._validate(); self.image(J, p)                               # a slot holding a state: the list of what to do with it (load, create, delete)
         self.page('states', FakeGame(savestates=False))
         for n in (1, 9):
             J, p = menu('states'); p._request_deletion(n); self.image(J, p)          # confirmation window (n = 9: empty slot, no date)
@@ -179,7 +195,7 @@ class Visit:
     def page_commands(self):
         self.page('controls')
         self.page('controls', controls_pad=True)                                                                          # gamepad cells: "Bouton 1 / 2", the "Clavier / Manette" row, "View" (View button)
-        J = FakeGame(); J.reg.bind_pad('info', 'PAD_TOUCH'); self.page('controls', J, controls_pad=True)                     # "Touch pad" (an Xbox controller has no picture for it: its text is drawn)
+        J = FakeGame(); J.reg.bind_pad('info', 'PAD_TOUCH'); J.reg.bind_pad('chat', 'PAD_BACK'); self.page('controls', J, controls_pad=True)                     # "Touch pad" (an Xbox controller has no picture for it: its text is drawn)
         for action in ('up', 'accel', 'cam_left'):
             for col in (0, 1):
                 for pad in (False, True):
@@ -200,12 +216,10 @@ class Visit:
         finally:
             if saved is None: os.environ.pop('DQ_SPEED_ANCHOR', None)
             else: os.environ['DQ_SPEED_ANCHOR'] = saved
-        for target in ('buttons', 'speed_button', 'msg', 'RootMenu', 'UnknownWindow'):
+        for target in ('buttons', 'speed_button', 'vehicle_button', 'msg', 'RootMenu', 'UnknownWindow'):          # (the vehicle button: listed in DQ VI only, its page is the same in every game)
             for mask in (False, True):                                                # hidden: "Hidden" / "Hidden" on the preview
-                J = FakeGame(); J.reg['buttons'] = J.reg['speed_button'] = J.reg['dpad'] = not mask; J.reg['interface_hidden'] = ['msg', 'RootMenu', 'UnknownWindow'] if mask else []
+                J = FakeGame(); J.reg['buttons'] = J.reg['speed_button'] = J.reg['vehicle_button'] = J.reg['dpad'] = not mask; J.reg['interface_hidden'] = ['msg', 'RootMenu', 'UnknownWindow'] if mask else []
                 self.page('interface', J, target=target)
-        J, p = menu('interface'); draw_page(p); z = p.fold_zone                          # title bar tooltip
-        p.mouse_mode = True; p.mouse_pos = ((z[0] + z[2]) / 2, (z[1] + z[3]) / 2); p.tt = (('plier', 0), PA.time.time() - 1); self.image(J, p, 'infobulle')
         J, p = menu('interface'); p.folded = True; self.image(J, p)                       # collapsed panel
         J, p = menu('interface'); p.open_dropdown = [0, 0]; self.image(J, p)                  # "Interface to edit" list open (group subheadings)
 
@@ -225,7 +239,8 @@ class Visit:
         J, p = menu('states'); J.load_state = lambda n: (_ for _ in ()).throw(SS.OtherEngine('abcd')); p._load(2); self.image(J, p, 'message')       # "Cet état a été enregistré avec d'autres fichiers APK du jeu..."
         J, p = menu('controls'); p.capture = ('menu', 1, False); p.key_press(K.F11); p.capture = None; self.image(J, p, 'message')             # "This key is reserved (F11)."
         J, p = menu('controls'); J.reg.bind('info', 0, K.TAB); p.capture = ('menu', 1, False); p.key_press(K.TAB); self.image(J, p, 'message')       # "Tab retirée de "On-screen info"."
-        J, p = menu('controls'); J.reg.bind_pad('history', 'PAD_TOUCH'); p.capture = ('up', 0, True); p._capture(PI.SYMBOL['PAD_TOUCH']); self.image(J, p, 'message')       # "Pavé tactile retirée de "History"." (an Xbox controller has no picture for it: its text is drawn in the "Up" line)
+        J, p = menu('controls'); J.reg.bind_pad('map', 'PAD_TOUCH'); p.capture = ('up', 0, True); p._capture(PI.SYMBOL['PAD_TOUCH']); self.image(J, p, 'message')       # "Pavé tactile retirée de "Map"." (an Xbox controller has no picture for it: its text is drawn in the "Up" line)
+        J, p = menu('controls'); J.reg.bind_pad('map', 'PAD_BACK'); p.capture = ('up', 0, True); p._capture(PI.SYMBOL['PAD_BACK']); self.image(J, p, 'message')       # "Affichage retirée de "Map"." (View: no action by default since the History key is gone)
         J, p = menu('controls'); J.reg.bind('info', 0, K.TAB); TP.by_caption(p, 'settings.menu')['default'](); self.image(J, p, 'message')       # "Une touche d'origine est retirée de "On-screen info"."
         for action, _ in RG.ACTIONS:                                                    # "X retirée de "<each action, even those that are not in the page>"."
             J, p = menu('controls'); name_str = next(n for n in RG.DEFAULT_KEYS[action] if n)
@@ -343,7 +358,7 @@ class Walkthrough(Base):
     def test_in_english_translation_is_shown(self):
         texts = set(self.entry.texts('page'))
         for t in ('Settings', 'Resume', 'Display', 'Fullscreen', 'Contrast', 'Sharpness', 'Vignette effect', 'Supersampling', 'Brightness', 'Language', 'Sound', 'Controls', 'Save states', 'Quit', 'Yes', 'No', 'Are you sure?',
-                  'Text speed', 'Battle speed', 'Very fast', 'Hold middle click + move', 'Key 1', 'Key 2', 'Restore default keys', 'Left Shift', 'Numpad 7', 'Hidden', 'Casino: prizes',
+                  'Text speed', 'Battle speed', 'Very fast', 'Hold middle click + move', 'Key 1', 'Key 2', 'Restore default keys', 'L Shift', 'Numpad 7', 'Hidden', 'Casino: prizes',
                   'HP and MP restored on level up', 'Empty slot', 'World map', 'Battle'):
             self.assertIn(t, texts, t)
 
@@ -407,7 +422,7 @@ class Data(unittest.TestCase):
         self.assertTrue(PA.Pause.KEY_HELPTEXT.startswith('settings.enter_change_key'))
 
     def test_and_are_translated_when_drawn(self):
-        self.assertEqual(LG.tr(dict(RG.ACTIONS)['up']), 'Up'); self.assertEqual(LG.tr(RG.key_name('LSHIFT')), 'Left Shift'); self.assertEqual(LG.tr(RG.key_name('NUM_7')), 'Numpad 7')
+        self.assertEqual(LG.tr(dict(RG.ACTIONS)['up']), 'Up'); self.assertEqual(LG.tr(RG.key_name('LSHIFT')), 'L Shift'); self.assertEqual(LG.tr(RG.key_name('NUM_7')), 'Numpad 7')
         self.assertEqual(LG.tr(RG.BATTLE_SPEED_NAMES[3.0]), 'Very fast'); self.assertEqual(LG.tr(RG.key_name('F5')), 'F5'); self.assertEqual(LG.tr(RG.key_name(None)), '—')
 
     def test_message_keeps_its_key_and_is_displayed_translated(self):
@@ -425,7 +440,7 @@ class Data(unittest.TestCase):
         the list, the delete window and the thumbnail; a savestate without a date remains "No date"."""
         att = {'fr': ['31/10/2026  19:21:05', '02/11/2026  08:05:59', 'Sans date', '03/11/2026  23:59:00'], 'en': ['2026-10-31  19:21:05', '2026-11-02  08:05:59', 'No date', '2026-11-03  23:59:00']}
         for language in ('fr', 'en'):
-            LG.select_language(language); J, p = menu('states'); p.state_action = 'load'
+            LG.select_language(language); J, p = menu('states')
             slots = [x for x in p._entries_savestates() if x['t'] == 'slot' and x['n'] in (1, 2, 3, 5)]
             self.assertEqual([LG.tr(x['l']) for x in slots], att[language], language)
             p._request_deletion(1); self.assertEqual(p.popup['detail'], att[language][0], language)
@@ -453,11 +468,11 @@ class Keys(unittest.TestCase):
             self.assertFalse(TL.french(entry), '%s : %r -> %r' % (n, fr, entry)); self.assertNotIn('Pavé', entry)
             if fr != n and fr in EN_SETTINGS.TEXTS: self.assertNotEqual(entry, fr)
         self.assertEqual([LG.tr(RG.key_name(n)) for n in ('LSHIFT', 'RSHIFT', 'LCTRL', 'RCTRL', 'LALT', 'RALT', 'SPACE', 'RETURN', 'ENTER', 'BACKSPACE', 'DELETE', 'INSERT', 'HOME', 'END', 'PAGEUP', 'PAGEDOWN', 'CAPSLOCK', 'NUM_ADD', 'NUM_SUBTRACT')],
-                         ['Left Shift', 'Right Shift', 'Left Ctrl', 'Right Ctrl', 'Left Alt', 'Alt Gr', 'Space', 'Enter', 'Numpad Enter', 'Backspace', 'Delete', 'Insert', 'Home', 'End', 'Page Up', 'Page Down', 'Caps Lock', 'Numpad +', 'Numpad -'])
+                         ['L Shift', 'R Shift', 'L Ctrl', 'R Ctrl', 'Alt', 'Alt Gr', 'Space', 'Enter', 'Numpad Enter', 'Backspace', 'Delete', 'Insert', 'Home', 'End', 'Page Up', 'Page Down', 'Caps Lock', 'Numpad +', 'Numpad -'])
 
     def test_in_french_nothing_changes(self):
         LG.select_language('fr')
-        for n, att in (('LSHIFT', 'Maj gauche'), ('RETURN', 'Entrée'), ('NUM_3', 'Pavé 3'), ('F1', 'F1'), ('BACKSPACE', 'Retour arrière')): self.assertEqual(LG.tr(RG.key_name(n)), att)
+        for n, att in (('LSHIFT', 'Maj G'), ('RETURN', 'Entrée'), ('NUM_3', 'Pavé 3'), ('F1', 'F1'), ('BACKSPACE', 'Retour arrière')): self.assertEqual(LG.tr(RG.key_name(n)), att)
 
     def test_whole_pyglet_numpad_is_translated(self):
         for language, prefix in (('fr', 'Pavé '), ('en', 'Numpad ')):
@@ -506,7 +521,7 @@ class Console(unittest.TestCase):
 
 
 class Catalog(unittest.TestCase):
-    """The catalog rules (tests/test_language.py) for dq4_pc/texts/*/settings.py, plus: a key is ONE help sentence (help texts chain keys separated by three spaces)."""
+    """The catalog rules (tests/test_language.py) for dq456_pc/texts/*/settings.py, plus: a key is ONE help sentence (help texts chain keys separated by three spaces)."""
     def test_rules(self):
         for k, fr in FR_SETTINGS.TEXTS.items():
             entry = EN_SETTINGS.TEXTS[k]
@@ -534,7 +549,7 @@ class Mutations(Base):
         f = getattr(klass, name_str); src = textwrap.dedent(inspect.getsource(f))
         self.assertIn(old, src, 'the mutation targets nothing: %r' % old)
         ns = dict(vars(sys.modules[klass.__module__])); exec(compile(src.replace(old, new, 1), '<mutation>', 'exec'), ns)
-        setattr(klass, name_str, types.FunctionType(ns[name_str].__code__, vars(sys.modules[klass.__module__]), name_str))          # (with the module globals as they are during the walkthrough: the frozen clock, for example)
+        setattr(klass, name_str, types.FunctionType(ns[name_str].__code__, vars(sys.modules[klass.__module__]), name_str, ns[name_str].__defaults__))          # (with the module globals as they are during the walkthrough: the frozen clock, for example)
         try: yield
         finally: setattr(klass, name_str, f)
 
@@ -566,7 +581,7 @@ class Mutations(Base):
         self.assertTrue(any('key drawn' in x for x in pb), pb)
 
     def test_tr_of_key_n_removed(self):
-        with self.muter(PA.Pause, 'draw_all', "self._label(tr('settings.button' if self.controls_pad else 'settings.key') % (c + 1)", "self._label(('settings.button %d' if self.controls_pad else 'settings.key %d') % (c + 1)"): pb = self.check(('page_commands',))
+        with self.muter(PA.Pause, '_draw_page', "self._label(tr('settings.button' if self.controls_pad else 'settings.key') % (c + 1)", "self._label(('settings.button %d' if self.controls_pad else 'settings.key %d') % (c + 1)"): pb = self.check(('page_commands',))
         self.assertTrue(any('key drawn' in x for x in pb), pb)
 
     def test_tr_of_message_values_removed(self):

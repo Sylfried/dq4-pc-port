@@ -16,11 +16,11 @@ sys.path.insert(0, os.path.join(HERE, '..'))
 try:
     import pyglet
     if sys.platform.startswith('linux') and not os.environ.get('DISPLAY'): pyglet.options['headless'] = True; pyglet.options['shadow_window'] = False
-    from dq4_pc.window import game as F
+    from dq456_pc.window import game as F
 except Exception as ex:
     F = None; IMPORT_ERROR = ex
-from dq4_pc.core import engine as ENGINE
-from dq4_pc.core import game_priority as PJ
+from dq456_pc.core import engine as ENGINE
+from dq456_pc.core import game_priority as PJ
 
 APK, SAVES = os.environ.get('DQ_APK'), os.environ.get('DQ_SAVES')
 STEP = 1.0 / 30.0
@@ -108,7 +108,7 @@ class Clock(unittest.TestCase):
         j = types.SimpleNamespace(reg={'battle_speed': battle_speed, 'accel_speed': accel})
         j.engine = types.SimpleNamespace(state=e, msg_visible=False, active_menu=lambda: menu, flags=lambda: flags, ui=types.SimpleNamespace(msg={'feed': False}))
         j.pad = lambda: ENGINE.UP if direction else 0; j._held = lambda a: accel_held and a == 'accel'; j.hud = types.SimpleNamespace(dpad_run=lambda: False); j.pause = types.SimpleNamespace(opened=False)
-        for name_str in ('_battle_clock', '_wait_for_player'): setattr(j, name_str, types.MethodType(getattr(F.Game, name_str), j))
+        for name_str in ('_battle_clock', '_wait_for_player', '_battle_won'): setattr(j, name_str, types.MethodType(getattr(F.Game, name_str), j))
         j.factor = lambda: F.Game._speed_factor(j)
         return j
 

@@ -16,20 +16,20 @@ sys.path.insert(0, ROOT)
 APK, SAVES = os.environ.get('DQ_APK'), os.environ.get('DQ_SAVES')
 NOTES = os.path.join(ROOT, 'docs', 'engine-patches.md')
 
-EXPECTED = {'core/engine.py': 22, 'battle/battle_history.py': 8, 'core/pktlog.py': 3, 'core/history.py': 4, 'core/emu_core.py': 2}       # measured with the French texts (the English ones: core/engine.py 21, no copy-name elision hook)
+EXPECTED = {'core/engine.py': 49, 'battle/battle_history.py': 8, 'core/pktlog.py': 3, 'core/history.py': 4, 'core/emu_core.py': 6}       # measured with the French texts (the English ones: core/engine.py 47, no copy-name elision hook nor status-name article hook)
 OUTSIDE_EMU = sum(n for f, n in EXPECTED.items() if f != 'core/emu_core.py')
 
 
 def count_hooks():
-    """-> Counter {dq4_pc file: number of `hook_add`} during the creation of the engine."""
+    """-> Counter {dq456_pc file: number of `hook_add`} during the creation of the engine."""
     import unicorn
-    from dq4_pc.core import engine as ENGINE
+    from dq456_pc.core import engine as ENGINE
     per_file = collections.Counter()
     real = unicorn.Uc.hook_add
     def spy(self, *a, **k):
         for fr in traceback.extract_stack()[::-1]:
-            if os.sep + 'dq4_pc' + os.sep in fr.filename:
-                per_file[fr.filename.split(os.sep + 'dq4_pc' + os.sep)[1].replace(os.sep, '/')] += 1; break
+            if os.sep + 'dq456_pc' + os.sep in fr.filename:
+                per_file[fr.filename.split(os.sep + 'dq456_pc' + os.sep)[1].replace(os.sep, '/')] += 1; break
         return real(self, *a, **k)
     unicorn.Uc.hook_add = spy
     try:
@@ -59,7 +59,7 @@ class Document(unittest.TestCase):
             self.assertRegex(self.count, r'`%s`\s*\*\*%d\*\*' % (re.escape(f), n), '%s: %d expected' % (f, n))
 
     def test_the_survey_command_works_on_subfolders(self):
-        """The command given to list the sites searches the subfolders of dq4_pc (`-r`)."""
+        """The command given to list the sites searches the subfolders of dq456_pc (`-r`)."""
         self.assertIn('grep -rn', self.count)
 
 

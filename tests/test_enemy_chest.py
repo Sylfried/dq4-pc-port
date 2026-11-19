@@ -29,7 +29,7 @@ STAGES = ('laisse tomber un coffre au trésor', "l'ouvre", 'Il contient', ('dans
 class ChestDroppedByEnemy(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        import unicorn; from dq4_pc.core import engine as ENGINE; from dq4_pc.persistence import savestates as SS
+        import unicorn; from dq456_pc.core import engine as ENGINE; from dq456_pc.persistence import savestates as SS
         cls.ENGINE, cls.SS = ENGINE, SS
         cls.eng = ENGINE.Engine(APK, SAVES, tempfile.mkdtemp(prefix='sv_coffre_')); c = cls.c = cls.eng.core
         SV.load_any(cls.eng)

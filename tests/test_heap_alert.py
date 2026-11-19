@@ -9,13 +9,13 @@
 import os, sys, types, unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from dq4_pc import language as _LANGUAGE; _LANGUAGE.select_language('fr')          # (these tests expect the French texts, whatever the computer's language)
-from dq4_pc.core import emu_core as EC
+from dq456_pc import language as _LANGUAGE; _LANGUAGE.select_language('fr')          # (these tests expect the French texts, whatever the computer's language)
+from dq456_pc.core import emu_core as EC
 
 try:
     import pyglet
     pyglet.options['shadow_window'] = False
-    from dq4_pc.window import game as WND
+    from dq456_pc.window import game as WND
 except Exception as ex:          # window/game.py needs pyglet, numpy, unicorn... (the import alone is enough)
     WND = None; ERROR_WND = ex
 

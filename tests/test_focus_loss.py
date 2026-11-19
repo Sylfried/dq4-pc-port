@@ -18,7 +18,7 @@ def new_sound():
     """A Sound without pyglet (`pyglet` module masked) with fake players: a music track and a sound effect playing."""
     saved = sys.modules.get('pyglet', 0); sys.modules['pyglet'] = None
     try:
-        from dq4_pc import sound as SOUND
+        from dq456_pc import sound as SOUND
         s = SOUND.Sound('inexistant.apk', '/tmp', log=lambda *a: None, logfile=lambda *a: None, alert=lambda *a: None)
     finally:
         if saved == 0: sys.modules.pop('pyglet', None)
@@ -70,7 +70,7 @@ class SoundWithoutFocus(unittest.TestCase):
 class GameWithoutFocus(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        try: from dq4_pc.window import game as window; cls.WND = window
+        try: from dq456_pc.window import game as window; cls.WND = window
         except Exception as ex: raise unittest.SkipTest('fenetre non importable ici (%r)' % (ex,))
 
     def fake_game(self):

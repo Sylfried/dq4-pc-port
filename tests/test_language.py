@@ -1,5 +1,5 @@
-"""Language of the port's texts (dq4_pc/language.py), without window or engine: detection of the computer's language (French whatever the variant, otherwise English),
-setting, `tr` / `N_`, reading the setting in settings.json, and rules of the catalogs (dq4_pc/texts/<language>/): the same keys in every language, each key in the file of
+"""Language of the port's texts (dq456_pc/language.py), without window or engine: detection of the computer's language (French whatever the variant, otherwise English),
+setting, `tr` / `N_`, reading the setting in settings.json, and rules of the catalogs (dq456_pc/texts/<language>/): the same keys in every language, each key in the file of
 its domain, the same placeholders (%d, %s...) and the same spaces at the edges, no French in the English, and every key the code uses exists.
 
     python3 tests/test_language.py"""
@@ -8,7 +8,7 @@ import ast, json, os, re, sys, tempfile, unittest
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.join(HERE, '..')
 sys.path.insert(0, ROOT)
-from dq4_pc import language as LG
+from dq456_pc import language as LG
 
 ACCENTS = re.compile('[àâäçéèêëîïôöùûüÿœÀÂÇÉÈÊËÎÏÔÙÛÜŒ]')
 FRENCH_WORDS = {'le', 'la', 'les', 'des', 'du', 'une', 'et', 'ou', 'pour', 'dans', 'sur', 'avec', 'sans', 'est', 'pas', 'ces', 'aux', 'vos', 'votre', 'tes', 'tous', 'toutes', 'quand', 'comme', 'mais', 'donc', 'sont', 'chaque', 'sinon', 'aucun', 'aucune'}
@@ -23,7 +23,7 @@ def french(text):
 
 def catalog_by_file(language):
     import importlib
-    return {d: importlib.import_module('dq4_pc.texts.%s.%s' % (language, d)).TEXTS for d in LG.DOMAINS}
+    return {d: importlib.import_module('dq456_pc.texts.%s.%s' % (language, d)).TEXTS for d in LG.DOMAINS}
 
 
 KEY = re.compile(r'^[a-z]+\.[a-z0-9_]+$')
@@ -115,7 +115,7 @@ class Translation(unittest.TestCase):
 
 
 class Catalog(unittest.TestCase):
-    """Rules of the catalogs (dq4_pc/texts/fr and dq4_pc/texts/en)."""
+    """Rules of the catalogs (dq456_pc/texts/fr and dq456_pc/texts/en)."""
     def test_files_types_and_key_names(self):
         for lang in LG.LANGUAGES:
             for d, c in catalog_by_file(lang).items():
@@ -147,7 +147,7 @@ class Catalog(unittest.TestCase):
 
     def test_every_key_of_the_code_exists_and_every_key_is_used(self):
         known = LG.catalog('fr'); used = set(); missing = []
-        for d, _, fs in os.walk(os.path.join(ROOT, 'dq4_pc')):
+        for d, _, fs in os.walk(os.path.join(ROOT, 'dq456_pc')):
             if os.sep + 'texts' in d: continue
             for f in fs:
                 if not f.endswith('.py'): continue

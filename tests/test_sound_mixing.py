@@ -7,7 +7,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 sys.modules['pyglet'] = None                                             # (no pyglet: neither window nor audio driver; Sound takes it for "sound unavailable" and we give it fake players)
-from dq4_pc import sound as SOUND
+from dq456_pc import sound as SOUND
 
 
 class FakePlayer:

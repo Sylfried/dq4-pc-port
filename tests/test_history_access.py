@@ -15,9 +15,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..'))
 import pyglet
 pyglet.options['shadow_window'] = False
-from dq4_pc.window import game as F
-from dq4_pc.menus import pause as PA
-from dq4_pc.core import engine as ENGINE
+from dq456_pc.window import game as F
+from dq456_pc.menus import pause as PA
+from dq456_pc.core import engine as ENGINE
+from dq456_pc.persistence import settings as RG
 
 
 def fake_game(part=ENGINE.PART_TOWN, flag=0, msg=False, menu=None, effect=None, waiting=None, guard=0, title_screen=None):
@@ -66,17 +67,10 @@ class TestHistoryPossible(unittest.TestCase):
 
 
 class TestKey(unittest.TestCase):
-    def test_opens_when_player_has_control(self):
-        j = fake_game(); F.Game._history_key(j); self.assertEqual(j.calls, ['history'])
-
-    def test_does_nothing_without_message_otherwise(self):          # the player does not need to be informed
-        for kw in (dict(part=ENGINE.PART_BATTLE), dict(msg=True), dict(flag=ENGINE.PLAYER_LOCKED_FLAG)):
-            j = fake_game(**kw); F.Game._history_key(j); self.assertEqual(j.calls, [], kw)
-
-    def test_on_key_press_goes_through_the_rule(self):
-        src = inspect.getsource(F.Game.on_key_press)
-        i = src.index("action_of(symbol) == 'history'"); line = src[i:src.index('\n', i)]
-        self.assertIn('self._history_key()', line); self.assertNotIn("self.pause.ouvrir('history')", line)
+    def test_no_history_key(self):
+        """No more History key (nor its line in "Controls"): the history is a line of the Esc menu, drawn on the right of its root."""
+        self.assertFalse(hasattr(F.Game, '_history_key')); self.assertNotIn('history', RG.DEFAULT_KEYS); self.assertNotIn('history', dict(RG.ACTIONS))
+        self.assertNotIn("== 'history'", inspect.getsource(F.Game.on_key_press))
 
 
 def menu(j, stack=None):

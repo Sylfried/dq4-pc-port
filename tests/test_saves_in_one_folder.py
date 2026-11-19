@@ -3,7 +3,7 @@
   1. layout: `data\\saves` receives data1.dat to data5.dat, data9.dat AND `savestates\\` (like the export .zip); `portage` is now just another name for this folder;
   2. resume of the old `saves\\portage` and `saves\\mobile\\<date>` at startup: the adventure logs are COPIED into `saves\\` (the port first, then the most recent phone copy, without overwriting anything: what the game read
      before, file by file), then the two old folders are MOVED as they are into `before_tidy_<date>\\`; nothing is deleted, a second resume does nothing;
-  3. A real case: port files older than the phone's, `manifest.json` in the phone copy, old `dq4_pc\\saves` still there (must not take precedence over today's files);
+  3. A real case: port files older than the phone's, `manifest.json` in the phone copy, old `dq4_pc\\sauvegardes` still there (must not take precedence over today's files);
   4. safety: an adventure log already placed in `saves\\` is not overwritten, a move error leaves everything in place (the game already reads `saves\\`), DQ4_JEUX (phone copy elsewhere) is not touched;
   5. the engine reads this folder (`effective_files`), the export flattens it and the import writes into it.
 
@@ -13,9 +13,9 @@ import os, shutil, sys, tempfile, unittest, zipfile
 from unittest import mock
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from dq4_pc import language as _LANGUAGE; _LANGUAGE.select_language('fr')          # (these tests expect the French texts, whatever the computer's language)
-from dq4_pc import paths as CH
-from dq4_pc.persistence import saves as S
+from dq456_pc import language as _LANGUAGE; _LANGUAGE.select_language('fr')          # (these tests expect the French texts, whatever the computer's language)
+from dq456_pc import paths as CH
+from dq456_pc.persistence import saves as S
 
 NAMES = CH.LOGFILE_NAMES
 
@@ -45,7 +45,7 @@ class Layout(unittest.TestCase):
 
     def test_no_code_still_stores_in_port(self):
         """The `portage` folder now exists only as an old name (paths.py: resumed then tidied away); no other module builds it."""
-        root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'dq4_pc')
+        root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'dq456_pc')
         for folder, _d, files in os.walk(root):
             for f in files:
                 if f.endswith('.py') and f != 'paths.py':
@@ -103,7 +103,7 @@ class Resume(unittest.TestCase):
         self.assertEqual(self.migrate(), []); self.assertEqual(all_files(self.t), before)
 
     def test_old_dq4_pc_folder_does_not_outrank_todays_files(self):
-        """There is still a `dq4_pc\\saves` from before the first tidy-up (a copy, not a move): its old data1 and data3 must not replace those of the port."""
+        """There is still a `dq4_pc\\sauvegardes` from before the first tidy-up (a copy, not a move): its old data1 and data3 must not replace those of the port."""
         self.real_layout(); self.migrate()
         self.assertEqual(content(self.sv, 'data1.dat'), b'portage_data1.dat'); self.assertEqual(content(self.sv, 'data3.dat'), b'portage_vieux_data3.dat')
         self.assertEqual(content(self.t, 'dq4_pc', 'sauvegardes', 'data1.dat'), b'tres_vieux')                                                      # (and it is not touched)
@@ -129,7 +129,7 @@ class Resume(unittest.TestCase):
         def refuse_folders(src, dst):                                    # Windows: a folder with an open file in it cannot be moved; the file copies (tmp -> destination) go through
             if os.path.isdir(src): raise PermissionError('fichier ouvert')
             return actual(src, dst)
-        with mock.patch('dq4_pc.paths.os.replace', side_effect=refuse_folders):
+        with mock.patch('dq456_pc.paths.os.replace', side_effect=refuse_folders):
             done = self.migrate()
         self.assertTrue(any('NOT moved' in ph and 'fichier ouvert' in ph for ph in done), done)
         self.assertTrue(os.path.isdir(self.d.old_port_dir) and os.path.isdir(self.d.mobile))                                                            # nothing moved

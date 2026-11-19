@@ -3,7 +3,7 @@ Run from the root: PYTHONPATH=. python3 tests/test_sound_decoding.py (no sound c
 import io, os, shutil, struct, sys, tempfile, threading, unittest, zipfile
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import numpy as np
-from dq4_pc import sound as S
+from dq456_pc import sound as S
 
 try: import soundfile as sf
 except Exception: sf = None

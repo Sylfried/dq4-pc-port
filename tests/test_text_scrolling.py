@@ -11,7 +11,7 @@ Saves are opened read-only: the engine writes to a temporary folder.
 import argparse, os, sys, tempfile, unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from dq4_pc.core import engine as ENGINE
+from dq456_pc.core import engine as ENGINE
 
 ARGS = None
 SPEEDS = (0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 4000.0)

@@ -11,12 +11,12 @@ import os, shutil, sys, tempfile, types, unittest
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 import pyglet
 pyglet.options['shadow_window'] = False
-from dq4_pc import language as LG
+from dq456_pc import language as LG
 LG.select_language('fr')
-from dq4_pc.core import history as HI
-from dq4_pc.menus import battle_rewind as BR
-from dq4_pc.menus import ui_history as UH
-from dq4_pc.persistence import settings as RG
+from dq456_pc.core import history as HI
+from dq456_pc.menus import battle_rewind as BR
+from dq456_pc.menus import ui_history as UH
+from dq456_pc.persistence import settings as RG
 
 
 class Clock:

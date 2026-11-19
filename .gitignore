@@ -1,5 +1,5 @@
-# --- Game content and player files: NEVER in this repository ---
-/data/
+# --- Game content and player files: NEVER in this repository (the data folders themselves are, with only a README.txt each: see the end) ---
+/data/**
 *.apk
 *.so
 *.unity3d
@@ -20,6 +20,8 @@ sauvegardes/
 reglages.json
 historique_messages.json*
 historique_favoris.json*
+/dq4_pc/
+# (the package folder dq4_pc was renamed dq456_pc: only leftovers of earlier versions can stay in it)
 
 # --- Python / local environment ---
 __pycache__/
@@ -32,4 +34,8 @@ modules_ok.txt
 *.log
 
 # --- Temporary extractions (game data) ---
-/dq4_pc/*.json
+/dq456_pc/*.json
+
+# --- The empty data folders, ready to receive the APK files and saves: only their README.txt (keep these lines last) ---
+!/data/**/
+!/data/**/README.txt

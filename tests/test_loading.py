@@ -18,8 +18,8 @@ import argparse, os, sys, tempfile, time, types, unittest
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 import pyglet
 if sys.platform.startswith('linux') and not os.environ.get('DISPLAY'): pyglet.options['headless'] = True; pyglet.options['shadow_window'] = False
-from dq4_pc.core import engine as ENGINE
-from dq4_pc.window import game as F
+from dq456_pc.core import engine as ENGINE
+from dq456_pc.window import game as F
 
 ARGS = None
 OUTPUT, ENTRY = 0x1000, 0                       # bit 12 of packet 9: fade to the color (exit); otherwise entry

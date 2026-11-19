@@ -1,4 +1,4 @@
-"""Test of the battle results capture (dq4_pc/battle_history.py): defeated enemies, gold, experience.
+"""Test of the battle results capture (dq456_pc/battle_history.py): defeated enemies, gold, experience.
 
 Three levels:
 - pure computation (Tracking, plate names, build_battle): no engine;
@@ -16,9 +16,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
 import _saves as SV
-from dq4_pc import language as LG
+from dq456_pc import language as LG
 LG.select_language('fr')          # (the expectations of this test are in French, whatever the language of the computer)
-from dq4_pc.battle import battle_history as HC
+from dq456_pc.battle import battle_history as HC
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------- pure computation
@@ -439,7 +439,7 @@ RE_GOLD = re.compile(r"reçoit (\d+) pièces? d'or")
 class RealEngine(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        import unicorn; from dq4_pc.core import engine as ENGINE; from dq4_pc.persistence import savestates as SS
+        import unicorn; from dq456_pc.core import engine as ENGINE; from dq456_pc.persistence import savestates as SS
         cls.ENGINE, cls.SS, cls.unicorn = ENGINE, SS, unicorn
         cls.eng = ENGINE.Engine(APK, SAVES, tempfile.mkdtemp(prefix='sv_hcb_')); c = cls.c = cls.eng.core
         SV.load_any(cls.eng)

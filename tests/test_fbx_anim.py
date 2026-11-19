@@ -1,4 +1,4 @@
-"""Tests of the 3D model animation (dq4_pc/fbx.py): Hermite curves, player loop, rotation blending.
+"""Tests of the 3D model animation (dq456_pc/fbx.py): Hermite curves, player loop, rotation blending.
 
   python3 tests/test_fbx_anim.py
 
@@ -12,7 +12,7 @@ import math, os, sys, unittest
 import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from dq4_pc.world import fbx as F
+from dq456_pc.world import fbx as F
 
 
 def quat_y(deg):

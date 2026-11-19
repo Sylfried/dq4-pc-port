@@ -13,12 +13,12 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE); sys.path.insert(0, os.path.join(HERE, '..'))
 import pyglet
 pyglet.options['shadow_window'] = False
-from dq4_pc.menus import hud_mobile as HM
-from dq4_pc.core import engine as ENGINE
+from dq456_pc.menus import hud_mobile as HM
+from dq456_pc.core import engine as ENGINE
 import test_dpad_and_click as TC
 
 try:
-    from dq4_pc.window import game as F
+    from dq456_pc.window import game as F
 except Exception as ex:
     F = None
 
