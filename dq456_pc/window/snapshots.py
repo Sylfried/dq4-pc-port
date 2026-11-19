@@ -5,6 +5,7 @@ import pyglet
 from pyglet import gl
 from dq456_pc import paths as CH
 from dq456_pc import games as GM
+from dq456_pc import language as LG
 from dq456_pc.language import N_
 from dq456_pc.core import engine as ENGINE
 from dq456_pc.persistence import savestates as SS
@@ -71,9 +72,9 @@ class SnapshotsMixin:
     def _location(self):
         """Location noted in the savestate file: a catalog key (N_ marker), never translated here; the Pause menu's savestate page translates it when displaying it (Pause._label)."""
         e = self.engine.state
-        if e.part == ENGINE.PART_CASINO: return N_('settings.casino_poker') if e.game_map == 'ev04' else (N_('settings.casino_slot_machine') if e.game_map == 'ev05' else N_('settings.casino'))          # (maps ev04 / ev05: see Global::setMinigame)
-        if e.part == ENGINE.PART_BESTIARY: return N_('settings.bestiary')
-        return N_('settings.world_map') if e.part == ENGINE.PART_FIELD else (N_('settings.battle') if e.part == ENGINE.PART_BATTLE else (e.game_map or '?'))
+        if e.part == ENGINE.PART_CASINO: return N_('interface.casino_poker') if e.game_map == 'ev04' else (N_('interface.casino_slot_machine') if e.game_map == 'ev05' else N_('interface.casino'))          # (maps ev04 / ev05: see Global::setMinigame)
+        if e.part == ENGINE.PART_BESTIARY: return N_('interface.bestiary')
+        return N_('save_states.world_map') if e.part == ENGINE.PART_FIELD else (N_('save_states.battle') if e.part == ENGINE.PART_BATTLE else (e.game_map or '?'))
 
     def _complete_savestate(self):
         """Savestate of the engine + the viewer (including the map's animated objects)."""
@@ -88,14 +89,14 @@ class SnapshotsMixin:
         SS.write(self.state_path(n), d, {'location': self._location(), 'map': self.engine.state.game_map, 'part': self.engine.state.part, 'frames': self.engine.frames}, thumbnail_png)
 
     def state_language(self, lib_sha):
-        """Language ('fr' or 'en') of the game version whose APK folder holds the library with this fingerprint, or None (the APK files of that version are not there, or it is another update)."""
-        for lg in ('fr', 'en'):
+        """Language (code of its APK folder) of the game version whose APK folder holds the library with this fingerprint, or None (the APK files of that version are not there, or it is another update)."""
+        for lg in LG.LANGUAGES:
             folder = CH.FOLDERS.apk_for(lg)
             if os.path.isfile(os.path.join(folder, 'base.apk')) and SS.apk_fingerprint(folder) == lib_sha: return lg
         return None
 
     def load_state(self, n):
-        """Reloads slot n; the state from before the loading is kept in memory (cancel_loading). A state of the game's other language raises SS.OtherLanguage (nothing touched): the caller offers to switch the game to that language (reload_game)."""
+        """Reloads slot n; the state from before the loading is kept in memory (cancel_loading). A state of another game version raises SS.OtherLanguage (nothing touched): the caller offers to switch the game to its language (reload_game)."""
         d = SS.read(self.state_path(n))
         try: SS.check(self.engine, d)
         except SS.OtherEngine as ex:
@@ -110,7 +111,7 @@ class SnapshotsMixin:
         """Goes back to the state just before the last loading (a second call redoes the loading). Nothing loaded yet: nothing happens, without a notice (Shift + Ctrl pressed for something else)."""
         if self.undo_state is None: return False
         current = self._complete_savestate(); d, self.undo_state = self.undo_state, current
-        self._apply_savestate(d); self.toast(N_('window.load_undone'))
+        self._apply_savestate(d); self.toast(N_('save_states.load_undone'))
         return True
 
     def _apply_savestate(self, d):

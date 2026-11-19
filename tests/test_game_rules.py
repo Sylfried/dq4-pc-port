@@ -239,7 +239,7 @@ class NewGamePanel(unittest.TestCase):
     def setUp(self): self.t = tempfile.mkdtemp(prefix='rules_panel_'); LG.select_language('fr')
     def tearDown(self): shutil.rmtree(self.t, ignore_errors=True)
 
-    ROOT = ['settings.difficulty', 'settings.randomizer', 'settings.display', 'settings.sound', 'settings.controls', 'settings.hero_name', 'settings.hero_gender', 'settings.start_adventure']
+    ROOT = ['menu.difficulty', 'menu.randomizer', 'menu.display', 'menu.sound', 'menu.controls', 'new_game.hero_name', 'new_game.hero_gender', 'new_game.start_adventure']
     NAME, GENDER, START = 5, 6, 7
 
     def test_panel_pages_and_starting_records_the_rules(self):
@@ -251,19 +251,19 @@ class NewGamePanel(unittest.TestCase):
         self.assertEqual([e.get('page') for e in p._entries_root()][2:5], ['display', 'sound', 'controls'])          # (their pages, the same as during a game)
         self.assertEqual([e['l'] for e in p._entries_root()], self.ROOT)
         self.assertIsNone(p.draft_seed)                                                               # (randomizer mode off: no seed drawn)
-        p.stack[-1] = 'randomizer'; e = p._entries(); self.assertEqual([x['l'] for x in e], ['settings.randomizer_mode'])          # (off: the switch alone)
+        p.stack[-1] = 'randomizer'; e = p._entries(); self.assertEqual([x['l'] for x in e], ['randomizer.randomizer_mode'])          # (off: the switch alone)
         self.assertFalse(e[0]['get']()); e[0]['ok'](); seed = p.draft_seed; self.assertIsNotNone(SD.parse(seed))                      # (turned on: a seed is drawn)
-        e = p._entries(); self.assertEqual([x['l'] for x in e[:3]], ['settings.randomizer_mode', 'settings.seed', 'settings.safety']); self.assertEqual(e[1]['v'](), seed)
+        e = p._entries(); self.assertEqual([x['l'] for x in e[:3]], ['randomizer.randomizer_mode', 'randomizer.seed', 'randomizer.safety']); self.assertEqual(e[1]['v'](), seed)
         e[1]['default'](); self.assertNotEqual(p.draft_seed, seed)                                 # (the round button on the right of the seed: a new seed)
-        p.stack.pop(); start = p._entries()[self.START]; self.assertTrue(start['off']()); self.assertEqual(start['hint'], 'settings.choose_name_gender_first')          # (grayed: no name, no gender)
+        p.stack.pop(); start = p._entries()[self.START]; self.assertTrue(start['off']()); self.assertEqual(start['hint'], 'new_game.choose_name_gender_first')          # (grayed: no name, no gender)
         start['ok'](); self.assertTrue(p.opened); self.assertEqual(p.stack, ['root', 'name']); self.assertEqual(J.sent, [])          # (its action without a name: the name page)
         J.name_entry.text_entered('Solo'); p.back(); self.assertEqual(p.stack, ['root'])                     # (letters typed on the name page; back to the list)
         self.assertNotIn('v', p._entries()[self.NAME]); self.assertTrue(p._entries()[self.START]['off']())                     # (the name is not shown in the list; still no gender)
         p._entries()[self.START]['ok'](); self.assertEqual(p.stack, ['root', 'gender'])                                # (without a gender: its page)
         g = p._entries_root()[self.GENDER]; self.assertNotIn('v', g); self.assertNotIn('vals', g)                       # (no value shown, no drop-down list: a page)
         p.key_press(K.RIGHT); p.key_press(K.ENTER); self.assertEqual(p.hero_gender, 1)
-        self.assertEqual(p.stack, ['root']); self.assertEqual(p._entries()[p.selected['root']]['l'], 'settings.start_adventure')          # (both chosen: on "Start the adventure")
-        self.assertFalse(p._entries()[self.START]['off']()); self.assertEqual(p._entries()[self.START]['hint'], 'settings.rules_saved_with_game')
+        self.assertEqual(p.stack, ['root']); self.assertEqual(p._entries()[p.selected['root']]['l'], 'new_game.start_adventure')          # (both chosen: on "Start the adventure")
+        self.assertFalse(p._entries()[self.START]['off']()); self.assertEqual(p._entries()[self.START]['hint'], 'new_game.rules_saved_with_game')
         J.reg['gold_rate'] = 0.75; draft = p.draft_seed; p._entries()[self.START]['ok']()
         self.assertFalse(p.opened); self.assertFalse(p.new_game); self.assertTrue(J.name_entry.handed); self.assertEqual(J.sent, [('ok', 'Solo', 1)])
         self.assertEqual(J.game_rules.pending['randomizer']['seed'], draft); self.assertEqual(J.game_rules.pending['difficulty']['gold_rate'], 0.75)
@@ -274,7 +274,7 @@ class NewGamePanel(unittest.TestCase):
         self.assertEqual(p.stack, ['root', 'name']); ne = J.name_entry; self.assertTrue(ne.in_panel())
         ne.text_entered('Ana'); self.assertEqual(ne.cur, 0); p.key_press(K.ENTER)                   # (typed on the keyboard, then Enter: the gender, not chosen yet)
         self.assertEqual(p.stack, ['root', 'gender']); self.assertIsNone(p.hero_gender); p.key_press(K.ENTER)          # (Enter: Masculin, under the cursor)
-        self.assertEqual(p.stack, ['root']); self.assertEqual(p._entries()[p.selected['root']]['l'], 'settings.start_adventure'); self.assertEqual(J.sent, [])
+        self.assertEqual(p.stack, ['root']); self.assertEqual(p._entries()[p.selected['root']]['l'], 'new_game.start_adventure'); self.assertEqual(J.sent, [])
         p.key_press(K.ENTER); self.assertEqual(J.sent, [('ok', 'Ana', 0)]); self.assertFalse(p.opened)
         self.assertIsNone(ne.on_ok)                                                                   # (an ordinary name entry has its OK again)
         J = FakeGame(self.t); p = PA.Pause(J); p.open_menu(new_game=True); p._switch_side(self.NAME); ne = J.name_entry
@@ -316,7 +316,7 @@ class NewGamePanel(unittest.TestCase):
         p.text(good.lower()); p.key_press(K.ENTER)
         self.assertIsNone(p.entry); self.assertEqual(p.draft_seed, good)
         p.key_press(K.ENTER); p.text('1234'); p.key_press(K.ENTER)
-        self.assertEqual(p.draft_seed, good); self.assertEqual(p.message[3], 'settings.invalid_seed')          # (wrong: the seed stays, a message says so)
+        self.assertEqual(p.draft_seed, good); self.assertEqual(p.message[3], 'randomizer.invalid_seed')          # (wrong: the seed stays, a message says so)
         other = SD.new_code(number=99); J.clip = other
         p.key_press(K.ENTER); p.key_press(K.V, K.MOD_CTRL); p.key_press(K.ENTER)
         self.assertEqual(p.draft_seed, other)
@@ -328,22 +328,22 @@ class NewGamePanel(unittest.TestCase):
     def test_settings_go_with_the_seed(self):
         """The settings of the page (Safety, Items, Monster drops, Random encounters, Bosses in random encounters, Bosses, Two bosses) are carried by the seed code: changing one changes the code, not its random number; a new seed (the seed's round button) keeps them; a typed seed sets them."""
         J = FakeGame(self.t); p = PA.Pause(J); p.open_menu(new_game=True); p.stack[-1] = 'randomizer'; p._entries()[0]['ok']()
-        e = p._entries(); self.assertEqual([x['l'] for x in e], ['settings.randomizer_mode', 'settings.seed', 'settings.safety', 'settings.items_setting', 'settings.loot_setting',
-                                                                 'settings.encounters_setting', 'settings.single_enemy_setting', 'settings.boss_encounters_setting', 'settings.bosses_setting', 'settings.two_bosses_setting'])
-        self.assertEqual([x['l'] for x in e if p._inactive(x)], ['settings.single_enemy_setting'])                          # (Safety does not gray the bosses' lines: "Unchanged" keeps them; one enemy only: with "Random" encounters)
+        e = p._entries(); self.assertEqual([x['l'] for x in e], ['randomizer.randomizer_mode', 'randomizer.seed', 'randomizer.safety', 'randomizer.items_setting', 'randomizer.loot_setting',
+                                                                 'randomizer.encounters_setting', 'randomizer.single_enemy_setting', 'randomizer.boss_encounters_setting', 'randomizer.bosses_setting', 'randomizer.two_bosses_setting'])
+        self.assertEqual([x['l'] for x in e if p._inactive(x)], ['randomizer.single_enemy_setting'])                          # (Safety does not gray the bosses' lines: "Unchanged" keeps them; one enemy only: with "Random" encounters)
         self.assertTrue(e[2]['get']()); self.assertEqual(e[3]['get'](), 0); self.assertEqual(e[3]['vals'], [0, 1, 2]); n = SD.parse(p.draft_seed)['number']
         zero = {'loot': 0, 'encounters': 0, 'single_enemy': 0, 'boss_encounters': 0, 'bosses': 0, 'two_bosses': 0}
         e[3]['plus'](); self.assertEqual(SD.parse(p.draft_seed)['options'], dict(zero, safety=0, items=1)); self.assertEqual(SD.parse(p.draft_seed)['number'], n)
         e[2]['ok'](); self.assertEqual(SD.parse(p.draft_seed)['options'], dict(zero, safety=1, items=1))
-        self.assertEqual(p._value_name('settings.items_setting', 1), 'settings.items_shuffled')
+        self.assertEqual(p._value_name('randomizer.items_setting', 1), 'randomizer.items_shuffled')
         self.assertEqual(e[4]['vals'], [0, 1]); e[4]['plus'](); self.assertEqual(SD.parse(p.draft_seed)['options']['loot'], 1)
-        self.assertEqual(p._value_name('settings.loot_setting', 1), 'settings.loot_random')
+        self.assertEqual(p._value_name('randomizer.loot_setting', 1), 'randomizer.loot_random')
         e = p._entries(); self.assertEqual(e[5]['vals'], [0, 1, 2]); self.assertFalse(e[7]['get']())
         e[5]['plus'](); self.assertTrue(p._inactive(p._entries()[6])); e[5]['plus'](); e = p._entries(); self.assertFalse(p._inactive(e[6])); e[6]['ok'](); e[7]['ok']()
         e = p._entries(); self.assertEqual(e[8]['vals'], [0, 1, 2]); self.assertFalse(e[9]['get']()); e[8]['plus'](); e[8]['plus'](); e[9]['ok']()
         every = {'safety': 1, 'items': 1, 'loot': 1, 'encounters': 2, 'single_enemy': 1, 'boss_encounters': 1, 'bosses': 2, 'two_bosses': 1}
-        self.assertEqual(SD.parse(p.draft_seed)['options'], every); self.assertEqual(p._value_name('settings.bosses_setting', 1), 'settings.bosses_shuffled')
-        self.assertEqual(p._value_name('settings.encounters_setting', 2), 'settings.encounters_random')
+        self.assertEqual(SD.parse(p.draft_seed)['options'], every); self.assertEqual(p._value_name('randomizer.bosses_setting', 1), 'randomizer.bosses_shuffled')
+        self.assertEqual(p._value_name('randomizer.encounters_setting', 2), 'randomizer.encounters_random')
         e[1]['default'](); q = SD.parse(p.draft_seed); self.assertNotEqual(q['number'], n); self.assertEqual(q['options'], every)          # (a new seed: the settings stay)
         typed = SD.new_code({'safety': 0, 'items': 2}, number=42); p._type_seed(typed)
         e = p._entries(); self.assertTrue(e[2]['get']()); self.assertEqual(e[3]['get'](), 2)
@@ -352,16 +352,16 @@ class NewGamePanel(unittest.TestCase):
     def test_during_a_game(self):
         code = SD.new_code({'safety': 1, 'items': 2, 'encounters': 2}, number=5)
         J = FakeGame(self.t, seed=code); p = PA.Pause(J); p.open_menu(); p.stack.append('randomizer')
-        e = p._entries(); self.assertEqual(e[0]['l'], 'settings.seed'); self.assertEqual(e[0]['v'](), code)
-        e[0]['ok'](); self.assertEqual(J.clip, code); self.assertEqual(p.message[3], 'settings.seed_copied')
-        self.assertEqual([(x['l'], x['get'](), p._inactive(x)) for x in e[1:]], [('settings.safety', False, True), ('settings.items_setting', 2, True), ('settings.loot_setting', 0, True),
-                                                                                    ('settings.encounters_setting', 2, True), ('settings.single_enemy_setting', False, True),
-                                                                                    ('settings.boss_encounters_setting', False, True),
-                                                                                    ('settings.bosses_setting', 0, True), ('settings.two_bosses_setting', False, True)])          # (the game's settings, shown only)
+        e = p._entries(); self.assertEqual(e[0]['l'], 'randomizer.seed'); self.assertEqual(e[0]['v'](), code)
+        e[0]['ok'](); self.assertEqual(J.clip, code); self.assertEqual(p.message[3], 'randomizer.seed_copied')
+        self.assertEqual([(x['l'], x['get'](), p._inactive(x)) for x in e[1:]], [('randomizer.safety', False, True), ('randomizer.items_setting', 2, True), ('randomizer.loot_setting', 0, True),
+                                                                                    ('randomizer.encounters_setting', 2, True), ('randomizer.single_enemy_setting', False, True),
+                                                                                    ('randomizer.boss_encounters_setting', False, True),
+                                                                                    ('randomizer.bosses_setting', 0, True), ('randomizer.two_bosses_setting', False, True)])          # (the game's settings, shown only)
         self.assertNotIn('default', e[0])                                                             # (no new seed during a game)
-        p.stack.pop(); self.assertNotIn('settings.start_adventure', [x['l'] for x in p._entries()])          # (the root of a game: the usual one)
+        p.stack.pop(); self.assertNotIn('new_game.start_adventure', [x['l'] for x in p._entries()])          # (the root of a game: the usual one)
         J2 = FakeGame(self.t); p2 = PA.Pause(J2); p2.open_menu(); p2.stack.append('randomizer')
-        self.assertEqual(p2._entries()[0]['l'], 'settings.game_without_randomizer')
+        self.assertEqual(p2._entries()[0]['l'], 'randomizer.game_without_randomizer')
         p2.shutdown(); self.assertIsNone(J2.game_rules.pending)                                      # (the menu of a game records nothing)
 
 

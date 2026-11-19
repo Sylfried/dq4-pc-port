@@ -36,7 +36,7 @@ class Setting(unittest.TestCase):
         self.assertEqual(RG.BATTLE_SPEEDS, (0.0, 1.0, 2.0, 3.0))
 
     def test_labels_never_x(self):
-        self.assertEqual([RG.BATTLE_SPEED_NAMES[v] for v in RG.BATTLE_SPEEDS], ['settings.manual', 'settings.normal', 'settings.fast', 'settings.very_fast'])
+        self.assertEqual([RG.BATTLE_SPEED_NAMES[v] for v in RG.BATTLE_SPEEDS], ['common.manual', 'common.normal', 'common.fast', 'common.very_fast'])
         self.assertFalse(any(re.search(r'\bx\d', n) for n in RG.BATTLE_SPEED_NAMES.values()))
 
     def test_validation(self):
@@ -62,7 +62,7 @@ class Setting(unittest.TestCase):
         for a, ts in RG.DEFAULT_KEYS.items():
             if a != 'battle_speed': self.assertNotIn('V', ts, a)                                      # no conflict with the existing keys
         self.assertNotIn('V', RG.RESERVED)
-        self.assertIn('battle_speed', dict(RG.ACTIONS)); self.assertEqual(dict(RG.ACTIONS)['battle_speed'], 'settings.change_battle_speed')
+        self.assertIn('battle_speed', dict(RG.ACTIONS)); self.assertEqual(dict(RG.ACTIONS)['battle_speed'], 'controls.change_battle_speed')
         r = RG.Settings(None); self.assertEqual(r['keys']['battle_speed'], ['V', None]); self.assertEqual(r.action_of(RG.key_symbol('V')), 'battle_speed')
 
     def test_old_file_takes_default_key(self):
@@ -392,7 +392,7 @@ class ScreenButton(unittest.TestCase):
         r = RG.Settings(None); r['speed_button_pos'] = list(J.reg['speed_button_pos']); r.reset_interface(RG.SPEED_TARGET); self.assertEqual(r['speed_button_pos'], [])        # "Restore this interface" puts it back in place
 
     def test_editor_caption(self):
-        self.assertEqual(HM.CAPTION[HM.BATTLE], 'settings.battle_speed')
+        self.assertEqual(HM.CAPTION[HM.BATTLE], 'controls.battle_speed')
 
 
 @unittest.skipUnless(os.environ.get('DQ_APK') and os.environ.get('DQ_SAVES') and ENGINE is not None, 'real engine: DQ_APK and DQ_SAVES required')

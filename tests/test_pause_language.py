@@ -8,7 +8,7 @@ for capturing a key and entering a value, the title bar tooltip, the confirmatio
 
 Rules: (1) no catalog key is ever drawn as such (a key on screen = a missing `tr`), in either language; (2) in English, no drawn text is French; (3) every drawn French
 text comes from the French catalog (whitelist: words identical in both languages) and its English text is drawn in the English walkthrough; (4) the menu DATA (labels, value
-names, key names, messages) hold keys, translated when drawn; (5) no unused key and no empty or identical translation in dq456_pc/texts/*/settings.py; (6) control mutations:
+names, key names, messages) hold keys, translated when drawn; (5) no unused key and no empty or identical translation in the Esc menu's texts (dq456_pc/languages/<code>.json); (6) control mutations:
 a removed key, a `tr` removed from several places, an emptied translation or one left in French make the check fail."""
 import contextlib, inspect, io, os, re, sys, tempfile, textwrap, time, types, unittest
 
@@ -23,8 +23,22 @@ from dq456_pc.persistence import settings as RG, savestates as SS, pad_inputs as
 from dq456_pc.menus import pause as PA
 from dq456_pc.persistence import game_rules as GR
 from dq456_pc.randomizer import seed as SD
-from dq456_pc.texts.fr import settings as FR_SETTINGS
-from dq456_pc.texts.en import settings as EN_SETTINGS
+ESC_FILES = ('menu', 'common', 'display', 'sound', 'controls', 'keys', 'save_states', 'new_game', 'difficulty', 'randomizer', 'interface', 'language')     # the texts of the Esc menu's pages
+OUTSIDE = {'menu.license', 'new_game.enter_name', 'new_game.keyboard_type_name', 'new_game.enter_confirm_esc_back', 'save_states.date_format',          # (in these files, but drawn elsewhere: start
+           'interface.talk', 'interface.d_pad', 'interface.camera_rotation_bar', 'interface.message_preview_sentence', 'interface.test_text', 'interface.used_adjust_size',          # menu, name entry,
+           'interface.position_dialogue_boxes', 'interface.message_preview', 'interface.two_lines', 'interface.here_example_dialogue', 'interface.move_resize',                       # on-screen
+           'interface.window_as_like', 'interface.test_text_game_messages', 'interface.will_displayed_here_size'} | {k for k in LG.catalog('en-us') if k.startswith('save_states.') and k.split('.')[1] in   # buttons, notices,
+           ('state_loaded', 'state_other_version_game_load', 'loading_state', 'state_empty', 'load_undone', 'state_saved', 'saving_state')} | {k for k in LG.section_texts('en-us', 'language') if k not in   # language screen)
+           ('language.title', 'language.system', 'language.tool_language_hint', 'language.system_language_hint', 'language.game_language_hint', 'language.reload_language_at_title',
+            'language.reload_language_at_menu_close', 'language.switch_game_language_load_state', 'language.state_was_saved_language_version')}
+
+
+def esc_texts(language):
+    """{key: text} of the Esc menu's pages in `language` (ESC_FILES, without OUTSIDE)."""
+    return {k: v for name in ESC_FILES for k, v in LG.section_texts(LG.OLD_CODES.get(language, language), name).items() if k not in OUTSIDE}
+
+
+FR_TEXTS, EN_TEXTS = esc_texts('fr-fr'), esc_texts('en-us')
 
 K = pyglet.window.key
 PAGES = ('root', 'display', 'sound', 'controls', 'difficulty', 'randomizer', 'cheats', 'achievements', 'states', 'quit', 'interface')
@@ -32,6 +46,7 @@ PAGES = ('root', 'display', 'sound', 'controls', 'difficulty', 'randomizer', 'ch
 # (an identical entry would duplicate those in the other files).
 NEUTRAL = {'Interface', 'Casino', 'Menu', 'Normal', 'Dragon', 'Randomizer', 'Action', 'Shader', 'Antialiasing', 'Tab', 'Alt', 'Alt Gr', 'EPX x8', 'Pixel perfect', 'x2', 'x4', 'x8',
            'RS ←', 'RS →', 'RS ↑', 'RS ↓', 'LS ←', 'LS →', 'LS ↑', 'LS ↓', 'Select', 'Start', 'Create', 'Options', 'UnknownWindow'}          # (the fake name that the fake game gives to a window the tool does not know)
+NEUTRAL |= set(LG.NAMES.values())          # (each language in its own language, whatever the language displayed)
 _win = []
 
 
@@ -63,8 +78,8 @@ class FakeGame(TP.FakeGame):
 
     def __init__(self, savestates=True):
         super().__init__(); self.post = types.SimpleNamespace(max_msaa=None); self.hud = FakeHud(); self.seen = []; self.moment = 'page'; self.cache_label = {}; self.failure = None
-        self.savestates = {1: ({'date': '2026-10-31 19:21:05', 'location': 'settings.world_map'}, png()), 2: ({'date': '2026-11-02 08:05:59', 'location': 'settings.battle'}, png((160, 60, 40))),
-                      3: ({'location': 'mak1f1'}, None), 5: ({'date': '2026-11-03 23:59:00', 'location': 'settings.battle'}, None)} if savestates else {}
+        self.savestates = {1: ({'date': '2026-10-31 19:21:05', 'location': 'save_states.world_map'}, png()), 2: ({'date': '2026-11-02 08:05:59', 'location': 'save_states.battle'}, png((160, 60, 40))),
+                      3: ({'location': 'mak1f1'}, None), 5: ({'date': '2026-11-03 23:59:00', 'location': 'save_states.battle'}, None)} if savestates else {}
         self.sound = types.SimpleNamespace(active=True, listening=False, listen=lambda b: None, tick=lambda: None)
     def set_full_screen(self, v): self.is_fullscreen = v
     def resolutions(self): return [(1280, 720), (1920, 1080)]
@@ -235,13 +250,13 @@ class Visit:
         finally:
             if os.path.exists(file): os.remove(file)
         for on_title in (False, True):                                                    # "The game will be reloaded in this language when you return to the title screen." / "... à la fermeture du menu." (the game started in the other language)
-            J, p = menu('display'); J.game_language = 'en' if self.language == 'fr' else 'fr'; J.title = on_title; TP.by_caption(p, 'settings.language')['set'](self.language); J.reg['language'] = 'system'; self.image(J, p, 'message')
+            J, p = menu('display'); J.game_language = 'en-us' if self.language == 'fr' else 'fr-fr'; J.title = on_title; TP.by_caption(p, 'language.title')['set'](LG.OLD_CODES[self.language]); J.reg['language'] = 'system'; self.image(J, p, 'message')
         J, p = menu('states'); J.load_state = lambda n: (_ for _ in ()).throw(SS.OtherEngine('abcd')); p._load(2); self.image(J, p, 'message')       # "Cet état a été enregistré avec d'autres fichiers APK du jeu..."
         J, p = menu('controls'); p.capture = ('menu', 1, False); p.key_press(K.F11); p.capture = None; self.image(J, p, 'message')             # "This key is reserved (F11)."
         J, p = menu('controls'); J.reg.bind('info', 0, K.TAB); p.capture = ('menu', 1, False); p.key_press(K.TAB); self.image(J, p, 'message')       # "Tab retirée de "On-screen info"."
         J, p = menu('controls'); J.reg.bind_pad('map', 'PAD_TOUCH'); p.capture = ('up', 0, True); p._capture(PI.SYMBOL['PAD_TOUCH']); self.image(J, p, 'message')       # "Pavé tactile retirée de "Map"." (an Xbox controller has no picture for it: its text is drawn in the "Up" line)
         J, p = menu('controls'); J.reg.bind_pad('map', 'PAD_BACK'); p.capture = ('up', 0, True); p._capture(PI.SYMBOL['PAD_BACK']); self.image(J, p, 'message')       # "Affichage retirée de "Map"." (View: no action by default since the History key is gone)
-        J, p = menu('controls'); J.reg.bind('info', 0, K.TAB); TP.by_caption(p, 'settings.menu')['default'](); self.image(J, p, 'message')       # "Une touche d'origine est retirée de "On-screen info"."
+        J, p = menu('controls'); J.reg.bind('info', 0, K.TAB); TP.by_caption(p, 'controls.menu')['default'](); self.image(J, p, 'message')       # "Une touche d'origine est retirée de "On-screen info"."
         for action, _ in RG.ACTIONS:                                                    # "X retirée de "<each action, even those that are not in the page>"."
             J, p = menu('controls'); name_str = next(n for n in RG.DEFAULT_KEYS[action] if n)
             p.capture = ('up' if action != 'up' else 'down', 0, False); p.key_press(RG.key_symbol(name_str)); self.image(J, p, 'message')
@@ -290,10 +305,10 @@ def problems(fr, entry, category):
     for walk in (fr, entry):                                                              # (1) a key drawn as it is: a `tr` is missing
         for t in sorted(set(walk.texts('page', 'infobulle', 'message', 'hint')) | set(walk.help_lines())):
             for part in re.split(r'\s+', t):
-                if TL.KEY.match(part) and part.split('.')[0] in LG.DOMAINS: pb.append('key drawn instead of its text (%s): %r' % (walk.language, t)); break
+                if TL.KEY.match(part) and part.split('.')[0] in LG.SECTIONS: pb.append('key drawn instead of its text (%s): %r' % (walk.language, t)); break
     in_page = set(entry.texts('page', 'infobulle', 'message'))
     for t in sorted(in_page | set(entry.help_lines())):                                    # (2)
-        if TL.french(t): pb.append('French drawn in English: %r' % t)
+        if TL.french(t) and t not in NEUTRAL: pb.append('French drawn in English: %r' % t)
     for k in cat_fr:                                                                     # (5) empty or identical translations
         v = cat_en.get(k, '')
         if not v.strip(): pb.append('empty translation: %r' % k)
@@ -335,15 +350,15 @@ class Base(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         window(); LG.select_language('fr')
-        cls.fr = visit('fr'); cls.entry = visit('en'); cls.category = (dict(FR_SETTINGS.TEXTS), dict(EN_SETTINGS.TEXTS))
+        cls.fr = visit('fr'); cls.entry = visit('en'); cls.category = (dict(FR_TEXTS), dict(EN_TEXTS))
     def tearDown(self): LG.select_language('fr')
 
 
 class Walkthrough(Base):
     def test_walkthrough_is_complete(self):
         texts = {t for m, t in self.fr.seen if m == 'page'}; FR = LG.catalog('fr')
-        for expected in ('settings.settings', 'settings.resume', 'settings.fullscreen', 'settings.put_back_under_battle_box', 'settings.put_back_left_edge', 'settings.hidden_feminine', 'settings.hidden_masculine', 'Touche 2', 'settings.no_thumbnail', 'settings.empty_slot', 'settings.empty', 'settings.no_date',
-                        'settings.other', 'settings.very_fast', 'settings.sure', 'settings.left_shift', 'Pavé 7', 'settings.hold_middle_click_move'):
+        for expected in ('menu.settings', 'menu.resume', 'display.fullscreen', 'interface.put_back_under_battle_box', 'interface.put_back_left_edge', 'interface.hidden_feminine', 'interface.hidden_masculine', 'Touche 2', 'save_states.no_thumbnail', 'save_states.empty_slot', 'save_states.empty', 'save_states.no_date',
+                        'controls.other', 'common.very_fast', 'common.sure', 'keys.left_shift', 'Pavé 7', 'controls.hold_middle_click_move'):
             self.assertIn(FR.get(expected, expected), texts, expected)
         self.assertIn('Limité à x4 par cette carte graphique', [ph for t, _ in self.fr.helpers for ph in phrases(t)])
         self.assertGreater(len(texts), 250); self.assertGreater(len(self.fr.helpers), 80)
@@ -353,7 +368,7 @@ class Walkthrough(Base):
         self.assertEqual(problems(self.fr, self.entry, self.category), [])
 
     def test_in_english_no_drawn_text_is_french(self):
-        self.assertEqual(sorted({t for t in self.entry.texts('page', 'hint', 'infobulle', 'message') if TL.french(t)}), [])
+        self.assertEqual(sorted({t for t in self.entry.texts('page', 'hint', 'infobulle', 'message') if TL.french(t) and t not in NEUTRAL}), [])
 
     def test_in_english_translation_is_shown(self):
         texts = set(self.entry.texts('page'))
@@ -374,22 +389,22 @@ class Walkthrough(Base):
     def test_reload_notice_only_when_the_game_language_differs(self):
         """the game restarts on the title screen when the language chosen differs from the loaded game's; the message says when (menu closed on the title screen, or the return to the title screen)."""
         try:
-            for game_language, chosen, notice in (('fr', 'en', True), ('en', 'fr', True), ('fr', 'fr', False), ('en', 'en', False)):
+            for game_language, chosen, notice in (('fr-fr', 'en-us', True), ('en-us', 'fr-fr', True), ('fr-fr', 'fr-fr', False), ('en-us', 'en-us', False)):
                 for on_title in (False, True):
-                    J, p = menu('display'); J.game_language = game_language; J.title = on_title; TP.by_caption(p, 'settings.language')['set'](chosen)
+                    J, p = menu('display'); J.game_language = game_language; J.title = on_title; TP.by_caption(p, 'language.title')['set'](chosen)
                     self.assertEqual(bool(p._message_text()), notice, (game_language, chosen))
-                    if notice: self.assertEqual(p.message[3], 'settings.reload_language_at_menu_close' if on_title else 'settings.reload_language_at_title')
+                    if notice: self.assertEqual(p.message[3], 'language.reload_language_at_menu_close' if on_title else 'language.reload_language_at_title')
         finally: LG.select_language('fr')
 
     def test_state_of_the_other_language_offers_to_switch(self):
         """a state saved with the other language's game opens a Yes / No window (No preselected); Yes reloads the game in that language and loads the state; No changes nothing."""
         try:
-            for language, title, detail in (('fr', 'Switch the game to French to load this state?', 'This state was saved with the French version of the game.'), ('en', 'Switch the game to English to load this state?', 'This state was saved with the English version of the game.')):
+            for language, title, detail in (('fr-fr', 'Switch the game to French to load this state?', 'This state was saved with the game in French.'), ('de-de', 'Switch the game to German to load this state?', 'This state was saved with the game in German.'), ('en-us', 'Switch the game to English to load this state?', 'This state was saved with the game in English.')):
                 LG.select_language('en')
                 J, p = menu('states'); asked = []
                 J.load_state = lambda n, language=language: (_ for _ in ()).throw(SS.OtherLanguage('abcd', language)); J.reload_game = lambda lg, n: asked.append((lg, n))
                 p._load(3)
-                self.assertEqual(p.popup['choice'], 1); self.assertEqual(LG.tr(p.popup['model']), title); self.assertEqual(p.popup['detail'], detail)
+                self.assertEqual(p.popup['choice'], 1); self.assertEqual(LG.tr(p.popup['model']) % p.popup['values'], title); self.assertEqual(p.popup['detail'], detail)
                 p._validate_popup(False); self.assertEqual(asked, []); self.assertIsNone(p.popup)
                 p._load(3); p._validate_popup(True); self.assertEqual(asked, [(language, 3)])
         finally: LG.select_language('fr')
@@ -404,7 +419,7 @@ class Walkthrough(Base):
             if k in help_keys or v in seen or '« %s »' % v in messages: return True
             if v.endswith(' ') and any(x.startswith(v) for x in seen): return True          # (a prefix: "Numpad " of the numeric keypad's key names)
             return bool(TL.GAPS.search(v)) and any(template(v).match(x) for x in seen | {ph for t, ls in self.fr.helpers for ph in ls})
-        self.assertEqual(sorted(k for k in cat_fr if not shown(k)), [])
+        self.assertEqual(sorted(k for k in cat_fr if not shown(k) and k not in LG.SENTENCE_NAMES.values()), [])          # (the names of the languages inside a sentence: test_state_of_the_other_language_offers_to_switch)
 
 
 class Data(unittest.TestCase):
@@ -414,20 +429,20 @@ class Data(unittest.TestCase):
 
     def test_labels_values_and_keys(self):
         J, p = menu('controls')
-        self.assertEqual(dict(RG.ACTIONS)['up'], 'settings.up'); self.assertEqual(dict(RG.ACTIONS)['info'], 'settings.screen_info')
-        self.assertEqual(RG.key_name('LSHIFT'), 'settings.left_shift'); self.assertEqual(RG.key_name('NUM_7'), 'Numpad 7'); self.assertEqual(RG.key_name(None), '—')
-        self.assertEqual(RG.BATTLE_SPEED_NAMES[3.0], 'settings.very_fast'); self.assertEqual(p._value_name('settings.text_speed', 0.5), 'settings.very_slow'); self.assertEqual(p._value_name('settings.interface_edit', 'buttons'), 'settings.screen_buttons_d_pad')
-        self.assertEqual(p._value_name('settings.language', 'en'), 'settings.english'); self.assertEqual(p._value_name('settings.fullscreen', True), 'settings.yes')
-        e = TP.by_caption(p, 'settings.menu'); self.assertEqual((e['l'], e['v']), ('settings.menu', ['settings.enter', 'Tab', 'PAD_Y']))
-        self.assertTrue(PA.Pause.KEY_HELPTEXT.startswith('settings.enter_change_key'))
+        self.assertEqual(dict(RG.ACTIONS)['up'], 'controls.up'); self.assertEqual(dict(RG.ACTIONS)['info'], 'controls.screen_info')
+        self.assertEqual(RG.key_name('LSHIFT'), 'keys.left_shift'); self.assertEqual(RG.key_name('NUM_7'), 'Numpad 7'); self.assertEqual(RG.key_name(None), '—')
+        self.assertEqual(RG.BATTLE_SPEED_NAMES[3.0], 'common.very_fast'); self.assertEqual(p._value_name('display.text_speed', 0.5), 'display.very_slow'); self.assertEqual(p._value_name('interface.interface_edit', 'buttons'), 'interface.screen_buttons_d_pad')
+        self.assertEqual(p._value_name('language.title', 'en-us'), 'English'); self.assertEqual(p._value_name('language.title', 'ko-kr'), '한국어'); self.assertEqual(p._value_name('display.fullscreen', True), 'common.yes')
+        e = TP.by_caption(p, 'controls.menu'); self.assertEqual((e['l'], e['v']), ('controls.menu', ['keys.enter', 'Tab', 'PAD_Y']))
+        self.assertTrue(PA.Pause.KEY_HELPTEXT.startswith('controls.enter_change_key'))
 
     def test_and_are_translated_when_drawn(self):
         self.assertEqual(LG.tr(dict(RG.ACTIONS)['up']), 'Up'); self.assertEqual(LG.tr(RG.key_name('LSHIFT')), 'L Shift'); self.assertEqual(LG.tr(RG.key_name('NUM_7')), 'Numpad 7')
         self.assertEqual(LG.tr(RG.BATTLE_SPEED_NAMES[3.0]), 'Very fast'); self.assertEqual(LG.tr(RG.key_name('F5')), 'F5'); self.assertEqual(LG.tr(RG.key_name(None)), '—')
 
     def test_message_keeps_its_key_and_is_displayed_translated(self):
-        J, p = menu('controls'); J.reg.bind('info', 0, K.TAB); TP.by_caption(p, 'settings.menu')['default']()
-        self.assertEqual(p.message[3], 'settings.default_key_removed_from'); self.assertFalse(p.message[2])
+        J, p = menu('controls'); J.reg.bind('info', 0, K.TAB); TP.by_caption(p, 'controls.menu')['default']()
+        self.assertEqual(p.message[3], 'controls.default_key_removed_from'); self.assertFalse(p.message[2])
         self.assertEqual(p._message_text(), 'A default key is removed from "On-screen info".')
         p.message = (p.message[0], p.message[1] - 5.0) + p.message[2:]; self.assertEqual(p._message_text(), '')              # (more than 4 seconds: gone)
         J, p = menu('states'); J.failure = 'disque plein'; p._save(3)
@@ -448,12 +463,12 @@ class Data(unittest.TestCase):
 
     def test_deletion_window_title(self):
         J, p = menu('states'); p._request_deletion(4)
-        self.assertEqual(p.popup['model'], 'settings.delete_save_state_n'); self.assertEqual(p.popup['title'], 'Delete save state 4?'); self.assertEqual(p.popup['choice'], 1)
+        self.assertEqual(p.popup['model'], 'save_states.delete_save_state_n'); self.assertEqual(p.popup['title'], 'Delete save state 4?'); self.assertEqual(p.popup['choice'], 1)
 
     def test_line_helptexts_hold_keys(self):
         J, p = menu('display')
-        self.assertIn('settings.fullscreen_borderless_window_resolution_screen', p._line_helptext(TP.by_caption(p, 'settings.fullscreen')))
-        J.post.max_msaa = 2; J.reg['msaa'] = 8; self.assertEqual(TP.by_caption(p, 'settings.antialiasing')['hint'], 'Limited to x2 by this graphics card')       # (text with placeholders: translated then filled in, see Pause._entries_display)
+        self.assertIn('display.fullscreen_borderless_window_resolution_screen', p._line_helptext(TP.by_caption(p, 'display.fullscreen')))
+        J.post.max_msaa = 2; J.reg['msaa'] = 8; self.assertEqual(TP.by_caption(p, 'display.antialiasing')['hint'], 'Limited to x2 by this graphics card')       # (text with placeholders: translated then filled in, see Pause._entries_display)
 
 
 class Keys(unittest.TestCase):
@@ -466,7 +481,7 @@ class Keys(unittest.TestCase):
         for n in names:
             fr = RG.key_name(n); entry = LG.tr(fr)
             self.assertFalse(TL.french(entry), '%s : %r -> %r' % (n, fr, entry)); self.assertNotIn('Pavé', entry)
-            if fr != n and fr in EN_SETTINGS.TEXTS: self.assertNotEqual(entry, fr)
+            if fr != n and fr in EN_TEXTS: self.assertNotEqual(entry, fr)
         self.assertEqual([LG.tr(RG.key_name(n)) for n in ('LSHIFT', 'RSHIFT', 'LCTRL', 'RCTRL', 'LALT', 'RALT', 'SPACE', 'RETURN', 'ENTER', 'BACKSPACE', 'DELETE', 'INSERT', 'HOME', 'END', 'PAGEUP', 'PAGEDOWN', 'CAPSLOCK', 'NUM_ADD', 'NUM_SUBTRACT')],
                          ['L Shift', 'R Shift', 'L Ctrl', 'R Ctrl', 'Alt', 'Alt Gr', 'Space', 'Enter', 'Numpad Enter', 'Backspace', 'Delete', 'Insert', 'Home', 'End', 'Page Up', 'Page Down', 'Caps Lock', 'Numpad +', 'Numpad -'])
 
@@ -515,16 +530,16 @@ class Console(unittest.TestCase):
             with tempfile.TemporaryDirectory() as t:
                 open(os.path.join(t, 'ui_font.otf'), 'wb').close()
                 for language in ('fr', 'en'):
-                    J = FakeGame(); J.args = types.SimpleNamespace(cache=t); p = PA.Pause(J); LG.select_language(language); outputs.append(self.output(lambda: p._label('settings.sound', 12.0)))
+                    J = FakeGame(); J.args = types.SimpleNamespace(cache=t); p = PA.Pause(J); LG.select_language(language); outputs.append(self.output(lambda: p._label('menu.sound', 12.0)))
         finally: pyglet.font.add_file = add_file
         self.assertTrue(outputs[0].startswith('game font not loaded: police refusee'), outputs[0]); self.assertTrue(outputs[1].startswith('game font not loaded: police refusee'), outputs[1])
 
 
 class Catalog(unittest.TestCase):
-    """The catalog rules (tests/test_language.py) for dq456_pc/texts/*/settings.py, plus: a key is ONE help sentence (help texts chain keys separated by three spaces)."""
+    """The catalog rules (tests/test_language.py) for the Esc menu's text files, plus: a key is ONE help sentence (help texts chain keys separated by three spaces)."""
     def test_rules(self):
-        for k, fr in FR_SETTINGS.TEXTS.items():
-            entry = EN_SETTINGS.TEXTS[k]
+        for k, fr in FR_TEXTS.items():
+            entry = EN_TEXTS[k]
             self.assertTrue(entry.strip(), k)
             self.assertNotIn('   ', fr.strip(), 'a key is ONE help sentence: %r' % k); self.assertNotIn('   ', entry.strip(), k)
 
@@ -535,7 +550,7 @@ class Mutations(Base):
     def english(self, parts, catalogs=None):
         saved = LG._catalogs
         try:
-            if catalogs is not None: LG._catalogs = {'fr': dict(catalogs[0]), 'en': dict(catalogs[1])}
+            if catalogs is not None: LG._catalogs = {'fr-fr': dict(catalogs[0]), 'en-us': dict(catalogs[1])}
             return Visit('en', parts)
         finally: LG._catalogs = saved
 
@@ -562,26 +577,26 @@ class Mutations(Base):
         for parts in (('page_root',), ('page_commands',), ('messages',), ('page_savestates',)): self.assertEqual(self.check(parts), [], parts)
 
     def test_a_key_removed_from_the_catalog(self):
-        c, c_pause = self.without('settings.resume')
+        c, c_pause = self.without('menu.resume')
         pb = self.check(('page_root',), c, c_pause)
-        self.assertTrue(any('settings.resume' in x for x in pb), pb)
+        self.assertTrue(any('menu.resume' in x for x in pb), pb)
 
     def test_a_help_sentence_removed_from_the_catalog(self):
-        c, c_pause = self.without('settings.language_tool_settings_history_saves')
+        c, c_pause = self.without('language.tool_language_hint')
         pb = self.check(('page_display',), c, c_pause)
-        self.assertTrue(any('settings.language_tool_settings_history_saves' in x for x in pb), pb)
+        self.assertTrue(any('language.tool_language_hint' in x for x in pb), pb)
 
     def test_a_key_name_removed_from_the_catalog(self):
-        c, c_pause = self.without('settings.left_shift')
+        c, c_pause = self.without('keys.left_shift')
         pb = self.check(('key_list',), c, c_pause)
-        self.assertTrue(any('settings.left_shift' in x for x in pb), pb)
+        self.assertTrue(any('keys.left_shift' in x for x in pb), pb)
 
     def test_tr_of_helptexts_removed(self):
-        with self.muter(PA.Pause, '_helptext_lines', 'l = tr(l); cur', 'cur'): pb = self.check(('page_root',))
+        with self.muter(PA.Pause, '_helptext_lines', 'LG.wrap(tr(l),', 'LG.wrap(l,'): pb = self.check(('page_root',))
         self.assertTrue(any('key drawn' in x for x in pb), pb)
 
     def test_tr_of_key_n_removed(self):
-        with self.muter(PA.Pause, '_draw_page', "self._label(tr('settings.button' if self.controls_pad else 'settings.key') % (c + 1)", "self._label(('settings.button %d' if self.controls_pad else 'settings.key %d') % (c + 1)"): pb = self.check(('page_commands',))
+        with self.muter(PA.Pause, '_draw_page', "self._label(tr('controls.button' if self.controls_pad else 'controls.key') % (c + 1)", "self._label(('controls.button %d' if self.controls_pad else 'controls.key %d') % (c + 1)"): pb = self.check(('page_commands',))
         self.assertTrue(any('key drawn' in x for x in pb), pb)
 
     def test_tr_of_message_values_removed(self):
@@ -590,18 +605,18 @@ class Mutations(Base):
         self.assertTrue(any('removed from' in x for x in pb), pb)
 
     def test_an_emptied_translation(self):
-        en = dict(LG.catalog('en'), **{'settings.contrast': ''})
-        pb = self.check(('page_display',), (LG.catalog('fr'), en), (self.category[0], dict(self.category[1], **{'settings.contrast': ''})))
+        en = dict(LG.catalog('en'), **{'display.contrast': ''})
+        pb = self.check(('page_display',), (LG.catalog('fr'), en), (self.category[0], dict(self.category[1], **{'display.contrast': ''})))
         self.assertTrue(any('empty' in x for x in pb), pb)
 
     def test_a_translation_left_in_french(self):
-        fr_text = LG.catalog('fr')['settings.resume']; en = dict(LG.catalog('en'), **{'settings.resume': fr_text})
-        pb = self.check(('page_root',), (LG.catalog('fr'), en), (self.category[0], dict(self.category[1], **{'settings.resume': fr_text})))
+        fr_text = LG.catalog('fr')['menu.resume']; en = dict(LG.catalog('en'), **{'menu.resume': fr_text})
+        pb = self.check(('page_root',), (LG.catalog('fr'), en), (self.category[0], dict(self.category[1], **{'menu.resume': fr_text})))
         self.assertTrue(any('identical' in x or 'French drawn' in x for x in pb), pb)
 
     def test_without_tr_french_shows_keys(self):
         """A menu without the `tr` on the help texts draws keys in French too."""
-        with self.muter(PA.Pause, '_helptext_lines', 'l = tr(l); cur', 'cur'): f = Visit('fr', ('page_root',))
+        with self.muter(PA.Pause, '_helptext_lines', 'LG.wrap(tr(l),', 'LG.wrap(l,'): f = Visit('fr', ('page_root',))
         self.assertTrue(any(TL.KEY.match(l) for _, ls in f.helpers for l in ls))
 
 

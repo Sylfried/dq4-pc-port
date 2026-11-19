@@ -404,7 +404,7 @@ class Toggle(unittest.TestCase):
 
 class DisplayPage(unittest.TestCase):
     """"Display" page of the Esc menu: desired order, "Fullscreen" line = simple Yes / No switch, no "Resolution", no texture smoothing or sprite edge correction setting."""
-    ORDER = ['settings.language', 'settings.fullscreen', 'settings.brightness', 'settings.contrast', 'settings.filter', 'settings.shader', 'settings.vignette_effect', 'settings.edge_blur', 'settings.sharpness', 'settings.antialiasing', 'settings.supersampling', 'settings.text_speed', 'settings.interface']          # ("Filter" above "Shader", no "Motion blur" line)
+    ORDER = ['language.title', 'display.fullscreen', 'display.brightness', 'display.contrast', 'display.filter', 'display.shader', 'display.vignette_effect', 'display.edge_blur', 'display.sharpness', 'display.antialiasing', 'display.supersampling', 'display.text_speed', 'menu.interface']          # ("Filter" above "Shader", no "Motion blur" line)
 
     @classmethod
     def setUpClass(cls):
@@ -427,7 +427,7 @@ class DisplayPage(unittest.TestCase):
     def test_full_screen_line_is_a_switch(self):
         for full in (False, True):
             e, calls = self.page(full); f = e[1]                                                  # (e[0]: "Language")
-            self.assertEqual((f['t'], f['vals'], f['sw'], f['v']()), ('choice', [False, True], True, 'settings.yes' if full else 'settings.no'))      # Yes / No switch, not a drop-down list
+            self.assertEqual((f['t'], f['vals'], f['sw'], f['v']()), ('choice', [False, True], True, 'common.yes' if full else 'common.no'))      # Yes / No switch, not a drop-down list
             self.assertTrue(f['hint'])
             f['ok'](); self.assertEqual(calls[-1], ('plein', not full))                        # Enter / click toggles (Game.set_full_screen)
             n = len(calls); (f['minus'] if full else f['plus'])(); self.assertEqual(calls[n:], [('plein', not full)])      # left = No, right = Yes
@@ -437,18 +437,18 @@ class DisplayPage(unittest.TestCase):
         """no "Resolution" line; "Battle speed" is on the Controls page, under its key."""
         for full in (False, True):
             e, calls = self.page(full)
-            self.assertNotIn('Résolution', [x['l'] for x in e]); self.assertNotIn('settings.battle_speed', [x['l'] for x in e])
+            self.assertNotIn('Résolution', [x['l'] for x in e]); self.assertNotIn('controls.battle_speed', [x['l'] for x in e])
             self.assertFalse(any(x.get('off') for x in e), 'plein %s' % full)
         J = self.J; J.set_battle_speed = lambda v: None
         c = [x.get('l') for x in self.P._entries_commands()]
-        i = c.index('settings.battle_speed'); self.assertEqual(self.P._entries_commands()[i - 1].get('act'), 'battle_speed')
+        i = c.index('controls.battle_speed'); self.assertEqual(self.P._entries_commands()[i - 1].get('act'), 'battle_speed')
 
     def test_no_more_smoothing_or_edge_correction_options(self):
         e, _ = self.page(False)
         for x in e: self.assertNotIn(x['l'], ('settings.texture_smoothing', 'settings.sprite_edge_correction', 'settings.window'))
 
     def test_full_screen_and_interface_at_ends(self):
-        e, _ = self.page(False); self.assertEqual((e[0]['l'], e[1]['l'], e[-1]['l']), ('settings.language', 'settings.fullscreen', 'settings.interface'))          # ("Interface" at the very end)               # ("Language" at the top)
+        e, _ = self.page(False); self.assertEqual((e[0]['l'], e[1]['l'], e[-1]['l']), ('language.title', 'display.fullscreen', 'menu.interface'))          # ("Interface" at the very end)               # ("Language" at the top)
 
 
 class RemovedCode(unittest.TestCase):

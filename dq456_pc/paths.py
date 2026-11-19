@@ -5,8 +5,9 @@ Everything that belongs to you (APKs, saves, caches, settings) is in ONE folder,
     data\\
       apk\\                    one folder per game (games.py: `dq4\\`, `dq5\\`, `dq6\\`)
         dq4\\
-          fr\\                  the 3 APKs of the French version (base.apk, split_config.arm64_v8a.apk, split_UnityDataAssetPack.apk)
-          en\\                  the 3 APKs of the English version: the game takes the APKs from the folder of the chosen language at STARTUP
+          en-us\\               the 3 APKs of the game (base.apk, split_config.arm64_v8a.apk, split_UnityDataAssetPack.apk), English version
+          fr-fr\\, ja-jp\\...    one folder per language (language.LANGUAGES: language-country codes): the game takes the APKs from the folder of the chosen language at STARTUP
+                               (language.LANGUAGES: any of its codes can have a folder; without APK files there, the English ones, otherwise the French ones)
       saves\\                  one folder per game (`dq4\\`, `dq5\\`, `dq6\\`)
         dq4\\                  A SINGLE folder: the exact content of the export .zip, to copy the phone's saves in one go
           data1.dat ... data5.dat, data9.dat the game's adventure logs (read and written by the engine; the phone's are copied here)
@@ -15,7 +16,7 @@ Everything that belongs to you (APKs, saves, caches, settings) is in ONE folder,
           before_import_<date>\\ backups made before each import of saves
           before_tidy_<date>\\     old `portage\\` and `mobile\\` folders tidied away as they were by the migration (see `migrate`): safe to delete once your game progress is verified
       cache\\                    what the port computes from the APKs (maps, sprites, sounds, menus): safe to delete
-        dq4\\fr\\, dq4\\en\\       one folder per game, then one per language, never mixed (earlier versions used `cache\\` and `cache_en\\` for DQ4: see `cache_per_game`)
+        dq4\\fr-fr\\...           one folder per game, then one per game version (the code of its APK folder), never mixed (earlier versions used `cache\\` and `cache_en\\` for DQ4: see `cache_per_game`)
       settings\\               shared by all the games: settings.json, history_favorites.json, history_recent.json (history_messages.json: old, no longer read)
       logs\\                   window_errors.log
       resume.json               the steps of the migration from the old layout that are already done
@@ -71,8 +72,8 @@ class Folders:
         self.old_games = _norm(games_env) if games_env else None        # variable from before the tidy-up
         self.apk_root = os.path.join(self.data, 'apk')                          # one folder per game
         self.apk_game = os.path.join(self.apk_root, self.game)                   # (the APKs are in `apk\\<game>\\fr` and `apk\\<game>\\en`; earlier versions put DQ4's in `apk\\fr`, `apk\\en` or directly in `apk`, migrated by `migrate`)
-        self.apk_fr = os.path.join(self.old_games, 'patched_apks') if self.old_games else os.path.join(self.apk_game, 'fr')
-        self.apk_en = os.path.join(self.old_games, 'patched_apks_en') if self.old_games else os.path.join(self.apk_game, 'en')
+        self.apk_fr = os.path.join(self.old_games, 'patched_apks') if self.old_games else os.path.join(self.apk_game, 'fr-fr')
+        self.apk_en = os.path.join(self.old_games, 'patched_apks_en') if self.old_games else os.path.join(self.apk_game, 'en-us')
         self.apk = self.apk_fr                                                  # (the tools (IL2CPP dump, original menus) read the French APKs: the game code is the same in both languages)
         self.saves_root = os.path.join(self.data, 'saves')                     # one folder per game
         self.saves = os.path.join(self.saves_root, self.game)
@@ -81,8 +82,8 @@ class Folders:
         self.old_port_dir = os.path.join(self.saves, 'portage')                  # (old write folder, taken over by `migrate`)
         self.savestates = os.path.join(self.saves, 'savestates')
         self.cache_root = os.path.join(self.data, 'cache')                     # one folder per game, then one per language
-        self.cache = os.path.join(self.cache_root, self.game, 'fr')
-        self.cache_en = os.path.join(self.cache_root, self.game, 'en')
+        self.cache = os.path.join(self.cache_root, self.game, 'fr-fr')
+        self.cache_en = os.path.join(self.cache_root, self.game, 'en-us')
         self.old_cache_en = os.path.join(self.data, 'cache_en')                # (DQ4's English cache before the cache was arranged by game: see `cache_per_game`)
         self.settings_dir = os.path.join(self.data, 'settings')                # (shared by all the games)
         self.settings = os.path.join(self.settings_dir, 'settings.json')
@@ -92,9 +93,10 @@ class Folders:
         self.window_logfile = os.path.join(self.logfiles, 'window_errors.log')
 
     def code_apk(self):
-        """The APK folder the tools read the game's code and menu resources from (IL2CPP dump, original window layout): the French one, or the English one when only it
-        holds APK files (the code is the same in both languages)."""
-        if not glob.glob(os.path.join(self.apk_fr, '*.apk')) and glob.glob(os.path.join(self.apk_en, '*.apk')): return self.apk_en
+        """The APK folder the tools read the game's code and menu resources from (IL2CPP dump, original window layout): the French one, otherwise the English one, otherwise
+        another language's, the first that holds APK files (the code is the same in every language)."""
+        for lg in dict.fromkeys(('fr-fr', 'en-us') + tuple(LG.LANGUAGES)):
+            if glob.glob(os.path.join(self.apk_for(lg), '*.apk')): return self.apk_for(lg)
         return self.apk_fr
 
     def for_game(self, game):
@@ -103,17 +105,26 @@ class Folders:
 
     # ---- game language ----------------------------------------------------------------------------------------------------
     def apk_for(self, language):
-        """APK folder of the language ('fr' or 'en')."""
-        return self.apk_en if language == 'en' else self.apk_fr
+        """APK folder of the language (a code of language.LANGUAGES: `data\\apk\\<game>\\<code>`)."""
+        if language == 'en-us': return self.apk_en
+        if language == 'fr-fr': return self.apk_fr
+        return os.path.join(self.apk_game, language)
 
     def cache_for(self, language):
-        """Cache of the files computed from the APKs of this language (`data\\cache\\<game>\\fr` or `data\\cache\\<game>\\en`)."""
-        return self.cache_en if language == 'en' else self.cache
+        """Cache of the files computed from the APKs of this language (`data\\cache\\<game>\\<code>`)."""
+        if language == 'en-us': return self.cache_en
+        if language == 'fr-fr': return self.cache
+        return os.path.join(self.cache_root, self.game, language)
+
+    def has_apk(self, language):
+        """The APK folder of this language holds `base.apk`."""
+        return os.path.isfile(os.path.join(self.apk_for(language), 'base.apk'))
 
     def choose_apk(self, language):
-        """(APK folder, game language) for the chosen language: its folder if it has `base.apk`, otherwise the folder of the other language (the player put in only one of the two versions: better a game in the other language than no game); with neither: the folder of the chosen language."""
-        for lg in (language, 'fr' if language == 'en' else 'en'):
-            if os.path.isfile(os.path.join(self.apk_for(lg), 'base.apk')): return self.apk_for(lg), lg
+        """(APK folder, game language) for the chosen language: its folder if it has `base.apk`, otherwise the English one, then the French one, then any other language's (the player
+        has the game in other languages than the port's texts: better a game in another language than no game); with none: the folder of the chosen language."""
+        for lg in dict.fromkeys((language,) + LG.FALLBACK + tuple(LG.LANGUAGES)):
+            if self.has_apk(lg): return self.apk_for(lg), lg
         return self.apk_for(language), language
 
     # ---- saves -------------------------------------------------------------------------------------------------------------------
@@ -259,6 +270,28 @@ def split_apk_by_language(d):
     return done
 
 
+def language_folders(d):
+    """the folders named by the language codes of earlier versions (`fr`, `en`...) take today's codes (`fr-fr`, `en-us`...: language.OLD_CODES), for the APK files and the cache of
+    every game: moves without copying or overwriting (`_move`); an earlier README.txt goes away when the new folder has its own. -> list of sentences describing what was done."""
+    done = []
+    if d.old_games: return done
+    for game in GM.GAMES:
+        for root in (d.apk_root, d.cache_root):
+            base = os.path.join(root, game)
+            for old, new in LG.OLD_CODES.items():
+                src, dst = os.path.join(base, old), os.path.join(base, new)
+                if not os.path.isdir(src) or os.path.islink(src): continue
+                readme = os.path.join(src, 'README.txt')
+                if os.path.isfile(readme) and os.path.isfile(os.path.join(dst, 'README.txt')):
+                    try: os.remove(readme)
+                    except OSError: pass
+                moves, problems = [], []
+                _move(src, dst, moves, problems)
+                if moves: done.append('language folder renamed: %s -> %s' % (_rel_data(d, src), _rel_data(d, dst)))
+                for a, _b, reason in problems: done.append('NOT moved into %s: %s (%s)' % (_rel_data(d, dst), _rel_data(d, a), 'already there' if reason == 'exists' else reason))
+    return done
+
+
 def _rel_data(d, p):
     """`p` as written in the messages: `data\\...` (Windows separators, as in the other messages) for a folder of `data`."""
     return 'data\\' + os.path.relpath(p, d.data).replace(os.sep, '\\') if _norm(p).startswith(d.data + os.sep) else p
@@ -286,13 +319,16 @@ def cache_per_game(d):
 
 
 def language_cache(d, language, log=print):
-    """the cache for the game's language. The English one (`data\\cache\\<game>\\en`) starts empty; only `ui_layout.json` (the menu layout, computed by `tools\\generate_ui.bat` from the game's code, the same in both languages) is copied into it from the French cache, so that the original menus also work in English."""
+    """the cache for the game's language (`data\\cache\\<game>\\<code>`). Another language's cache than the French one starts empty; only `ui_layout.json` (the menu layout, computed by
+    `tools\\generate_ui.bat` from the game's code, the same in every language) is copied into it from the French cache (or the English one), so that the original menus also work there."""
     cache = d.cache_for(language)
-    if cache != d.cache:
-        src = os.path.join(d.cache, 'ui_layout.json')
+    for source in (d.cache, d.cache_for('en-us')):
+        src = os.path.join(source, 'ui_layout.json')
+        if source == cache or not os.path.isfile(src): continue
         try:
-            if os.path.isfile(src) and _clone(src, os.path.join(cache, 'ui_layout.json'), log, 0): log('Migration: ui_layout.json copied: %s -> %s' % (_rel_data(d, d.cache), _rel_data(d, cache)))
-        except OSError as ex: log('Migration: ui_layout.json NOT copied to the English cache (%s)' % ex)
+            if _clone(src, os.path.join(cache, 'ui_layout.json'), log, 0): log('Migration: ui_layout.json copied: %s -> %s' % (_rel_data(d, source), _rel_data(d, cache)))
+        except OSError as ex: log('Migration: ui_layout.json NOT copied to %s (%s)' % (_rel_data(d, cache), ex))
+        break
     return cache
 
 
@@ -416,9 +452,10 @@ def migrate(d=None, log=print):
         # (and twice per launch: `launch_dq4.bat` calls `python -m dq456_pc.paths` and `main` calls `migrate` again) —. Only a FAILED rename (locked folder, permissions) is retried.
         if moves or problems:
             if not any(reason != 'exists' for _a, _b, reason in problems): new_entries[ENGLISH_STAGE] = time.strftime('%d/%m/%Y %H:%M:%S')
+    done += language_folders(d)                                            # (before `split_apk_by_language` and `_already_in_service`, which look in `apk\\dq4\\fr-fr`; always done: it moves)
     done += saves_into_game_folder(d)                                      # (before `_already_in_service` and the other steps, which look in `saves\\dq4`; always done: it moves, so it does not repeat itself)
-    done += split_apk_by_language(d)                                       # (before `_already_in_service`, which looks for the French APKs in `apk\\dq4\\fr`)
-    done += cache_per_game(d)                                              # (before `_already_in_service` and step 1, which look for the cache in `cache\\dq4\\fr`; always done: it moves)
+    done += split_apk_by_language(d)                                       # (before `_already_in_service`, which looks for the French APKs in `apk\\dq4\\fr-fr`)
+    done += cache_per_game(d)                                              # (before `_already_in_service` and step 1, which look for the cache in `cache\\dq4\\fr-fr`; always done: it moves)
     in_service = _already_in_service(d)
 
     def is_pending(name_str):
@@ -440,7 +477,7 @@ def migrate(d=None, log=print):
     # 2. APK francais : copies (jeux\DQ4\patched_apks -> data\apk\fr)
     if is_pending('apk') and not d.old_games and os.path.isdir(os.path.join(games, 'patched_apks')):
         n = _clone_tree(os.path.join(games, 'patched_apks'), d.apk, log, 0)
-        if n: done.append('%d APK file(s) copied: jeux\\DQ4\\patched_apks -> data\\apk\\dq4\\fr' % n)
+        if n: done.append('%d APK file(s) copied: jeux\\DQ4\\patched_apks -> %s' % (n, _rel_data(d, d.apk_fr)))
         mark_done('apk')
     # 3. the old folders data\saves\portage and \mobile\<date> are moved up into data\saves then tidied away (BEFORE the older migrations: what the game
     #    wrote in recent days takes priority over old copies)

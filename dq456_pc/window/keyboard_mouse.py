@@ -1,6 +1,7 @@
 """Keyboard, mouse and gamepad: window events and key reading."""
 import os, time
 import pyglet
+from dq456_pc import language as LG
 from dq456_pc.language import tr
 from dq456_pc.window import inputs as EN
 from dq456_pc.menus import hud_mobile as HM
@@ -34,6 +35,7 @@ class KeyboardMouseMixin:
         if self._ready and self.pause.opened and self.pause.entry is not None: self.pause.text(text)
         elif self._ready and self.pause.opened and getattr(self.pause, 'screen_page', None) == 'name' and self.pause.popup is None: self.name_entry.text_entered(text)          # (the name page of a new game's panel)
         elif self._ready and self._name_entry_in_progress(): self.name_entry.text_entered(text)
+        elif self._ready and getattr(self, 'port_screen', None) is not None and hasattr(self.port_screen, 'text'): self.port_screen.text(text)          # (the language screen's forms)
         return pyglet.event.EVENT_HANDLED
 
     def on_key_press(self, symbol, modifiers):
@@ -68,12 +70,11 @@ class KeyboardMouseMixin:
             if self._held('modifier'):
                 self.combo[1] = True
                 if self.state_info(n):
-                    try: self.load_state(n); self.toast(tr('window.state_loaded') % n)
-                    except SS.OtherLanguage as ex:                          # a state of the game's other language: the Esc menu offers to switch the game to that language
-                        if ex.language == 'fr': self.toast(tr('window.state_french_version_game_load') % n, duration=5.0)
-                        else: self.toast(tr('window.state_english_version_game_load') % n, duration=5.0)
-                    except Exception as ex: self._note_state_failure(tr('window.loading_state') % n, 'Loading savestate %d' % n, ex)
-                else: self.toast(tr('window.state_empty') % n)
+                    try: self.load_state(n); self.toast(tr('save_states.state_loaded') % n)
+                    except SS.OtherLanguage as ex:                          # a state of another game version: the Esc menu offers to switch the game to its language
+                        self.toast(tr('save_states.state_other_version_game_load') % (n, LG.language_name(ex.language)), duration=5.0)
+                    except Exception as ex: self._note_state_failure(tr('save_states.loading_state') % n, 'Loading savestate %d' % n, ex)
+                else: self.toast(tr('save_states.state_empty') % n)
             else: self.quick_save = n
             return pyglet.event.EVENT_HANDLED
         if symbol in (K.LSHIFT, K.RSHIFT) or symbol in self.reg.codes('modifier'):      # Shift + modifier key (no digit): undoes the last load, on release

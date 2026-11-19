@@ -172,15 +172,15 @@ class Reset(unittest.TestCase):
         r = modified_settings(); P = PA.Pause(types.SimpleNamespace(reg=r, window_names=lambda: {'RootMenu': [1], 'Status': [2], 'Money': [3]}))
         P.target = 'RootMenu'; P.pan_pos = (500.0, 400.0)
         ent = {x['l']: x for x in P._entries_interface() if x['t'] == 'act'}
-        self.assertEqual(list(ent)[-3:], ['settings.restore_interface', 'settings.restore_all_interfaces', 'settings.finish'])
-        ent['settings.restore_interface']['ok']()
+        self.assertEqual(list(ent)[-3:], ['interface.restore_interface', 'interface.restore_all_interfaces', 'interface.finish'])
+        ent['interface.restore_interface']['ok']()
         self.assertNotIn('RootMenu', r['interface_windows']); self.assertIn('Status', r['interface_windows']); self.assertEqual(r['dpad_size'], OTHER['dpad_size'])
         self.assertEqual(P.pan_pos, (500.0, 400.0))                                               # the panel's position is a global editor option
         P.target = RG.SCREEN_TARGET
         ent = {x['l']: x for x in P._entries_interface() if x['t'] == 'act'}
-        ent['settings.restore_interface']['ok']()
+        ent['interface.restore_interface']['ok']()
         self.assertEqual([r[k] for k in RG.SCREEN_KEYS], [RG.DEFAULT[k] for k in RG.SCREEN_KEYS]); self.assertIn('Status', r['interface_windows'])
-        ent['settings.restore_all_interfaces']['ok']()
+        ent['interface.restore_all_interfaces']['ok']()
         for k in RG.INTERFACE_KEYS: self.assertEqual(r[k], RG.DEFAULT[k], k)
         self.assertIsNone(P.pan_pos)
 

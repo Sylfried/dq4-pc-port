@@ -25,7 +25,7 @@ class QuitQuestion(unittest.TestCase):
     def test_no_back_button_on_the_question(self):
         p = self.drawn('quit')
         self.assertIsNone(p.zone_ret, 'the question has no back button')
-        self.assertIn('settings.no', [e.get('l') for e in p._entries()], 'its "No" goes back')
+        self.assertIn('common.no', [e.get('l') for e in p._entries()], 'its "No" goes back')
 
     def test_other_pages_keep_it(self):
         for page in ('sound', 'controls', 'difficulty', 'cheats'):

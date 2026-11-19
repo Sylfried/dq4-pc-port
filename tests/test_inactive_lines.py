@@ -120,7 +120,7 @@ class PauseFullScreenLine(PA.Pause):
     def _entries(self):
         e = super()._entries()
         for x in e:
-            if x.get('l') == 'settings.brightness': x['off'] = self.J.is_fullscreen; x['hint'] = 'No effect in full screen (test)'
+            if x.get('l') == 'display.brightness': x['off'] = self.J.is_fullscreen; x['hint'] = 'No effect in full screen (test)'
         return e
 
 
@@ -133,8 +133,8 @@ class DisplayPage(unittest.TestCase):
     def test_line_states(self):
         for full in (False, True):
             J, p, e, n = self.lines(full)
-            self.assertEqual(p._inactive(e[n['settings.brightness']]), full, full); self.assertNotIn('settings.resolution', n)
-            self.assertFalse(p._inactive(e[n['settings.fullscreen']])); self.assertFalse(p._inactive(e[n['settings.sharpness']])); self.assertFalse(p._inactive(e[n['settings.interface']]))
+            self.assertEqual(p._inactive(e[n['display.brightness']]), full, full); self.assertNotIn('settings.resolution', n)
+            self.assertFalse(p._inactive(e[n['display.fullscreen']])); self.assertFalse(p._inactive(e[n['display.sharpness']])); self.assertFalse(p._inactive(e[n['menu.interface']]))
 
     def test_no_more_red_note_text(self):
         for full in (False, True):
@@ -144,48 +144,48 @@ class DisplayPage(unittest.TestCase):
         self.assertNotIn("entry['note']", src); self.assertNotIn('note=', src); self.assertNotIn('dec = ', src)                    # (no more `note` parameter, no more space reserved under the value; still in red: the error message at the foot of the frame and the editor's "Hidden", which are not notes under the values)
 
     def test_navigation_skips_inactive_lines(self):
-        J, p, e, n = self.lines(False); p.selected['display'] = n['settings.fullscreen']                      # window: nothing is skipped
-        p.key_press(K.S); self.assertEqual(p.selected['display'], n['settings.brightness'])
-        p.key_press(K.W); self.assertEqual(p.selected['display'], n['settings.fullscreen'])
-        J, p, e, n = self.lines(True); p.selected['display'] = n['settings.fullscreen']                       # full screen: "Brightness" is skipped
-        p.key_press(K.S); self.assertEqual(p.selected['display'], n['settings.contrast'])
-        p.key_press(K.W); self.assertEqual(p.selected['display'], n['settings.fullscreen'])
-        p.key_press(K.W); self.assertEqual(p.selected['display'], n['settings.language'])                           # ("Language" is the first line of the page)
-        p.key_press(K.W); self.assertEqual(p.selected['display'], n['settings.interface'])                        # (the list wraps around, restarting from the end: the Interface button, last)
-        p.key_press(K.S); self.assertEqual(p.selected['display'], n['settings.language'])
-        p.key_press(K.S); self.assertEqual(p.selected['display'], n['settings.fullscreen'])
+        J, p, e, n = self.lines(False); p.selected['display'] = n['display.fullscreen']                      # window: nothing is skipped
+        p.key_press(K.S); self.assertEqual(p.selected['display'], n['display.brightness'])
+        p.key_press(K.W); self.assertEqual(p.selected['display'], n['display.fullscreen'])
+        J, p, e, n = self.lines(True); p.selected['display'] = n['display.fullscreen']                       # full screen: "Brightness" is skipped
+        p.key_press(K.S); self.assertEqual(p.selected['display'], n['display.contrast'])
+        p.key_press(K.W); self.assertEqual(p.selected['display'], n['display.fullscreen'])
+        p.key_press(K.W); self.assertEqual(p.selected['display'], n['language.title'])                           # ("Language" is the first line of the page)
+        p.key_press(K.W); self.assertEqual(p.selected['display'], n['menu.interface'])                        # (the list wraps around, restarting from the end: the Interface button, last)
+        p.key_press(K.S); self.assertEqual(p.selected['display'], n['language.title'])
+        p.key_press(K.S); self.assertEqual(p.selected['display'], n['display.fullscreen'])
 
     def test_wheel_skips_inactive_lines(self):
-        J, p, e, n = self.lines(True); p.selected['display'] = n['settings.fullscreen']
-        p.wheel(1); self.assertEqual(p.selected['display'], n['settings.contrast'])                            # (wheel up = next line)
+        J, p, e, n = self.lines(True); p.selected['display'] = n['display.fullscreen']
+        p.wheel(1); self.assertEqual(p.selected['display'], n['display.contrast'])                            # (wheel up = next line)
 
     def test_keyboard_without_effect_on_inactive_line(self):
-        for full, lib in ((True, 'settings.brightness'),):
+        for full, lib in ((True, 'display.brightness'),):
             J, p, e, n = self.lines(full); p.selected['display'] = n[lib]; before = state(J, p)
             for t in (K.RETURN, K.SPACE, K.LEFT, K.RIGHT, K.DELETE, K.HOME): p.key_press(t); p.selected['display'] = n[lib]
             self.assertEqual(state(J, p), before, (full, lib)); self.assertIsNone(p._current())
 
     def test_active_line_always_adjustable(self):
-        J, p, e, n = self.lines(False); p.selected['display'] = n['settings.brightness']; p.key_press(K.RIGHT)          # window: the line can be set
+        J, p, e, n = self.lines(False); p.selected['display'] = n['display.brightness']; p.key_press(K.RIGHT)          # window: the line can be set
         self.assertAlmostEqual(J.reg['brightness'], 1.1)
 
     def test_state_recomputed_each_frame(self):
         """A line grayed out because another value makes it ineffective becomes active again as soon as that value changes (and vice versa)."""
         J, p = menu('display', False, klass=PauseFullScreenLine); n = {x['l']: i for i, x in enumerate(p._entries())}
-        self.assertFalse(p._inactive(p._entries()[n['settings.brightness']]))
-        p.selected['display'] = n['settings.fullscreen']; p.key_press(K.RETURN)                                          # Enter on the switch: full screen
-        self.assertTrue(J.full); self.assertTrue(p._inactive(p._entries()[n['settings.brightness']]))              # ... "Brightness" is grayed out right away
-        p.key_press(K.RETURN); self.assertFalse(J.full); self.assertFalse(p._inactive(p._entries()[n['settings.brightness']]))      # ... and turns back on when returning to window mode
+        self.assertFalse(p._inactive(p._entries()[n['display.brightness']]))
+        p.selected['display'] = n['display.fullscreen']; p.key_press(K.RETURN)                                          # Enter on the switch: full screen
+        self.assertTrue(J.full); self.assertTrue(p._inactive(p._entries()[n['display.brightness']]))              # ... "Brightness" is grayed out right away
+        p.key_press(K.RETURN); self.assertFalse(J.full); self.assertFalse(p._inactive(p._entries()[n['display.brightness']]))      # ... and turns back on when returning to window mode
 
     def test_selection_leaves_line_that_became_inactive(self):
         J, p = menu('display', False, klass=PauseFullScreenLine); n = {x['l']: i for i, x in enumerate(p._entries())}; window()
-        p.selected['display'] = n['settings.brightness']; render_texture(p); self.assertEqual(p.selected['display'], n['settings.brightness'])
-        J.full = True; render_texture(p); self.assertEqual(p.selected['display'], n['settings.contrast'])                      # F11 while "Brightness" is selected: the cursor moves to the next active line
-        J.full = False; render_texture(p); self.assertEqual(p.selected['display'], n['settings.contrast'])                    # (back in window mode: the line turns back on, the cursor stays where it is)
+        p.selected['display'] = n['display.brightness']; render_texture(p); self.assertEqual(p.selected['display'], n['display.brightness'])
+        J.full = True; render_texture(p); self.assertEqual(p.selected['display'], n['display.contrast'])                      # F11 while "Brightness" is selected: the cursor moves to the next active line
+        J.full = False; render_texture(p); self.assertEqual(p.selected['display'], n['display.contrast'])                    # (back in window mode: the line turns back on, the cursor stays where it is)
 
     def test_click_hover_and_tooltip(self):
         J, p = menu('display', True, klass=PauseFullScreenLine); n = {x['l']: i for i, x in enumerate(p._entries())}; window(); render_texture(p)
-        for lib in ('settings.brightness',):
+        for lib in ('display.brightness',):
             z, active = zone_of(p, n[lib]); self.assertFalse(active, lib)
             for f in (0.05, 0.3, 0.5, 0.7, 0.95):                                                          # (label, value, arrow, ↺ button: anywhere in the cell)
                 x, y = z[0] + f * (z[2] - z[0]), (z[1] + z[3]) / 2; before = state(J, p); selected = p.selected['display']
@@ -193,15 +193,15 @@ class DisplayPage(unittest.TestCase):
                 p.click(x, y, LEFT); self.assertEqual(state(J, p), before, 'clic'); self.assertEqual(p.selected['display'], selected)
                 p.release(x, y, LEFT)
             self.assertTrue(p._line_helptext(p._entries()[n[lib]]), lib)                                      # (it keeps its help: it says why)
-        self.assertNotIn('settings.enter', p._line_helptext(p._entries()[n['settings.brightness']]))                           # (but no more "Enter or click: open the list" hint)
-        z, active = zone_of(p, n['settings.sharpness']); self.assertTrue(active)                                      # an active line, on the other hand, responds
-        p.hovered((z[0] + z[2]) / 2, (z[1] + z[3]) / 2); self.assertEqual(p.selected['display'], n['settings.sharpness'])
+        self.assertNotIn('keys.enter', p._line_helptext(p._entries()[n['display.brightness']]))                           # (but no more "Enter or click: open the list" hint)
+        z, active = zone_of(p, n['display.sharpness']); self.assertTrue(active)                                      # an active line, on the other hand, responds
+        p.hovered((z[0] + z[2]) / 2, (z[1] + z[3]) / 2); self.assertEqual(p.selected['display'], n['display.sharpness'])
 
     def test_pixels_no_highlight_on_hover(self):
         """The inactive line is identical with or without the pointer over it; an active line changes (test control)."""
         J, p = menu('display', True, klass=PauseFullScreenLine); n = {x['l']: i for i, x in enumerate(p._entries())}; window(); far = (5.0, 5.0)
         p.mouse_mode = True; p.mouse_pos = far; render_texture(p); background = render_texture(p)
-        for lib, change in (('settings.brightness', False), ('settings.sharpness', True), ('settings.contrast', True)):
+        for lib, change in (('display.brightness', False), ('display.sharpness', True), ('display.contrast', True)):
             z, active = zone_of(p, n[lib]); self.assertEqual(active, change, lib)
             p.mouse_pos = ((z[0] + z[2]) / 2, (z[1] + z[3]) / 2); p.tt = None; above = render_texture(p); p.mouse_pos = far; p.tt = None
             equal = np.array_equal(crop(background, z), crop(above, z))
@@ -211,7 +211,7 @@ class DisplayPage(unittest.TestCase):
     def test_whole_cell_grayed(self):
         """The plate of an inactive line is darker than that of an active line, and its text is gray (not white)."""
         J, p = menu('display', True, klass=PauseFullScreenLine); n = {x['l']: i for i, x in enumerate(p._entries())}; window(); p.mouse_mode = False; img = render_texture(p)
-        zr, _ = zone_of(p, n['settings.brightness']); zn, _ = zone_of(p, n['settings.sharpness'])
+        zr, _ = zone_of(p, n['display.brightness']); zn, _ = zone_of(p, n['display.sharpness'])
         def lum(z): c = crop(img, z, 6).astype(float); return c[..., :3].mean(), c[..., :3].max()
         (m_r, max_r), (m_n, max_n) = lum(zr), lum(zn)
         self.assertLess(m_r, m_n); self.assertLess(max_r, 200); self.assertGreater(max_n, 240)             # (grayed out: no pure white; active: white text)
@@ -273,7 +273,7 @@ class AllTypes(unittest.TestCase):
 
     def test_an_active_line_stays_usable(self):
         """Marking the other lines does not interfere with the one that remains (test control)."""
-        window(); J, p = menu('quit', klass=PauseMarked, inactive=('settings.yes',)); p.selected['quit'] = 2; render_texture(p)
+        window(); J, p = menu('quit', klass=PauseMarked, inactive=('common.yes',)); p.selected['quit'] = 2; render_texture(p)
         p.key_press(K.W); self.assertEqual(p.selected['quit'], 2)                                               # "Yes" is inactive: the cursor stays on "No"
         z, active = zone_of(p, 1); self.assertFalse(active)
         p.click((z[0] + z[2]) / 2, (z[1] + z[3]) / 2, LEFT); self.assertNotIn('quit', J.calls); self.assertEqual(p.stack, ['quit'])          # click on inactive "Yes": the application does not close
@@ -284,12 +284,12 @@ class ChangesDuringAction(unittest.TestCase):
     """A line that becomes inactive while being held (slider dragged, value typed, list open) is released without changing anything."""
     def test_slider_dragged_value_typed_list_opened(self):
         window(); J, p = menu('display', klass=PauseMarked); n = {x['l']: i for i, x in enumerate(p._entries())}; render_texture(p)
-        z, _ = zone_of(p, n['settings.sharpness']); bx0, bx1 = p.bars[n['settings.sharpness']]
-        p.click(bx0 + 0.8 * (bx1 - bx0), (z[1] + z[3]) / 2, LEFT); self.assertEqual(p.dragging, n['settings.sharpness']); self.assertAlmostEqual(J.reg['sharpness'], 0.8, 1)       # (active: the click sets the cursor)
-        p.inactive = ('settings.sharpness',); p.drag_to(bx0 + 0.2 * (bx1 - bx0), (z[1] + z[3]) / 2); self.assertIsNone(p.dragging); self.assertAlmostEqual(J.reg['sharpness'], 0.8, 1)   # (became inactive while being held: released)
-        p.inactive = (); p.entry = [n['settings.sharpness'], '5']; p.inactive = ('settings.sharpness',); render_texture(p); self.assertIsNone(p.entry)
-        p.inactive = (); p.selected['display'] = n['settings.shader']; p.key_press(K.RETURN); self.assertIsNotNone(p.open_dropdown)                                  # list opened on "Shader"
-        p.inactive = ('settings.shader',); render_texture(p); self.assertIsNone(p.open_dropdown)
+        z, _ = zone_of(p, n['display.sharpness']); bx0, bx1 = p.bars[n['display.sharpness']]
+        p.click(bx0 + 0.8 * (bx1 - bx0), (z[1] + z[3]) / 2, LEFT); self.assertEqual(p.dragging, n['display.sharpness']); self.assertAlmostEqual(J.reg['sharpness'], 0.8, 1)       # (active: the click sets the cursor)
+        p.inactive = ('display.sharpness',); p.drag_to(bx0 + 0.2 * (bx1 - bx0), (z[1] + z[3]) / 2); self.assertIsNone(p.dragging); self.assertAlmostEqual(J.reg['sharpness'], 0.8, 1)   # (became inactive while being held: released)
+        p.inactive = (); p.entry = [n['display.sharpness'], '5']; p.inactive = ('display.sharpness',); render_texture(p); self.assertIsNone(p.entry)
+        p.inactive = (); p.selected['display'] = n['display.shader']; p.key_press(K.RETURN); self.assertIsNotNone(p.open_dropdown)                                  # list opened on "Shader"
+        p.inactive = ('display.shader',); render_texture(p); self.assertIsNone(p.open_dropdown)
 
 
 class ChangesCaption(unittest.TestCase):
@@ -297,11 +297,11 @@ class ChangesCaption(unittest.TestCase):
         """Difficulty, Cheats and Randomizer: three lines of the root, right below "Achievements", each with its page (no tabs)."""
         J, p = menu('root'); libs = labels(p._entries())
         self.assertNotIn('settings.extras', libs); self.assertNotIn('Modifications', libs)
-        self.assertEqual(libs[libs.index('settings.achievements') + 1:libs.index('settings.achievements') + 4], ['settings.difficulty', 'settings.cheats', 'settings.randomizer'])
-        e = next(x for x in p._entries() if x['l'] == 'settings.difficulty'); e['ok'](); self.assertEqual(p.screen_page, 'difficulty')
-        self.assertEqual([x['l'] for x in p._entries()], ['settings.hp_mp_restored_level_up', 'settings.hp_mp_restored_battle_end', 'settings.difficulty_level', 'settings.experience_gained', 'settings.gold_gained', 'settings.casino_tokens_won', 'settings.damage_taken_party', 'settings.damage_taken_enemies', 'settings.encounter_rate'])
-        p.stack = ['root']; next(x for x in p._entries() if x['l'] == 'settings.randomizer')['ok'](); self.assertEqual([x['l'] for x in p._entries()], ['settings.game_without_randomizer'])
-        p.stack = ['root']; next(x for x in p._entries() if x['l'] == 'settings.cheats')['ok'](); self.assertEqual([x['l'] for x in p._entries()], ['settings.random_encounters'])
+        self.assertEqual(libs[libs.index('menu.achievements') + 1:libs.index('menu.achievements') + 4], ['menu.difficulty', 'menu.cheats', 'menu.randomizer'])
+        e = next(x for x in p._entries() if x['l'] == 'menu.difficulty'); e['ok'](); self.assertEqual(p.screen_page, 'difficulty')
+        self.assertEqual([x['l'] for x in p._entries()], ['difficulty.hp_mp_restored_level_up', 'difficulty.hp_mp_restored_battle_end', 'difficulty.difficulty_level', 'difficulty.experience_gained', 'difficulty.gold_gained', 'difficulty.casino_tokens_won', 'difficulty.damage_taken_party', 'difficulty.damage_taken_enemies', 'difficulty.encounter_rate'])
+        p.stack = ['root']; next(x for x in p._entries() if x['l'] == 'menu.randomizer')['ok'](); self.assertEqual([x['l'] for x in p._entries()], ['randomizer.game_without_randomizer'])
+        p.stack = ['root']; next(x for x in p._entries() if x['l'] == 'menu.cheats')['ok'](); self.assertEqual([x['l'] for x in p._entries()], ['difficulty.random_encounters'])
 
 if __name__ == '__main__':
     unittest.main(verbosity=1)

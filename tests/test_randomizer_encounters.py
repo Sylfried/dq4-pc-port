@@ -140,12 +140,12 @@ class SeedAndPage(unittest.TestCase):
 
     def test_page_lines(self):
         src = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'dq456_pc', 'menus', 'pause.py'), encoding='utf-8').read()
-        for k, _n in SD.OPTIONS[SD.VERSION]: self.assertIn("('%s', 'settings." % k, src)
-        from dq456_pc.texts.fr import settings as FR
-        from dq456_pc.texts.en import settings as EN_T
+        for k, _n in SD.OPTIONS[SD.VERSION]: self.assertIn("('%s', 'randomizer." % k, src)
+        from dq456_pc import language as LG
+        FR, EN_T = LG.section_texts('fr-fr', 'randomizer'), LG.section_texts('en-us', 'randomizer')
         for key in ('encounters_setting', 'encounters_random_hint', 'single_enemy_setting', 'loot_setting', 'boss_encounters_setting', 'two_bosses_setting', 'round_button_new_seed'):
-            self.assertIn('settings.' + key, FR.TEXTS); self.assertIn('settings.' + key, EN_T.TEXTS)
-        for gone in ('zones_setting', 'groups_setting', 'boss_companions_setting', 'new_seed', 'terrain_setting'): self.assertNotIn('settings.' + gone, FR.TEXTS)
+            self.assertIn('randomizer.' + key, FR); self.assertIn('randomizer.' + key, EN_T)
+        for gone in ('zones_setting', 'groups_setting', 'boss_companions_setting', 'new_seed', 'terrain_setting'): self.assertNotIn('randomizer.' + gone, FR)
 
 
 @unittest.skipUnless(APK and SAVES, 'real engine: DQ_APK and DQ_SAVES')

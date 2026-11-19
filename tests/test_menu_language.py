@@ -5,7 +5,7 @@
   - name entry, license (title; the game's original text and the "Privacy Policy" do not change), names of the interface editor's items, sample dialogue texts, F1 info, notifications,
     location of the savestates, console messages of these modules;
   - in English: no French word remains (apart from the whitelist, short and justified); in French: exactly the previous texts;
-  - the catalog (dq456_pc/texts/<language>/menus.py) has no orphan key, and every key marked in these modules has its French and its English text.
+  - the texts (the keys "saves.*" and "history.*" of dq456_pc/languages/<language>.json) have no orphan key, and every key marked in these modules has its French and its English text.
 The catalog's general rules (same placeholders, same edges, no French in the English, no duplicates, every `tr('...')` / `N_('...')` in the code has its translation) are in tests/test_language.py.
 
     python3 tests/test_menu_language.py"""
@@ -36,7 +36,8 @@ from dq456_pc.core import history as HI
 from dq456_pc.persistence import logfile_format as FJ
 from dq456_pc.persistence import settings as RG
 from dq456_pc.persistence import saves as S
-from test_language import french, catalog_by_file, keys_in_text
+from test_language import french, keys_in_text
+from dq456_pc import language as LG
 import test_saves_import as TIS
 import test_history_key as THC
 
@@ -512,8 +513,8 @@ class Other(Language):
     def test_savestates_location(self):
         """The location written in a savestate file is a catalog key (translated by the page that displays it), whatever the language."""
         from dq456_pc.core import engine as ENGINE
-        cases = [(ENGINE.PART_CASINO, 'ev04', 'settings.casino_poker'), (ENGINE.PART_CASINO, 'ev05', 'settings.casino_slot_machine'), (ENGINE.PART_CASINO, 'ev99', 'settings.casino'), (ENGINE.PART_BESTIARY, 'x', 'settings.bestiary'),
-                 (ENGINE.PART_FIELD, 'x', 'settings.world_map'), (ENGINE.PART_BATTLE, 'x', 'settings.battle'), (ENGINE.PART_TOWN, 'dnb1b2', 'dnb1b2')]
+        cases = [(ENGINE.PART_CASINO, 'ev04', 'interface.casino_poker'), (ENGINE.PART_CASINO, 'ev05', 'interface.casino_slot_machine'), (ENGINE.PART_CASINO, 'ev99', 'interface.casino'), (ENGINE.PART_BESTIARY, 'x', 'interface.bestiary'),
+                 (ENGINE.PART_FIELD, 'x', 'save_states.world_map'), (ENGINE.PART_BATTLE, 'x', 'save_states.battle'), (ENGINE.PART_TOWN, 'dnb1b2', 'dnb1b2')]
         for language in ('fr', 'en'):
             LG.select_language(language)
             for part, game_map, att in cases:
@@ -523,7 +524,7 @@ class Other(Language):
 
     def test_location_written_by_an_older_version(self):
         """A savestate written before the catalog keys holds the French text: it is still shown, in the current language."""
-        for old, key in (('Carte du monde', 'settings.world_map'), ('Combat', 'settings.battle'), ('mak1f1', None)):
+        for old, key in (('Carte du monde', 'save_states.world_map'), ('Combat', 'save_states.battle'), ('mak1f1', None)):
             self.assertEqual(PA.Pause._readable_location({'location': old}), key or '')
 
     def test_module_console_messages(self):
@@ -562,6 +563,11 @@ def marked_texts(files):
     return out
 
 
+def menu_texts(language):
+    """{key: text} of the files of the screens this test walks through (saves screen, history)."""
+    language = LG.OLD_CODES.get(language, language); return dict(LG.section_texts(language, 'saves'), **LG.section_texts(language, 'history'))
+
+
 class Catalog(Language):
     def test_each_marked_text_is_a_key_of_both_catalogs(self):
         """Every text marked in these modules (tr / N_) is a catalog key with its French and its English text (a typo in a key no longer lets a key through on screen)."""
@@ -576,15 +582,14 @@ class Catalog(Language):
         """No orphan entry: every key of the `menus` catalog appears in the code."""
         used = set()
         for d, _, fs in os.walk(os.path.join(ROOT, 'dq456_pc')):
-            if os.sep + 'texts' in d: continue
             for f in fs:
                 if not f.endswith('.py'): continue
                 with open(os.path.join(d, f), encoding='utf-8') as fh: tree = ast.parse(fh.read())
                 used.update(k for n in ast.walk(tree) if isinstance(n, ast.Constant) and isinstance(n.value, str) for k in keys_in_text(n.value))
-        self.assertEqual(sorted(set(catalog_by_file('fr')['menus']) - used), [])
+        self.assertEqual(sorted(set(menu_texts('fr-fr')) - used), [])
 
     def test_each_language_gives_its_text(self):
-        fr, en = catalog_by_file('fr')['menus'], catalog_by_file('en')['menus']
+        fr, en = menu_texts('fr-fr'), menu_texts('en-us')
         LG.select_language('fr')
         for k, t in fr.items(): self.assertEqual(LG.tr(k), t)
         entry()

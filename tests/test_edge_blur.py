@@ -56,8 +56,8 @@ class Setting(unittest.TestCase):
     def test_line_just_under_the_vignette(self):
         src = open(os.path.join(HERE, '..', 'dq456_pc', 'menus', 'pause.py'), encoding='utf-8').read()
         lines = src[src.index('def _entries_display'):].split('\n')
-        i = next(n for n, l in enumerate(lines) if "('settings.vignette_effect'" in l)
-        self.assertIn("('settings.edge_blur'", lines[i + 1])
+        i = next(n for n, l in enumerate(lines) if "('display.vignette_effect'" in l)
+        self.assertIn("('display.edge_blur'", lines[i + 1])
 
     def test_drawn_where_the_vignette_is(self):
         """After the scene (the interface stays sharp), not in battle, on the world map nor during the end credits (source read as text: no display needed)."""

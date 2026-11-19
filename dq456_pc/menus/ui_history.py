@@ -34,20 +34,20 @@ from dq456_pc.language import tr, N_
 from dq456_pc.window import inputs as EN
 
 GOLD = (255, 235, 4); WHITE = (255, 255, 255); GRAY = (150, 150, 150); HELPTEXT = (175, 175, 175); STAR = (255, 210, 40); EMPTY_STAR = (20, 20, 20)
-TABS = ((N_('settings.dialogue'), 'dialogues'), (N_('menus.battles'), 'battles'))            # (names translated when drawn)
+TABS = ((N_('interface.dialogue'), 'dialogues'), (N_('history.battles'), 'battles'))            # (names translated when drawn)
 O_DIALOGUES, O_BATTLES = 0, 1
-FILTER_CAPTION = N_('menus.favorites_only')
-CLEAR_CAPTION = N_('menus.clear_all')                                    # plate of the tab row: empties the adventure's history but its favorites; three choices, no Yes / No (choosing is the confirmation)
-CLEAR_QUESTION = N_('menus.clear_what')
-CLEAR_DETAIL = N_('menus.favorites_kept')
-CLEAR_CHOICES = ((N_('menus.clear_dialogues'), 'dialogues'), (N_('menus.clear_battles'), 'battles'), (N_('menus.clear_all'), None))
+FILTER_CAPTION = N_('history.favorites_only')
+CLEAR_CAPTION = N_('history.clear_all')                                    # plate of the tab row: empties the adventure's history but its favorites; three choices, no Yes / No (choosing is the confirmation)
+CLEAR_QUESTION = N_('history.clear_what')
+CLEAR_DETAIL = N_('history.favorites_kept')
+CLEAR_CHOICES = ((N_('history.clear_dialogues'), 'dialogues'), (N_('history.clear_battles'), 'battles'), (N_('history.clear_all'), None))
 TRASH = (200, 70, 60)                                               # trash of an element when hovered
 TRASH_OFF = (70, 70, 70)                                            # grayed trash of a favorite (a favorite cannot be deleted: unstar it first)
 BOX_SCALE = 1.12                 # enlargement of the game windows relative to H / 800 (= window.UI_ZOOM): the history box has the size of a game dialogue box on screen
 TEXT_SCALE = 1.09                     # one pixel of the original font (SE-GARRIR) = 1.09 interface units in the game's message canvas (measured: a line of 371 font pixels = 407 screen pixels at scale 1.008; the layout header states 1.105, the engine rounds the advances)
-EMPTY_MESSAGES = {'dialogues': N_('menus.no_dialogue_yet'), 'battles': N_('menus.no_battle_yet')}
-EMPTY_FAVORITES = {'dialogues': N_('menus.no_favorite_dialogue_uncheck_favorites'),
-                 'battles': N_('menus.no_favorite_battle_uncheck_favorites')}            # (translated when drawn, as a whole before being wrapped at words)
+EMPTY_MESSAGES = {'dialogues': N_('history.no_dialogue_yet'), 'battles': N_('history.no_battle_yet')}
+EMPTY_FAVORITES = {'dialogues': N_('history.no_favorite_dialogue_uncheck_favorites'),
+                 'battles': N_('history.no_favorite_battle_uncheck_favorites')}            # (translated when drawn, as a whole before being wrapped at words)
 
 
 def wrap_words(text, width_px, max_width):
@@ -63,9 +63,9 @@ def wrap_words(text, width_px, max_width):
 
 REWIND_LINES = 4                    # text lines of the rewind's message box (the box grows like a battle box)
 NOTICE_SECONDS = 3.0
-NO_REWIND = N_('menus.battle_cannot_replayed_was_recorded')
-REWIND_TITLE = N_('menus.battle_replay')
-REWIND_END = N_('menus.end_battle')
+NO_REWIND = N_('history.battle_cannot_replayed_was_recorded')
+REWIND_TITLE = N_('history.battle_replay')
+REWIND_END = N_('history.end_battle')
 
 PAGE_MESSAGES = 3                   # messages skipped by PgUp / PgDn (and the L / R keys)
 WHEEL_STEP = 2.0                   # text lines (Box.STEP: 28 units) per wheel notch: a fine, constant step, never a whole entry
@@ -715,7 +715,7 @@ class HistoryView:
         if place: x0, y1, pw, h = place[0], place[1], place[2], place[4]          # (right window: its place and size, the same frame as the other pages of the menu)
         y0 = y1 - h
         HM.border(x0, y0, pw, h, k, background=(0, 0, 0), opacity=HM.GAME_OPACITY)                # as transparent as the other game windows
-        title_screen = tr('settings.history')
+        title_screen = tr('menu.history')
         wt = self._text_width(bm, title_screen, su * 1.25, size_value * 1.3)
         self._line(bm, title_screen, x0 + (pw - wt) / 2, y1 - 24 * k - asc * 1.25, su * 1.25, WHITE, size_value * 1.3)
         # tabs: the buttons of the Keyboard / Gamepad row of "Controls" (pause._tab_buttons): the open tab lit, gold outline and text
@@ -729,7 +729,7 @@ class HistoryView:
         self._filter(bm, su, size_value, asc, k, tx + tabs_width + 14 * k, ty, th)                  # "Favorites only" checkbox (to the right of the tabs)
         self._clear(bm, su, size_value, asc, k, tx + tabs_width + 14 * k + fw + 14 * k, ty, th)
         # help (one or two lines, depending on the window width)
-        helptext = [tr('menus.up_down_previous_next_message'), tr('menus.mouse_wheel_scroll'), tr('menus.camera_keys_tab'), tr('menus.enter_favorite'), tr('menus.delete_delete')] + ([tr('menus.space_play_button_replay_battle')] if TABS[self.tab][1] == 'battles' else []) + [tr('menus.f_favorites_only')] + [tr('menus.esc_close')]
+        helptext = [tr('history.up_down_previous_next_message'), tr('history.mouse_wheel_scroll'), tr('history.camera_keys_tab'), tr('history.enter_favorite'), tr('history.delete_delete')] + ([tr('history.space_play_button_replay_battle')] if TABS[self.tab][1] == 'battles' else []) + [tr('history.f_favorites_only')] + [tr('history.esc_close')]
         max_line_width = pw - 24 * k; measure_help = lambda t: self._text_width(bm, t, su * 0.72, size_value * 0.72)
         help_lines = []; cur = ''
         for a in helptext:
@@ -842,6 +842,6 @@ class HistoryView:
         P._back_button(rx, ry, rw, rh, P._pointer_in(zq))
         self.rewind_zones = {'speed': zs, 'quit': zq}
         ks = (J.reg['keys'].get('battle_speed') or [None])[0] if hasattr(J.reg, '__getitem__') else None
-        help_ = '     '.join(([tr('menus.speed') % tr(RG.key_name(ks))] if ks else []) + [tr('menus.enter_click_next_message'), tr('menus.esc_quit')])
+        help_ = '     '.join(([tr('history.speed') % tr(RG.key_name(ks))] if ks else []) + [tr('history.enter_click_next_message'), tr('history.esc_quit')])
         if r.finished(): help_ = tr(REWIND_END) + '     ' + help_
         hw = self._text_width(bm, help_, su * 0.72, size_value * 0.72); self._line(bm, help_, (W - hw) / 2, sy - 30 * k, su * 0.72, HELPTEXT, size_value * 0.72)

@@ -6,7 +6,7 @@ on the title screen of the new language; a savestate of the other language offer
      what `reload_game` keeps (size, position, state to load, setting), the state loaded at the first loop of the new game, the arguments of the new game (`main.args_for_restart`, `choose_game_files`);
   2. with the real engine (DQ_APK = French APK folder, its English sibling `../en` or DQ_APK_EN, DQ_SAVES, DQ_MAP_CACHE, DQ_UI_CACHE): the whole sequence in a separate process with a hidden window:
      French game, setting switched to English (nothing happens away from the title screen), return to the title screen -> English game on its title screen (English APK and cache, the old engine
-     released, same window size), French state refused with OtherLanguage('fr'), reload_game('fr', 1) -> French game with the state loaded.
+     released, same window size), French state refused with OtherLanguage('fr-fr'), reload_game('fr-fr', 1) -> French game with the state loaded.
 
     python3 tests/test_language_reload.py"""
 import glob, json, os, shutil, subprocess, sys, tempfile, time, types, unittest
@@ -20,7 +20,7 @@ sys.path.insert(0, ROOT); sys.path.insert(0, HERE)
 def english_apk():
     """English APK folder for the real-engine scenario: DQ_APK_EN, otherwise the `en` sibling of DQ_APK (data\\apk\\fr -> data\\apk\\en)."""
     if os.environ.get('DQ_APK_EN'): return os.environ['DQ_APK_EN']
-    if os.environ.get('DQ_APK'): return os.path.join(os.path.dirname(os.path.normpath(os.environ['DQ_APK'])), 'en')
+    if os.environ.get('DQ_APK'): return os.path.join(os.path.dirname(os.path.normpath(os.environ['DQ_APK'])), 'en-us')
     return ''
 
 
@@ -52,7 +52,7 @@ if __name__ != '__main__' or not os.environ.get('DQ_RELOAD_SCENARIO'):
             with self.assertRaises(SS.OtherEngine) as c: SS.check(m, {'lib_sha': '0123456789abcdef'})
             self.assertEqual(c.exception.lib_sha, '0123456789abcdef'); self.assertNotIsInstance(c.exception, SS.OtherLanguage)
             self.assertTrue(issubclass(SS.OtherLanguage, SS.OtherEngine) and issubclass(SS.OtherEngine, ValueError))          # (the callers that caught ValueError still catch it)
-            ex = SS.OtherLanguage('abcd', 'en'); self.assertEqual((ex.lib_sha, ex.language), ('abcd', 'en'))
+            ex = SS.OtherLanguage('abcd', 'en-us'); self.assertEqual((ex.lib_sha, ex.language), ('abcd', 'en-us'))
 
         def test_apply_refuses_before_writing(self):
             m, writes = fake_engine()
@@ -64,7 +64,7 @@ if __name__ != '__main__' or not os.environ.get('DQ_RELOAD_SCENARIO'):
 
 
     class FakeSnapshots:
-        game_language = 'en'; engine = object()
+        game_language = 'en-us'; engine = object()
         def __init__(self, languages=None): self.applied = []; self.undo_state = 'avant'; self.languages = languages or {}
         def state_path(self, n): return 'etat_%d' % n
         def _complete_savestate(self): return 'courant'
@@ -80,12 +80,12 @@ if __name__ != '__main__' or not os.environ.get('DQ_RELOAD_SCENARIO'):
             return d
 
         def test_state_of_the_other_language(self):
-            j = FakeSnapshots({'aaaa': 'fr'})
+            j = FakeSnapshots({'aaaa': 'fr-fr'})
             with self.assertRaises(SS.OtherLanguage) as c: self.load(j)
-            self.assertEqual(c.exception.language, 'fr'); self.assertEqual(j.applied, []); self.assertEqual(j.undo_state, 'avant')          # (nothing touched)
+            self.assertEqual(c.exception.language, 'fr-fr'); self.assertEqual(j.applied, []); self.assertEqual(j.undo_state, 'avant')          # (nothing touched)
 
         def test_state_of_another_update_or_unknown(self):
-            for languages in ({'aaaa': 'en'}, {}):                                         # the loaded language's fingerprint is not the state's: another update of the APK files, not a language question
+            for languages in ({'aaaa': 'en-us'}, {}):                                         # the loaded language's fingerprint is not the state's: another update of the APK files, not a language question
                 j = FakeSnapshots(languages)
                 with self.assertRaises(SS.OtherEngine) as c: self.load(j)
                 self.assertNotIsInstance(c.exception, SS.OtherLanguage); self.assertEqual(j.applied, [])
@@ -96,21 +96,22 @@ if __name__ != '__main__' or not os.environ.get('DQ_RELOAD_SCENARIO'):
 
         def test_state_language(self):
             t = tempfile.mkdtemp(prefix='lr_apk_'); self.addCleanup(shutil.rmtree, t, True)
-            for lg in ('fr', 'en'): os.makedirs(os.path.join(t, lg)); open(os.path.join(t, lg, 'base.apk'), 'w').close()
-            folders = types.SimpleNamespace(apk_for=lambda lg: os.path.join(t, lg)); prints = {os.path.join(t, 'fr'): '1111', os.path.join(t, 'en'): '2222'}
+            for lg in ('fr-fr', 'en-us'): os.makedirs(os.path.join(t, lg)); open(os.path.join(t, lg, 'base.apk'), 'w').close()
+            folders = types.SimpleNamespace(apk_for=lambda lg: os.path.join(t, lg)); prints = {os.path.join(t, 'fr-fr'): '1111', os.path.join(t, 'en-us'): '2222'}
             with mock.patch.object(SN.CH, 'FOLDERS', folders), mock.patch.object(SN.SS, 'apk_fingerprint', side_effect=lambda f: prints[f]):
                 j = types.SimpleNamespace()
-                self.assertEqual(SN.SnapshotsMixin.state_language(j, '2222'), 'en'); self.assertEqual(SN.SnapshotsMixin.state_language(j, '1111'), 'fr')
+                self.assertEqual(SN.SnapshotsMixin.state_language(j, '2222'), 'en-us'); self.assertEqual(SN.SnapshotsMixin.state_language(j, '1111'), 'fr-fr')
                 self.assertIsNone(SN.SnapshotsMixin.state_language(j, '3333'))
-                os.remove(os.path.join(t, 'en', 'base.apk')); self.assertIsNone(SN.SnapshotsMixin.state_language(j, '2222'))           # (APK files of that language not there)
+                os.remove(os.path.join(t, 'en-us', 'base.apk')); self.assertIsNone(SN.SnapshotsMixin.state_language(j, '2222'))           # (APK files of that language not there)
 
 
     class FakeGame:
-        def __init__(self, game_language='fr', forced=False):
+        def __init__(self, game_language='fr-fr', forced=False):
             self.game_language = game_language; self.args = types.SimpleNamespace(apk_forced=forced, reload_state=None); self.reg = {'language': game_language}
             self.pause = types.SimpleNamespace(opened=False); self.reload_request = None; self.title = True; self.calls = []; self.toasts = []
             self.is_fullscreen = False; self.width, self.height = 1600, 900; self.window_size = (2560, 1440)
         def language_target(self): return GM.Game.language_target(self)
+        def game_version_of(self, lg): return GM.Game.game_version_of(self, lg)
         def on_title(self): return self.title
         def reload_game(self, *a): self.calls.append(('reload',) + a)
         def quit_game(self): self.calls.append('quit')
@@ -121,46 +122,48 @@ if __name__ != '__main__' or not os.environ.get('DQ_RELOAD_SCENARIO'):
 
 
     class Reload(unittest.TestCase):
-        def setUp(self): LG.select_language('fr'); self.addCleanup(LG.select_language, 'fr')
+        def setUp(self): LG.select_language('fr-fr'); self.addCleanup(LG.select_language, 'fr-fr')
 
         def folders(self, only=None):
             """Fake folders: choose_apk falls back on the other language when only `only` has its files."""
             return types.SimpleNamespace(choose_apk=lambda lg: ('apk_' + (only or lg), only or lg))
 
         def test_language_target_and_pending(self):
-            j = FakeGame('fr')
+            j = FakeGame('fr-fr')
             with mock.patch.object(GM.CH, 'FOLDERS', self.folders()):
-                self.assertEqual(GM.Game.language_target(j), 'fr'); self.assertFalse(GM.Game.language_pending(j))
-                LG.select_language('en'); self.assertEqual(GM.Game.language_target(j), 'en'); self.assertTrue(GM.Game.language_pending(j))
-            with mock.patch.object(GM.CH, 'FOLDERS', self.folders(only='fr')): self.assertFalse(GM.Game.language_pending(j))          # (no English APK files: the game stays French, nothing to reload)
-            j = FakeGame('fr', forced=True)
+                self.assertEqual(GM.Game.language_target(j), 'fr-fr'); self.assertFalse(GM.Game.language_pending(j))
+                LG.select_language('en-us'); self.assertEqual(GM.Game.language_target(j), 'en-us'); self.assertTrue(GM.Game.language_pending(j))
+            with mock.patch.object(GM.CH, 'FOLDERS', self.folders(only='fr-fr')): self.assertFalse(GM.Game.language_pending(j))          # (no English APK files: the game stays French, nothing to reload)
+            with mock.patch.object(GM.CH, 'FOLDERS', self.folders(only='fr-fr')):
+                LG.select_language('de-de'); self.assertEqual(GM.Game.game_version_of(j, 'de-de'), 'fr-fr'); self.assertFalse(GM.Game.language_pending(j))          # (German texts, French game: nothing to reload)
+            j = FakeGame('fr-fr', forced=True)
             with mock.patch.object(GM.CH, 'FOLDERS', self.folders()): self.assertFalse(GM.Game.language_pending(j))                    # (--apk forced: tests, special installations)
 
         def test_reload_only_on_the_title_with_the_menu_closed(self):
             with mock.patch.object(GM.CH, 'FOLDERS', self.folders()):
-                j = FakeGame('fr'); self.assertFalse(GM.Game._reload_step(j)); self.assertEqual(j.calls, [])               # same language: nothing
-                LG.select_language('en')
-                j = FakeGame('fr'); j.title = False; self.assertFalse(GM.Game._reload_step(j)); self.assertEqual(j.calls, [])  # away from the title screen: waits
-                j = FakeGame('fr'); j.pause.opened = True; self.assertFalse(GM.Game._reload_step(j)); self.assertEqual(j.calls, [])     # menu open: waits for it to close
-                j = FakeGame('fr'); self.assertTrue(GM.Game._reload_step(j)); self.assertEqual(j.calls, [('reload',)])
-                j = FakeGame('fr'); j.reload_request = {}; self.assertTrue(GM.Game._reload_step(j)); self.assertEqual(j.calls, [])        # already closing
+                j = FakeGame('fr-fr'); self.assertFalse(GM.Game._reload_step(j)); self.assertEqual(j.calls, [])               # same language: nothing
+                LG.select_language('en-us')
+                j = FakeGame('fr-fr'); j.title = False; self.assertFalse(GM.Game._reload_step(j)); self.assertEqual(j.calls, [])  # away from the title screen: waits
+                j = FakeGame('fr-fr'); j.pause.opened = True; self.assertFalse(GM.Game._reload_step(j)); self.assertEqual(j.calls, [])     # menu open: waits for it to close
+                j = FakeGame('fr-fr'); self.assertTrue(GM.Game._reload_step(j)); self.assertEqual(j.calls, [('reload',)])
+                j = FakeGame('fr-fr'); j.reload_request = {}; self.assertTrue(GM.Game._reload_step(j)); self.assertEqual(j.calls, [])        # already closing
 
         def test_reload_game_keeps_size_position_and_state(self):
-            j = FakeGame('fr'); GM.Game.reload_game(j)
-            self.assertEqual(j.reload_request, {'state': None, 'size': (1600, 900), 'location': (40, 60)}); self.assertEqual(j.calls, ['quit']); self.assertEqual(j.reg['language'], 'fr')
-            j = FakeGame('en'); j.is_fullscreen = True; GM.Game.reload_game(j, 'fr', 3)
-            self.assertEqual(j.reload_request, {'state': 3, 'size': (2560, 1440), 'location': None}); self.assertEqual(j.reg['language'], 'fr'); self.assertEqual(LG.current_language(), 'fr')
-            j = FakeGame('fr'); j.get_location = lambda: None; GM.Game.reload_game(j, 'en')                          # (no position known: the system places the window)
-            self.assertIsNone(j.reload_request['location']); self.assertEqual(LG.current_language(), 'en')
+            j = FakeGame('fr-fr'); GM.Game.reload_game(j)
+            self.assertEqual(j.reload_request, {'state': None, 'size': (1600, 900), 'location': (40, 60)}); self.assertEqual(j.calls, ['quit']); self.assertEqual(j.reg['language'], 'fr-fr')
+            j = FakeGame('en-us'); j.is_fullscreen = True; GM.Game.reload_game(j, 'fr-fr', 3)
+            self.assertEqual(j.reload_request, {'state': 3, 'size': (2560, 1440), 'location': None}); self.assertEqual(j.reg['language'], 'fr-fr'); self.assertEqual(LG.current_language(), 'fr-fr')
+            j = FakeGame('fr-fr'); j.get_location = lambda: None; GM.Game.reload_game(j, 'en-us')                          # (no position known: the system places the window)
+            self.assertIsNone(j.reload_request['location']); self.assertEqual(LG.current_language(), 'en-us')
 
         def test_state_loaded_at_the_first_loop(self):
-            j = FakeGame('fr'); j.args.reload_state = 4; GM.Game._load_after_reload(j)
+            j = FakeGame('fr-fr'); j.args.reload_state = 4; GM.Game._load_after_reload(j)
             self.assertEqual(j.calls, [('load', 4)]); self.assertEqual(j.toasts, ['État 4 chargé']); self.assertIsNone(j.args.reload_state)
-            j = FakeGame('fr'); j.args.reload_state = 2; j.load_state = lambda n: (_ for _ in ()).throw(OSError('disque'))
+            j = FakeGame('fr-fr'); j.args.reload_state = 2; j.load_state = lambda n: (_ for _ in ()).throw(OSError('disque'))
             GM.Game._load_after_reload(j); self.assertEqual(j.calls, [('failure', "Chargement de l'état 2")]); self.assertIsNone(j.args.reload_state)
 
         def args(self, **kw):
-            a = types.SimpleNamespace(apk_forced=False, cache_forced=False, apk='apk_fr', cache='cache_fr', game_language='fr', hd=0, msaa=0, full_screen=0, music_volume=0, sfx_volume=0,
+            a = types.SimpleNamespace(apk_forced=False, cache_forced=False, apk='apk_fr', cache='cache_fr', game_language='fr-fr', hd=0, msaa=0, full_screen=0, music_volume=0, sfx_volume=0,
                                       width_px=1280, height_px=720, no_logos=False, logos=True, slot=2, reload_state=None, reload_location=None)
             for k, v in kw.items(): setattr(a, k, v)
             return a
@@ -168,11 +171,11 @@ if __name__ != '__main__' or not os.environ.get('DQ_RELOAD_SCENARIO'):
         def test_args_for_restart(self):
             t = tempfile.mkdtemp(prefix='lr_dossiers_'); self.addCleanup(shutil.rmtree, t, True)
             d = types.SimpleNamespace(choose_apk=lambda lg: (os.path.join(t, 'apk', lg), lg), apk_for=lambda lg: os.path.join(t, 'apk', lg), cache=os.path.join(t, 'cache'),
-                                      cache_for=lambda lg: os.path.join(t, 'cache_en' if lg == 'en' else 'cache'))
+                                      cache_for=lambda lg: os.path.join(t, 'cache_en' if lg == 'en-us' else 'cache'))
             reg = {'sprite_mode': 1, 'msaa': 4, 'window_mode': 0, 'music_volume': 70, 'sfx_volume': 60, 'resolution': [1920, 1080]}
-            LG.select_language('en')
+            LG.select_language('en-us')
             a = M.args_for_restart(self.args(), reg, d, {'state': 3, 'size': (1600, 900), 'location': (10, 20)})
-            self.assertEqual((a.apk, a.game_language, a.cache), (os.path.join(t, 'apk', 'en'), 'en', os.path.join(t, 'cache_en')))
+            self.assertEqual((a.apk, a.game_language, a.cache), (os.path.join(t, 'apk', 'en-us'), 'en-us', os.path.join(t, 'cache_en')))
             self.assertEqual((a.width_px, a.height_px, a.reload_location, a.reload_state), (1600, 900, (10, 20), 3))
             self.assertEqual((a.no_logos, a.logos, a.slot), (True, False, 0))                        # (no entry logos, no direct start on a save)
             self.assertEqual((a.hd, a.msaa, a.full_screen, a.music_volume, a.sfx_volume), (1, 4, 0, 70, 60))   # (the settings as they are now)
@@ -181,7 +184,7 @@ if __name__ != '__main__' or not os.environ.get('DQ_RELOAD_SCENARIO'):
             a = M.args_for_restart(self.args(), reg, d, {})
             self.assertEqual((a.width_px, a.height_px), (1920, 1080))
             a = M.args_for_restart(self.args(apk_forced=True, cache_forced=True, apk='mes_apk', cache='mon_cache'), reg, d, {})
-            self.assertEqual((a.apk, a.cache, a.game_language), ('mes_apk', 'mon_cache', 'en'))   # (--apk / --cache kept)
+            self.assertEqual((a.apk, a.cache, a.game_language), ('mes_apk', 'mon_cache', 'en-us'))   # (--apk / --cache kept)
 
         def test_redrawing_scheduled_once_per_game(self):
             """pyglet.app.run(interval=0) schedules the redrawing of the windows at each call and never removes it; `main.run_loop` removes it when the loop stops, so a game started again
@@ -216,12 +219,12 @@ if __name__ != '__main__' or not os.environ.get('DQ_RELOAD_SCENARIO'):
             except OSError: self.fail('no result: %s' % (p.stdout[-3000:] + p.stderr[-3000:]))
             log = p.stdout[-3000:]
             self.assertEqual(r.get('main'), 0, log)
-            self.assertEqual(r['game1'], 'fr', log); self.assertTrue(r['pending']); self.assertFalse(r['on_title_1'])
+            self.assertEqual(r['game1'], 'fr-fr', log); self.assertTrue(r['pending']); self.assertFalse(r['on_title_1'])
             self.assertEqual(r['games_while_away'], 1, log)                          # (away from the title screen: no reload)
-            self.assertEqual(r['game2'], 'en', log); self.assertTrue(r['on_title_2'], log); self.assertTrue(r['apk2'].endswith('en'), log); self.assertTrue(r['cache2'].endswith(os.path.join('cache', 'dq4', 'en')), log)
+            self.assertEqual(r['game2'], 'en-us', log); self.assertTrue(r['on_title_2'], log); self.assertTrue(r['apk2'].endswith('en-us'), log); self.assertTrue(r['cache2'].endswith(os.path.join('cache', 'dq4', 'en-us')), log)
             self.assertFalse(r['engine1_alive'], log); self.assertEqual(r['size2'], [1280, 720], log)
-            self.assertEqual(r['refused'], 'fr', log)
-            self.assertEqual(r['game3'], 'fr', log); self.assertEqual(r['setting3'], 'fr', log)
+            self.assertEqual(r['refused'], 'fr-fr', log)
+            self.assertEqual(r['game3'], 'fr-fr', log); self.assertEqual(r['setting3'], 'fr-fr', log)
             self.assertEqual([r['map3'], r['part3']], [r['map1'], r['part1']], log); self.assertIsNone(r['reload_state3'], log)
             self.assertEqual(r['games'], 3, log)
             self.assertEqual((r['redraws2'], r['redraws3']), (1, 1), log)                 # (each game started again draws its frames once)
@@ -231,14 +234,14 @@ def scenario(out):
     """The real-engine sequence (separate process: DQ_DATA must be set before dq456_pc is imported). Writes `result.json` in `out`."""
     D = os.path.join(out, 'data')
     for sub in ('settings', 'saves/dq4/savestates', 'cache/dq4/fr', 'cache/dq4/en', 'apk/dq4'): os.makedirs(os.path.join(D, sub))
-    os.symlink(os.path.abspath(os.environ['DQ_APK']), os.path.join(D, 'apk', 'dq4', 'fr')); os.symlink(os.path.abspath(english_apk()), os.path.join(D, 'apk', 'dq4', 'en'))
+    os.symlink(os.path.abspath(os.environ['DQ_APK']), os.path.join(D, 'apk', 'dq4', 'fr-fr')); os.symlink(os.path.abspath(english_apk()), os.path.join(D, 'apk', 'dq4', 'en-us'))
     for f in glob.glob(os.path.join(os.environ['DQ_SAVES'], 'data*.dat')): shutil.copy(f, os.path.join(D, 'saves', 'dq4'))
     caches = [os.environ['DQ_MAP_CACHE']] + [c for c in (os.environ.get('DQ_UI_CACHE'),) if c and os.path.isdir(c)]
     for c in caches:
         for f in os.listdir(c):
-            dst = os.path.join(D, 'cache', 'dq4', 'fr', f)
+            dst = os.path.join(D, 'cache', 'dq4', 'fr-fr', f)
             if not os.path.exists(dst): os.symlink(os.path.abspath(os.path.join(c, f)), dst)          # (read only: the French cache is ready, nothing is written there)
-    with open(os.path.join(D, 'settings', 'settings.json'), 'w') as f: json.dump({'language': 'fr'}, f)
+    with open(os.path.join(D, 'settings', 'settings.json'), 'w') as f: json.dump({'language': 'fr-fr'}, f)
     os.environ['DQ_DATA'] = D
     sys.path.insert(0, ROOT)
     import gc, weakref
@@ -264,7 +267,7 @@ def scenario(out):
         if p == 'fr_wait':
             if g.n_loop < 200: return
             r['game1'] = g.game_language; r['map1'] = g.engine.state.game_map; r['part1'] = g.engine.state.part
-            g.save_state(1); g.reg['language'] = 'en'; LG.select_language('en')
+            g.save_state(1); g.reg['language'] = 'en-us'; LG.select_language('en-us')
             r['pending'] = g.language_pending(); r['on_title_1'] = g.on_title(); say('game 1', r); st.update(phase='fr_hold', k=0)
         elif p == 'fr_hold':
             if k == 90: r['games_while_away'] = len(refs); g.back_to_title(); st.update(phase='fr_title', k=0)
@@ -279,7 +282,7 @@ def scenario(out):
             try: g.load_state(1); r['refused'] = None
             except SS.OtherLanguage as ex: r['refused'] = ex.language
             except Exception as ex: r['refused'] = repr(ex)
-            say('game 2', r); g.reload_game('fr', 1); st.update(phase='fr2', k=0)
+            say('game 2', r); g.reload_game('fr-fr', 1); st.update(phase='fr2', k=0)
         elif p == 'fr2':
             if len(refs) < 3 or k < 60: return
             e = g.engine.state

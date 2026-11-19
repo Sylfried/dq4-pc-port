@@ -285,7 +285,7 @@ class Families(unittest.TestCase):
 
     def test_text_labels(self):
         self.assertEqual((PI.text_label('PAD_LT', 'XB'), PI.text_label('PAD_LT', 'PS'), PI.text_label('PAD_LT', 'NS')), ('LT', 'L2', 'ZL'))
-        self.assertEqual((PI.text_label('PAD_START', 'PS'), PI.text_label('PAD_START', 'NS'), PI.text_label('PAD_UP', 'PS'), PI.text_label('PAD_L3', 'XB'), PI.text_label('PAD_L3', 'NS')), ('Options', '+', 'settings.dpad_up', 'L3', 'LS'))
+        self.assertEqual((PI.text_label('PAD_START', 'PS'), PI.text_label('PAD_START', 'NS'), PI.text_label('PAD_UP', 'PS'), PI.text_label('PAD_L3', 'XB'), PI.text_label('PAD_L3', 'NS')), ('Options', '+', 'keys.dpad_up', 'L3', 'LS'))
         self.assertEqual(PI.text_label('PAD_LB', 'unknown'), 'LB', 'unknown family: Xbox')
 
     def test_every_input_has_a_text(self):
@@ -376,17 +376,17 @@ class StickMouse(unittest.TestCase):
 class CommandsColumn(unittest.TestCase):
     """two cells per line ("Key 1 / 2" or "Bouton 1 / 2"), the row above them chooses the keyboard or the gamepad: each action can have two keys and two gamepad inputs."""
     def test_line_values(self):
-        J, p = TP.menu('controls'); e = TP.by_caption(p, 'settings.action')
-        self.assertEqual(e['v'], ['settings.space', '—', 'PAD_A']); self.assertTrue(e['is_default']())
-        J.reg.bind_pad('A', 'PAD_Y'); e = TP.by_caption(p, 'settings.action'); self.assertEqual(e['v'][2], 'PAD_Y'); self.assertFalse(e['is_default']())
-        e['default'](); e = TP.by_caption(p, 'settings.action'); self.assertEqual(e['v'][2], 'PAD_A'); self.assertTrue(e['is_default']())
+        J, p = TP.menu('controls'); e = TP.by_caption(p, 'controls.action')
+        self.assertEqual(e['v'], ['keys.space', '—', 'PAD_A']); self.assertTrue(e['is_default']())
+        J.reg.bind_pad('A', 'PAD_Y'); e = TP.by_caption(p, 'controls.action'); self.assertEqual(e['v'][2], 'PAD_Y'); self.assertFalse(e['is_default']())
+        e['default'](); e = TP.by_caption(p, 'controls.action'); self.assertEqual(e['v'][2], 'PAD_A'); self.assertTrue(e['is_default']())
 
     def test_reset_reports_the_input_taken_from_another_action(self):
-        J, p = TP.menu('controls'); J.reg.bind_pad('B', 'PAD_A'); TP.by_caption(p, 'settings.action')['default'](); self.assertEqual((J.reg['gamepad']['A'], J.reg['gamepad']['B']), ('PAD_A', None))
-        self.assertTrue(any('settings.cancel_back' in str(a) for m in [p.message] if m for a in m))
+        J, p = TP.menu('controls'); J.reg.bind_pad('B', 'PAD_A'); TP.by_caption(p, 'controls.action')['default'](); self.assertEqual((J.reg['gamepad']['A'], J.reg['gamepad']['B']), ('PAD_A', None))
+        self.assertTrue(any('controls.cancel_back' in str(a) for m in [p.message] if m for a in m))
 
     def test_cursor_stays_in_the_two_cells(self):
-        J, p = TP.menu('controls'); p.selected['controls'] = [i for i, e in enumerate(p._entries()) if e['l'] == 'settings.action'][0]
+        J, p = TP.menu('controls'); p.selected['controls'] = [i for i, e in enumerate(p._entries()) if e['l'] == 'controls.action'][0]
         for _ in range(5): p._change_value(1)
         self.assertEqual(p.selected['col'], 1); p._change_value(-1); self.assertEqual(p.selected['col'], 0); p._change_value(-1); self.assertEqual(p.selected['col'], 0)
 
@@ -395,7 +395,7 @@ class CommandsColumn(unittest.TestCase):
         p._capture(K.SPACE); self.assertEqual(p.capture, ('up', 0, True), 'a keyboard key does not fit a gamepad cell')
         p._capture(PI.SYMBOL['PAD_B']); self.assertIsNone(p.capture); self.assertEqual((J.reg['gamepad']['up'], J.reg['gamepad']['B']), (['PAD_B', 'PAD_UP'], None), 'taken from "Annuler / Retour" (in "Button 1": the stick\'s cell; the d-pad stays in "Button 2")')
         self.assertEqual(J.reg['keys']['up'][0], 'W', 'the keys are untouched')
-        self.assertEqual(p.message[4][1], 'settings.cancel_back')          # (the message names the action that lost the input)
+        self.assertEqual(p.message[4][1], 'controls.cancel_back')          # (the message names the action that lost the input)
 
     def test_two_gamepad_inputs_per_action(self):
         J, p = TP.menu('controls'); r = J.reg
@@ -412,11 +412,11 @@ class CommandsColumn(unittest.TestCase):
     def test_delete_and_escape(self):
         J, p = TP.menu('controls'); p.capture = ('A', 0, True); p._capture(K.DELETE); self.assertIsNone(p.capture); self.assertIsNone(J.reg['gamepad']['A'])
         J.reg.bind_pad('A', 'PAD_A'); p.capture = ('A', 0, True); p._capture(K.ESCAPE); self.assertIsNone(p.capture); self.assertEqual(J.reg['gamepad']['A'], 'PAD_A')
-        p.selected['controls'] = [i for i, e in enumerate(p._entries()) if e['l'] == 'settings.action'][0]; p.selected['col'] = 0; p.controls_pad = True; p._delete_key(); self.assertIsNone(J.reg['gamepad']['A'])
+        p.selected['controls'] = [i for i, e in enumerate(p._entries()) if e['l'] == 'controls.action'][0]; p.selected['col'] = 0; p.controls_pad = True; p._delete_key(); self.assertIsNone(J.reg['gamepad']['A'])
         self.assertEqual(J.reg['keys']['A'][0], 'SPACE', 'the keyboard cell of the same place is untouched')
 
     def test_validate_starts_a_capture_on_the_chosen_cell(self):
-        J, p = TP.menu('controls'); p.selected['controls'] = [i for i, e in enumerate(p._entries()) if e['l'] == 'settings.action'][0]; p.selected['col'] = 1; p._validate(); self.assertEqual(p.capture, ('A', 1, False))
+        J, p = TP.menu('controls'); p.selected['controls'] = [i for i, e in enumerate(p._entries()) if e['l'] == 'controls.action'][0]; p.selected['col'] = 1; p._validate(); self.assertEqual(p.capture, ('A', 1, False))
         p.capture = None; p.switch_device(); p._validate(); self.assertEqual(p.capture, ('A', 1, True))
 
     def test_device_row_and_camera_keys(self):

@@ -13,21 +13,21 @@ BORDER = (-215.0, -215.0, 215.0, 215.0)                 # interface units, origi
 WHITE = (255, 255, 255, 255); HELPTEXT = (170, 170, 170, 255); GRAY = (128, 128, 128, 255); RED = (255, 110, 110, 255); GREEN = (150, 235, 160, 255)
 YELLOW = (255, 235, 4)
 SFX_BUTTON = 300                                          # press sound effect of a menu button (like window.SFX_BUTTON)
-TITLE = N_('menus.saves')
-BUTTONS = (N_('menus.export'), N_('menus.import'))                # (drawn by Pause._label, which translates them)
+TITLE = N_('saves.saves')
+BUTTONS = (N_('saves.export'), N_('saves.import'))                # (drawn by Pause._label, which translates them)
 BTN_Y, BTN_L, BTN_H, BTN_X = -42.0, 180.0, 50.0, 100.0
 BACK_WIDTH, BACK_HEIGHT, BACK_GAP = 62.0, 52.0, 8.0          # (the back button is under the frame, outside)
 I_BACK = 2
-EXPLANATION = (N_('menus.export_saves_adventure_logs_data1'),
-               N_('menus.import_reads_zip_like_data1'),
-               N_('menus.replaced_files_first_copied_before'))           # (translated line by line when drawn: see draw_all)
-FILES = (N_('menus.save_file'), N_('menus.save_files'))             # (singular, plural): English has its own templates
-SAVESTATES = (N_('menus.save_state'), N_('menus.save_states'))
+EXPLANATION = (N_('saves.export_saves_adventure_logs_data1'),
+               N_('saves.import_reads_zip_like_data1'),
+               N_('saves.replaced_files_first_copied_before'))           # (translated line by line when drawn: see draw_all)
+FILES = (N_('saves.save_file'), N_('saves.save_files'))             # (singular, plural): English has its own templates
+SAVESTATES = (N_('saves.save_state'), N_('saves.save_states'))
 
 
 def _pluralize(n, models):
     """"1 fichier de sauvegarde", "3 fichiers de sauvegarde": `models` = (singular template, plural template). The language's plural rule: in French 0 and 1 are singular ("0 etat instantane"), in English only 1 is ("0 save states")."""
-    singular = n < 2 if LG.current_language() == 'fr' else n == 1
+    singular = LG.plural_one(n)
     return tr(models[0] if singular else models[1]) % n
 
 
@@ -44,14 +44,14 @@ class SavesScreen:
     def export_saves(self):
         if self.dialogue is not None: return
         wdir, _ = self._folders()
-        self.action = 'export'; self.dialogue = S.Dialogue('save', tr('menus.export_saves'), wdir if os.path.isdir(wdir) else None, S.default_export_name())
-        self._say([tr('menus.choose_where_save_file_window')], HELPTEXT)
+        self.action = 'export'; self.dialogue = S.Dialogue('save', tr('saves.export_saves'), wdir if os.path.isdir(wdir) else None, S.default_export_name())
+        self._say([tr('saves.choose_where_save_file_window')], HELPTEXT)
 
     def import_saves(self):
         if self.dialogue is not None: return
         wdir, _ = self._folders()
-        self.action = 'import'; self.dialogue = S.Dialogue('open', tr('menus.import_saves'), None)
-        self._say([tr('menus.choose_zip_save_files_window')], HELPTEXT)
+        self.action = 'import'; self.dialogue = S.Dialogue('open', tr('saves.import_saves'), None)
+        self._say([tr('saves.choose_zip_save_files_window')], HELPTEXT)
 
     def _say(self, lines, clr=WHITE):
         self.msg = list(lines); self.msg_clr = clr
@@ -65,32 +65,32 @@ class SavesScreen:
             if action == 'export':
                 if d.unavailable:                                     # no dialog box: a port folder
                     path = os.path.join(wdir, 'export', S.default_export_name())
-                elif not d.result: self._say([tr('menus.export_canceled')], HELPTEXT); return
+                elif not d.result: self._say([tr('saves.export_canceled')], HELPTEXT); return
                 else: path = d.result[0]
                 nj, n_savestates = S.export_saves(wdir, rdir, path)
-                self._say([tr('menus.exported') % (_pluralize(nj, FILES), _pluralize(n_savestates, SAVESTATES)), path], GREEN)
+                self._say([tr('saves.exported') % (_pluralize(nj, FILES), _pluralize(n_savestates, SAVESTATES)), path], GREEN)
             elif action == 'import':
                 if d.unavailable:
                     folder = os.path.join(wdir, 'import'); os.makedirs(folder, exist_ok=True)
                     if not any(os.scandir(folder)):
                         try: os.startfile(folder)                      # (Windows) opens the folder in Explorer
                         except Exception: pass
-                        self._say([tr('menus.no_file_dialog_available_put'), folder, tr('menus.then_click_import_again')], RED); return
+                        self._say([tr('saves.no_file_dialog_available_put'), folder, tr('saves.then_click_import_again')], RED); return
                     sources = [folder]
-                elif not d.result: self._say([tr('menus.import_canceled')], HELPTEXT); return
+                elif not d.result: self._say([tr('saves.import_canceled')], HELPTEXT); return
                 else: sources = d.result
                 nj, n_savestates, copied, pb = S.import_saves(sources, wdir, rdir)
                 self.needs_reload = True; eng = self.J.engine
                 new = eng.reread_savefiles()                         # the lists ("Continuer", "Resume", "Supprimer", "Auto") immediately show the new adventure logs
                 if hasattr(self.J, 'follow_journals'): self.J.follow_journals(prune=False)           # (nothing deleted by the import itself: its logs are kept as they are)
-                lines = [tr('menus.imported') % (_pluralize(nj, FILES), _pluralize(n_savestates, SAVESTATES))]
-                if copied: lines.append(tr('menus.previous_files_copied') % copied)
-                if pb: lines.append(tr('menus.skipped') % '; '.join(pb))
+                lines = [tr('saves.imported') % (_pluralize(nj, FILES), _pluralize(n_savestates, SAVESTATES))]
+                if copied: lines.append(tr('saves.previous_files_copied') % copied)
+                if pb: lines.append(tr('saves.skipped') % '; '.join(pb))
                 if eng.initial_buttons_state(new) != eng.initial_buttons_state(self.J.initial_status):
-                    lines.append(tr('menus.update_grayed_out_buttons_start'))
+                    lines.append(tr('saves.update_grayed_out_buttons_start'))
                 self._say(lines, GREEN)
         except Exception as ex:
-            self._say([tr('menus.failed') % (ex,)], RED)
+            self._say([tr('saves.failed') % (ex,)], RED)
 
     # ---- inputs
     def press(self, i):

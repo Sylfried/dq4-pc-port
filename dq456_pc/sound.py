@@ -221,11 +221,11 @@ class Sound:
         if self.failures >= FAILURES_MAX:
             d = RETRY_DELAYS[min(self.outages, len(RETRY_DELAYS) - 1)]; self.outages += 1
             self.ok = False; self.retry = time.time() + d; self._in_outage = True
-            self._note('sound interrupted, retrying in %d s' % d, alert=tr('misc.sound_interrupted_automatic_retry'))
+            self._note('sound interrupted, retrying in %d s' % d, alert=tr('window.sound_interrupted_automatic_retry'))
 
     def _success(self):
         """A sound has just started: the series of failures is over (and, after a cutoff, the sound is restored)."""
-        if self._in_outage: self._in_outage = False; self._note('sound restored', alert=tr('misc.sound_restored'))
+        if self._in_outage: self._in_outage = False; self._note('sound restored', alert=tr('window.sound_restored'))
         self.failures = 0
 
     def _retry(self):

@@ -1,5 +1,6 @@
-""""Language" setting: `language` key of settings.json (default `system`, unknown value replaced), line of the "Display" page above "Fullscreen" ("System" / "English" / "French",
-"System" / "English" / "French" in English), immediate effect of the choice, and translation by the pages (`Pause._label`). Fake "game" for the Pause menu pages test.
+""""Language" setting: `language` key of settings.json (default `system`, unknown value replaced), line of the "Display" page above "Fullscreen" ("System", then each language in
+its own language: "English", "Français", "Deutsch"...), immediate effect of the choice, and translation by the pages (`Pause._label`, a language's own name in its fonts). Fake "game" for
+the Pause menu pages test.
 
     python3 tests/test_page_language.py"""
 import json, os, sys, tempfile, unittest
@@ -33,14 +34,14 @@ class Key(unittest.TestCase):
         with tempfile.TemporaryDirectory() as t:
             p = os.path.join(t, 'settings.json')
             self.assertEqual(RG.Settings(p)['language'], 'system')
-            for v, att in (('en', 'en'), ('fr', 'fr'), ('system', 'system'), ('xx', 'system'), (7, 'system'), (None, 'system')):
+            for v, att in (('en-us', 'en-us'), ('fr-fr', 'fr-fr'), ('zh-tw', 'zh-tw'), ('en', 'en-us'), ('fr', 'fr-fr'), ('system', 'system'), ('xx', 'system'), (7, 'system'), (None, 'system')):          # ('fr': an earlier version's code)
                 with open(p, 'w', encoding='utf-8') as f: json.dump({'language': v}, f)
                 self.assertEqual(RG.Settings(p)['language'], att, v)
 
     def test_saved(self):
         with tempfile.TemporaryDirectory() as t:
-            p = os.path.join(t, 'settings.json'); r = RG.Settings(p); r['language'] = 'en'; r.store()
-            self.assertEqual(RG.Settings(p)['language'], 'en')
+            p = os.path.join(t, 'settings.json'); r = RG.Settings(p); r['language'] = 'en-us'; r.store()
+            self.assertEqual(RG.Settings(p)['language'], 'en-us')
 
 
 class Page(unittest.TestCase):
@@ -49,24 +50,27 @@ class Page(unittest.TestCase):
 
     def test_line_above_full_screen(self):
         _, p = menu('display'); e = p._entries()
-        self.assertEqual([x['l'] for x in e[:2]], ['settings.language', 'settings.fullscreen']); self.assertEqual(e[0]['t'], 'choice'); self.assertEqual(e[0]['vals'], ['system', 'en', 'fr'])
+        self.assertEqual([x['l'] for x in e[:2]], ['language.title', 'display.fullscreen']); self.assertEqual(e[0]['t'], 'choice'); self.assertEqual(e[0]['vals'], ['system', 'en-us', 'fr-fr', 'de-de', 'es-es', 'it-it', 'ja-jp', 'ko-kr', 'zh-cn', 'zh-tw'])
 
-    def test_names_in_french_and_english(self):
+    def test_names_in_their_own_language(self):
         J, p = menu('display'); e = p._entries()[0]
-        self.assertEqual([p._value_name('settings.language', v) for v in e['vals']], ['settings.system', 'settings.english', 'settings.french'])
+        names = ['English', 'Français', 'Deutsch', 'Español', 'Italiano', '日本語', '한국어', '简体中文', '繁體中文']
+        self.assertEqual([LG.tr(p._value_name('language.title', v)) for v in e['vals']], ['Système'] + names)
         LG.select_language('en')
-        self.assertEqual([LG.tr(p._value_name('settings.language', v)) for v in e['vals']], ['System', 'English', 'French']); self.assertEqual(LG.tr('settings.language'), 'Language')
+        self.assertEqual([LG.tr(p._value_name('language.title', v)) for v in e['vals']], ['System'] + names); self.assertEqual(LG.tr('language.title'), 'Language')
 
     def test_system_follows_the_computer_language(self):
         J, p = menu('display'); self.assertEqual(J.reg['language'], 'system')
-        LG.select_language(J.reg['language'], reader=lambda: 0x0409); self.assertEqual(LG.current_language(), 'en')
-        LG.select_language(J.reg['language'], reader=lambda: 0x080C); self.assertEqual(LG.current_language(), 'fr')
+        LG.select_language(J.reg['language'], reader=lambda: 0x0409); self.assertEqual(LG.current_language(), 'en-us')
+        LG.select_language(J.reg['language'], reader=lambda: 0x080C); self.assertEqual(LG.current_language(), 'fr-fr')
 
     def test_choice_applies_immediately_and_is_kept(self):
         J, p = menu('display'); e = p._entries()[0]
-        e['plus'](); self.assertEqual(J.reg['language'], 'en'); self.assertEqual(LG.current_language(), 'en')           # system -> en
-        e['plus'](); self.assertEqual(J.reg['language'], 'fr'); self.assertEqual(LG.current_language(), 'fr')           # en -> fr
-        e['minus'](); self.assertEqual(LG.current_language(), 'en')
+        e['plus'](); self.assertEqual(J.reg['language'], 'en-us'); self.assertEqual(LG.current_language(), 'en-us')           # system -> en-us
+        e['plus'](); self.assertEqual(J.reg['language'], 'fr-fr'); self.assertEqual(LG.current_language(), 'fr-fr')           # en-us -> fr-fr
+        e['minus'](); self.assertEqual(LG.current_language(), 'en-us')
+        for _ in range(8): e['plus']()
+        self.assertEqual((J.reg['language'], LG.current_language(), LG.tr('language.title')), ('zh-tw', 'zh-tw', '語言'))
 
     def test_default_value_of_the_line(self):
         J, p = menu('display'); e = p._entries()[0]; e['plus'](); self.assertFalse(e['is_default']()); e['default'](); self.assertEqual(J.reg['language'], 'system'); self.assertTrue(e['is_default']())
@@ -74,9 +78,12 @@ class Page(unittest.TestCase):
     def test_pages_translate_what_they_draw(self):
         J, p = menu('display')
         seen = []
-        J._lbl = lambda text, size_value, color=None, fonts=(): seen.append(text) or type('E', (), {'content_width': 10.0})()
-        p._label('settings.language', 12.0); LG.select_language('en'); p._label('settings.language', 12.0); p._label('Text without translation', 12.0)
-        self.assertEqual(seen, ['Langue', 'Language', 'Text without translation'])
+        J._lbl = lambda text, size_value, color=None, fonts=(): seen.append((text, fonts[:1])) or type('E', (), {'content_width': 10.0})()
+        p._pol = ('Game font',)
+        p._label('language.title', 12.0); LG.select_language('en'); p._label('language.title', 12.0); p._label('Text without translation', 12.0)
+        p._label('한국어', 12.0); LG.select_language('ko'); p._label('language.title', 12.0); p._label('Deutsch', 12.0)
+        self.assertEqual(seen, [('Langue', ('Game font',)), ('Language', ('Game font',)), ('Text without translation', ('Game font',)),
+                                ('한국어', ('Malgun Gothic',)), ('언어', ('Malgun Gothic',)), ('Deutsch', ('Game font',))])          # (Korean letters: Korean fonts first)
 
 
 if __name__ == '__main__':

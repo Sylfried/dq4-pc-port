@@ -6,6 +6,7 @@ from pyglet import gl
 from pyglet.graphics.shader import Shader
 from pyglet.graphics.shader import ShaderProgram
 from dq456_pc.battle import battle_effect as EC
+from dq456_pc import language as LG
 from dq456_pc.language import tr, N_
 from dq456_pc.window import inputs as EN
 from dq456_pc.menus import ui_menu as UI
@@ -56,11 +57,11 @@ class MenusMixin:
 
     SAMPLE_HEIGHT = 87                                                  # height (canvas pixels) of a message sample: 3 lines of 28 pixels + 3 of margin (see ui_menu.limit_lines)
 
-    SAMPLE_TEXTS = ((N_('menus.message_preview_sentence'),),                                                      # sample texts of the interface editor (1 to 3 lines, like a dialogue box): one at random at each choice of "Dialogue"; each line is translated when drawn
-              (N_('menus.test_text'), N_('menus.used_adjust_size'), N_('menus.position_dialogue_boxes')),
-              (N_('menus.message_preview'), N_('menus.two_lines')),
-              (N_('menus.here_example_dialogue'), N_('menus.move_resize'), N_('menus.window_as_like')),
-              (N_('menus.test_text_game_messages'), N_('menus.will_displayed_here_size')))
+    SAMPLE_TEXTS = ((N_('interface.message_preview_sentence'),),                                                      # sample texts of the interface editor (1 to 3 lines, like a dialogue box): one at random at each choice of "Dialogue"; each line is translated when drawn
+              (N_('interface.test_text'), N_('interface.used_adjust_size'), N_('interface.position_dialogue_boxes')),
+              (N_('interface.message_preview'), N_('interface.two_lines')),
+              (N_('interface.here_example_dialogue'), N_('interface.move_resize'), N_('interface.window_as_like')),
+              (N_('interface.test_text_game_messages'), N_('interface.will_displayed_here_size')))
 
     def new_sample(self):
         """The editor chooses the sample text shown in the dialogue window: at random among SAMPLE_TEXTS (other than the previous one)."""
@@ -390,7 +391,9 @@ class MenusMixin:
 
     def _lbl(self, text, size_value, color=(255, 255, 255, 255), fonts=()):
         """Text label (cached: the LABEL_CACHE most recently used; creating one costs about a millisecond, and the Esc menu alone needs some 400: emptying the whole cache past 400
-        made every opening of the menu build them all again); `fonts`: families tried before the system fonts (the game font for the Esc menu)."""
+        made every opening of the menu build them all again); `fonts`: families tried before the system fonts (the game font for the Esc menu); none given: the system fonts of the language
+        displayed (language.font_families: the Korean and Chinese letters are not in the default fonts of every system)."""
+        fonts = tuple(fonts) or LG.font_families()
         k = (text, round(size_value, 1), color, fonts)
         l = self.lbl_menu.pop(k, None)
         if l is None: l = pyglet.text.Label(text, font_name=tuple(fonts) + FONTS, font_size=size_value, color=color, anchor_x='left', anchor_y='baseline')
@@ -752,7 +755,7 @@ class MenusMixin:
         gl.glEnable(gl.GL_BLEND); gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
         stats = self.stats and bool(self.spacings)
         if stats:
-            if self.n % 10 == 0 or not self.lbl_stats.text: self.lbl_stats.text = tr('menus.frames_s_engine_steps_s') % (len(self.spacings) / max(1e-6, sum(self.spacings)), (len(self.step_times) - 1) / max(1e-6, self.step_times[-1] - self.step_times[0]) if len(self.step_times) > 2 else 0.0, self.dt_engine * 1000, max(self.spacings) * 1000, self.dt_drawing * 1000)
+            if self.n % 10 == 0 or not self.lbl_stats.text: self.lbl_stats.text = tr('window.frames_s_engine_steps_s') % (len(self.spacings) / max(1e-6, sum(self.spacings)), (len(self.step_times) - 1) / max(1e-6, self.step_times[-1] - self.step_times[0]) if len(self.step_times) > 2 else 0.0, self.dt_engine * 1000, max(self.spacings) * 1000, self.dt_drawing * 1000)
         lines = [self.tag_label, self.lbl_hd] + ([self.lbl_stats] if stats else [])
         side, margin = self._helptext_margin()
         if (side, margin) != self.helptext_key: self.helptext_key = (side, margin); self.helptext_width = 0.0          # (window resized, full screen, other layout: the width is recomputed)

@@ -26,7 +26,7 @@ jobs:
       - name: "Forbidden files (game content, saves, caches)"
         run: |
           patterns='(^|/)(data|saves|cache|captures|il2cpp)/|(^|/)(dump\.cs|script\.json)$|\.(apk|so|unity3d|obb|mpt|dat|dqs|pkl)$'
-          forbidden=$(git ls-files | grep -vE '^data/(apk/dq[0-9]+/(fr|en)|saves/dq[0-9]+|settings|logs)/README\.txt$' | grep -E "$patterns" || true)          # (the empty data folders: their README.txt only)
+          forbidden=$(git ls-files | grep -vE '^data/(apk/dq[0-9]+/[a-z]{2}-[a-z]{2}|saves/dq[0-9]+|settings|logs)/README\.txt$' | grep -E "$patterns" || true)          # (the empty data folders: their README.txt only)
           if [ -n "$forbidden" ]; then
             echo "::error::Forbidden files in the repository (game content, saves, caches):"
             echo "$forbidden"

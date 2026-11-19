@@ -28,7 +28,7 @@ def menu(screen_page, opened=True):
 class TestTitle(unittest.TestCase):
     def test_root_is_called_settings(self):
         src = inspect.getsource(PA.Pause._draw_page)
-        self.assertIn("'root': N_('settings.settings')", src, 'the title of the root page')                    # (N_ marks the text, translated at drawing)
+        self.assertIn("'root': N_('menu.settings')", src, 'the title of the root page')                    # (N_ marks the text, translated at drawing)
         self.assertNotIn("'root': 'Pause'", src); self.assertNotIn("'root': N_('Pause')", src)
 
 

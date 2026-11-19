@@ -63,8 +63,8 @@ def check(name_str, raw, game=None):
     if name_str.lower() == 'data9.dat' or len(raw) != LOGFILE_SIZE: return None
     f = _format(game); plain = decrypt(raw); m0, m1 = struct.unpack_from('<II', plain, f.header); ck, = struct.unpack_from('<I', plain, f.checksum)
     if m0 in (NEW, DELETED): return None                                      # empty bank: valid, no checksum
-    if m0 != MAGIC1 or m1 != f.magic2: return tr('menus.not_game_adventure_log_unknown')
-    if ck != checksum(plain, game): return tr('menus.damaged_file_checksum_mismatch')
+    if m0 != MAGIC1 or m1 != f.magic2: return tr('saves.not_game_adventure_log_unknown')
+    if ck != checksum(plain, game): return tr('saves.damaged_file_checksum_mismatch')
     return None
 
 

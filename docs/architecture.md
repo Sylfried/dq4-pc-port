@@ -49,8 +49,8 @@ Their Unity layer draws a few things DQ IV's did not need, reproduced for DQ V's
 | `dq456_pc/render/` | `postfx.py` (off-screen rendering: antialiasing, supersampling, filters), `screen_blur.py`, `title_sky.py`, screen effects of the game's `Capture` class (`tabi_effect.py`, `lamp_effect.py`, `riremito_effect.py`, DQ VI's well and Pegasus `ido_effect.py`, `pegasus_effect.py`, `capture_effects.py`), the DQ V / VI spotlight and DQ VI's mask (`spotlight.py`) |
 | `dq456_pc/battle/` | `battle_effect.py` (battle start), `battle_speed.py` (battle clock), `battle_history.py`, `full_screen_effects.py` |
 | `dq456_pc/debug/` | debug mode (`--debug`, `launch_debug.bat`): `service.py` (time control and overlay, commands applied between two engine steps), `recorder.py` (bug reports, F8, and their replay), `panel.py` / `panel.html` (web panel on 127.0.0.1, F9), `catalog.py` (maps, story steps, switches, fights) and `story_steps_fr.py` (French names of the story steps); see [debug.md](debug.md) |
-| `dq456_pc/texts/` | the port's own texts: `fr/` and `en/`, one file per domain (`settings`, `menus`, `window`, `misc`, `debug`), each `TEXTS = {key: text}` |
-| `dq456_pc/` | `main.py` (command line), `games.py` (one profile per game), `paths.py` (every folder and file of `data`, for the running game), `sound.py` (music and sound effects), `language.py` (`tr`, `N_`) |
+| `dq456_pc/languages/` | the port's own texts: one JSON file per language code (`en-us.json`, `fr-fr.json`...), one entry per text: key, English reference, text displayed |
+| `dq456_pc/` | `main.py` (command line), `games.py` (one profile per game), `paths.py` (every folder and file of `data`, for the running game), `sound.py` (music and sound effects), `language.py` (`tr`, `N_`, the languages, their names and fonts) |
 | `tools/` | `launch_game.bat` (the launcher shared by `launch_dq4.bat`, `launch_dq5.bat`, `launch_dq6.bat`), `run_tests.sh` / `run_one.py` (test runner), `dump_il2cpp.*` (structure of the game's C# code, from your APK), `generate_ui.bat` and `ui_il2cpp/` (runs the game's window construction code under emulation to record the original layout), `make_key_pictures.py` and `make_stick_pictures.py` (key and left stick pictures, from Kenney's) |
 | `tests/` | one `test_*.py` per subject; the ones that need the game read `DQ_APK`, `DQ_APK_EN`, `DQ_SAVES`, `DQ_MAP_CACHE` and are skipped without them |
 
@@ -59,9 +59,9 @@ Their Unity layer draws a few things DQ IV's did not need, reproduced for DQ V's
 Everything that belongs to the player stays in `data` (or the folder named by `DQ_DATA`), never in the repository:
 
 ```
-data\apk\dq4\fr\  dq4\en\        the APK files, one folder per game language (dq5\, dq6\: the other games)
+data\apk\dq4\en-us\  fr-fr\ ... the APK files, one folder per language code (dq5\, dq6\: the other games)
 data\saves\dq4\                 data1.dat ... data5.dat, data9.dat (the game's adventure logs), savestates\ and rules\ (dq5\, dq6\: the other games)
-data\cache\dq4\fr\  dq4\en\     what the port computes from the APKs of each game and language (maps, sprites, sounds, window layout): safe to delete
+data\cache\dq4\fr-fr\ ...      what the port computes from the APKs of each game and language (maps, sprites, sounds, window layout): safe to delete
 data\settings\                  settings.json (shared by the games) and the history
 data\logs\                      window_errors.log
 ```
@@ -70,7 +70,7 @@ Files left by older versions of the port (French folder names, older layouts) ar
 
 ## Texts and languages
 
-The game's own texts come from the APK of the chosen language and are never touched. The port's texts are keys: the code calls `tr('menus.export_saves')`, and module constants mark their keys with `N_()` so that they are translated when drawn (the language can change while the game runs). `tests/test_language.py` checks that both languages have the same keys, the same placeholders, no French in the English texts, and that every key used by the code exists and every key is used.
+The game's own texts come from the APK of the chosen language and are never touched; a language without APK files of its own runs the English ones (otherwise the French ones), its port texts staying in that language. The port's texts are keys: the code calls `tr('saves.export_saves')`, and module constants mark their keys with `N_()` so that they are translated when drawn (the language can change while the game runs); a key missing in a language, or a language file that cannot be read, shows the English text (the only fallback; the game's APK files fall back on English, then French). The texts are one JSON file per language, `dq456_pc/languages/<code>.json` (`language.read_file`): its own name, its flag, then one entry per text with its key, the English text (`en`, the reference) and the text displayed (`text`; empty, or not fitting the English one: English is shown); any `<code>.json` there is a language. The language screen adds one (`language.create_language`: every English text, empty translations) and reads a file again after it is edited (`language.check_language`); its add-language screens are in English only (keys `new_language.*`, only in `en-us.json`). Each language is drawn with fonts that have its letters (`language.font_families`: the game font for the Latin and Japanese letters, the system fonts for Korean and Chinese); help texts are wrapped between characters in Japanese and Chinese (`language.wrap`). `tests/test_language.py` checks that every language has the keys of the English file in its order and its English texts in `en`, the same placeholders, edge spaces and line breaks, no French in the English texts, and that every key used by the code exists and every key is used.
 
 ## Tests
 

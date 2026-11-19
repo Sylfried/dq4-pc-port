@@ -9,12 +9,12 @@ PAD_BASE = 0x7F000000          # pseudo key codes start here (no pyglet key code
 
 # (name, French label shown in the Controls menu: data, translated when drawn). Names follow the Xbox layout; other controllers are mapped by position (A = bottom button).
 PAD_INPUTS = (
-    ('PAD_UP', N_('settings.dpad_up')), ('PAD_DOWN', N_('settings.dpad_down')), ('PAD_LEFT', N_('settings.dpad_left')), ('PAD_RIGHT', N_('settings.dpad_right')),         # d-pad
+    ('PAD_UP', N_('keys.dpad_up')), ('PAD_DOWN', N_('keys.dpad_down')), ('PAD_LEFT', N_('keys.dpad_left')), ('PAD_RIGHT', N_('keys.dpad_right')),         # d-pad
     ('PAD_RS_UP', 'RS ↑'), ('PAD_RS_DOWN', 'RS ↓'), ('PAD_RS_LEFT', 'RS ←'), ('PAD_RS_RIGHT', 'RS →'),          # (RS = right stick; not translated, like the other names printed on a controller)
     ('PAD_A', 'A'), ('PAD_B', 'B'), ('PAD_X', 'X'), ('PAD_Y', 'Y'),
     ('PAD_LB', 'LB'), ('PAD_RB', 'RB'), ('PAD_LT', 'LT'), ('PAD_RT', 'RT'),
     ('PAD_BACK', 'Select'), ('PAD_START', 'Start'), ('PAD_L3', 'L3'), ('PAD_R3', 'R3'),
-    ('PAD_TOUCH', N_('settings.touch_pad')),          # PlayStation touch pad click (DirectInput gives the click only, not the finger's position)
+    ('PAD_TOUCH', N_('controls.touch_pad')),          # PlayStation touch pad click (DirectInput gives the click only, not the finger's position)
     ('PAD_LS_UP', 'LS ↑'), ('PAD_LS_DOWN', 'LS ↓'), ('PAD_LS_LEFT', 'LS ←'), ('PAD_LS_RIGHT', 'LS →'),          # left stick (its own inputs since the d-pad and the stick have a cell each; added at the end: the codes of the others do not move)
 )
 DPAD_OF_STICK = {'PAD_LS_UP': 'PAD_UP', 'PAD_LS_DOWN': 'PAD_DOWN', 'PAD_LS_LEFT': 'PAD_LEFT', 'PAD_LS_RIGHT': 'PAD_RIGHT'}
@@ -57,8 +57,8 @@ def inputs(value):
 # The inputs are drawn with their picture (menus/prompts.py); this text is used where there is none. The inputs are positional (A = bottom button of any controller), so a Nintendo controller shows its "B" for PAD_A.
 FACE = ('PAD_A', 'PAD_B', 'PAD_X', 'PAD_Y')
 FAMILY_TEXT = {
-    'XB': {'PAD_LB': 'LB', 'PAD_RB': 'RB', 'PAD_LT': 'LT', 'PAD_RT': 'RT', 'PAD_BACK': N_('settings.view'), 'PAD_START': 'Menu'},
-    'PS': {'PAD_LB': 'L1', 'PAD_RB': 'R1', 'PAD_LT': 'L2', 'PAD_RT': 'R2', 'PAD_BACK': 'Create', 'PAD_START': 'Options', 'PAD_TOUCH': N_('settings.touch_pad')},
+    'XB': {'PAD_LB': 'LB', 'PAD_RB': 'RB', 'PAD_LT': 'LT', 'PAD_RT': 'RT', 'PAD_BACK': N_('controls.view'), 'PAD_START': 'Menu'},
+    'PS': {'PAD_LB': 'L1', 'PAD_RB': 'R1', 'PAD_LT': 'L2', 'PAD_RT': 'R2', 'PAD_BACK': 'Create', 'PAD_START': 'Options', 'PAD_TOUCH': N_('controls.touch_pad')},
     'NS': {'PAD_LB': 'L', 'PAD_RB': 'R', 'PAD_LT': 'ZL', 'PAD_RT': 'ZR', 'PAD_BACK': '−', 'PAD_START': '+', 'PAD_L3': 'LS', 'PAD_R3': 'RS'},
 }
 

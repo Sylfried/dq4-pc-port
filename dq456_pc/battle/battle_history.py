@@ -40,7 +40,7 @@ OFF_NUMBER, OFF_GROUP = 0x4f8, 0x4fc  # in a MonsterStatus: monster number (-1 =
 OFF_XP, OFF_GOLD = 0x2f8, 0x2fc         # in g_Party: experience and gold of the current battle (awarded on victory)
 OFF_DEFEAT = 0x509                    # g_BattleResult + 0x509: the party lost (ExitTask::terminate tests it before calling endBattle)
 UNKNOWN = 0xffffffff
-UNKNOWN_NAME = N_('menus.monster')                      # (fallback name when the engine does not answer: translated at capture time, see BattleSensor)
+UNKNOWN_NAME = N_('history.monster')                      # (fallback name when the engine does not answer: translated at capture time, see BattleSensor)
 OUTCOMES = ('victory', 'escape', 'defeat')
 MAX_FRAMES_WITHOUT_BATTLE = 20            # consecutive frames outside the "battle" part before abandoning tracking (the normal end always arrives before the part change)
 MAX_JUMP_FRAMES = 8                    # maximum gap in Engine.frames between two do_update calls without declaring a discontinuity (savestate loaded...)
@@ -85,7 +85,7 @@ def layout():
     """The places of the running game's engine (LAYOUTS)."""
     from dq456_pc import games as GM
     return LAYOUTS.get(GM.profile().key, LAYOUTS['dq4'])
-UNKNOWN_ITEM_NAME = N_('menus.item')
+UNKNOWN_ITEM_NAME = N_('history.item')
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------- pure part (no emulator)

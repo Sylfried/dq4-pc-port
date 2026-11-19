@@ -105,7 +105,7 @@ class TestBattles(unittest.TestCase):
         self.assertEqual(HI.battle_lines(e), ['Gluant ×3', 'Chauve-souris', 'Golem ×2 : 1 vaincu, 1 resté', 'Or : 21\u00a0\u00a0\u00a0\u00a0\u00a0Expérience : 38'])
         e2 = HI.battle_element(2, battle(outcome='escape', enemies=[{'name': 'Golem', 'total': 4, 'defeated': 2}]))
         self.assertEqual(HI.battle_lines(e2), ['Golem ×4 : 2 vaincus, 2 restés'])                              # no gold or experience without victory
-        self.assertEqual(HI.battle_lines(HI.battle_element(3, battle(enemies=[]))), [LG.tr('menus.unknown_enemies'), 'Or : 21\u00a0\u00a0\u00a0\u00a0\u00a0Expérience : 38'])
+        self.assertEqual(HI.battle_lines(HI.battle_element(3, battle(enemies=[]))), [LG.tr('history.unknown_enemies'), 'Or : 21\u00a0\u00a0\u00a0\u00a0\u00a0Expérience : 38'])
 
     def test_battle_element(self):
         e = HI.battle_element(7, battle(t=1234)); self.assertEqual((e.n, e.type, e.t, e.outcome, e.gold, e.xp, e.fav), (7, HI.BATTLE_TYPE, 1234, 'victory', 21, 38, None))
@@ -553,7 +553,7 @@ class TestBox(unittest.TestCase):
         vt = ml.message['types'][0]['frame_mesh']['vtx']; self.assertEqual(max(x[1] for x in vt) - min(x[1] for x in vt), 126.0)                    # (the original layout was not modified)
 
     def test_battle_without_known_enemy(self):
-        B = UH.Box(); e = self.battle([], 'defeat'); self.assertEqual(UH.rows_of(e, self.mes, B.text_width()), [LG.tr('menus.unknown_enemies')])
+        B = UH.Box(); e = self.battle([], 'defeat'); self.assertEqual(UH.rows_of(e, self.mes, B.text_width()), [LG.tr('history.unknown_enemies')])
 
     def test_a_single_column_the_whole_list(self):
         """The whole list is laid out at once, from the oldest (at the top) to the most recent (at the bottom), with no gap or overlap, WHATEVER the window height: no more pages, no more "last visible item"."""
@@ -767,7 +767,7 @@ class TestView(unittest.TestCase):
     def test_tabs(self):
         K = pyglet.window.key; v = make_view(n=6, battles=3)
         self.assertEqual((len(v.elements), v.elements[0].type), (6, 'd'))
-        self.assertEqual([n for n, _ in UH.TABS], ['settings.dialogue', 'menus.battles'])                                   # no more "Favoris" tab: it is a checkbox
+        self.assertEqual([n for n, _ in UH.TABS], ['interface.dialogue', 'history.battles'])                                   # no more "Favoris" tab: it is a checkbox
         v.key_press(K.RIGHT); self.assertEqual((v.tab, len(v.elements), v.elements[0].type, v.selected), (UH.O_BATTLES, 3, 'c', 2))
         v.key_press(K.RIGHT); self.assertEqual((v.tab, len(v.elements)), (UH.O_DIALOGUES, 6))                    # back to the first
         v.key_press(K.LEFT); self.assertEqual(v.tab, UH.O_BATTLES)
@@ -811,7 +811,7 @@ class TestView(unittest.TestCase):
         M = pyglet.window.mouse; v = make_view(n=4, battles=2); h = v.J.history; v.P.popup = None
         h.toggle_favorite(h.dialogues[1]); v.clear_zone = (10, 10, 50, 30); v.click(20, 20, M.LEFT)
         pp = v.P.popup; self.assertEqual((pp['choice'], len(pp['buttons']), 'yes' in pp, len(h.dialogues), len(h.battles)), (UH.O_DIALOGUES, 3, False, 4, 2))      # nothing deleted before the choice
-        self.assertEqual([c for c, _ in pp['buttons']], ['menus.clear_dialogues', 'menus.clear_battles', 'menus.clear_all'])
+        self.assertEqual([c for c, _ in pp['buttons']], ['history.clear_dialogues', 'history.clear_battles', 'history.clear_all'])
         pp['buttons'][1][1](); self.assertEqual((len(h.dialogues), h.battles), (4, []))
         pp['buttons'][0][1](); self.assertEqual(([e.text for e in h.dialogues], len(h.favorites)), (['m1'], 1))
 
@@ -887,7 +887,7 @@ class TestView(unittest.TestCase):
 
     def test_empty_with_the_filter(self):
         v = make_view(n=2); self.assertIn('Aucun dialogue', LG.tr(UH.EMPTY_MESSAGES['dialogues'])); v.toggle_filter()
-        self.assertEqual(v.elements, []); self.assertIn(LG.tr('menus.favorites_only'), LG.tr(UH.EMPTY_FAVORITES['dialogues'])); self.assertIn(LG.tr('menus.favorites_only'), LG.tr(UH.EMPTY_FAVORITES['battles']))
+        self.assertEqual(v.elements, []); self.assertIn(LG.tr('history.favorites_only'), LG.tr(UH.EMPTY_FAVORITES['dialogues'])); self.assertIn(LG.tr('history.favorites_only'), LG.tr(UH.EMPTY_FAVORITES['battles']))
         self.assertEqual(set(UH.EMPTY_FAVORITES), {c for _, c in UH.TABS}); self.assertEqual(set(UH.EMPTY_MESSAGES), {c for _, c in UH.TABS})
 
     def test_reload_on_each_opening(self):
@@ -1058,7 +1058,7 @@ class TestPause(unittest.TestCase):
     def test_view_put_back_after_a_replay(self):
         """a battle replay closes the menu for a moment (the history is not left: no favorite removed) and opens it again exactly as it was: pages, lines, tab, element, scroll."""
         J, p = self.game(); left = []; p.hist.leave = lambda: left.append(1)
-        p.open_menu(); p.selected['root'] = 1; next(x for x in p._entries() if x['l'] == 'settings.history')['ok'](); p.hist.change_tab(UH.O_BATTLES); p.hist.pos = 37.0
+        p.open_menu(); p.selected['root'] = 1; next(x for x in p._entries() if x['l'] == 'menu.history')['ok'](); p.hist.change_tab(UH.O_BATTLES); p.hist.pos = 37.0
         view = p.view_state(); p.shutdown(leaving=False)
         self.assertFalse(p.opened); self.assertEqual(left, [])
         p.restore_view(view)
@@ -1073,7 +1073,7 @@ class TestPause(unittest.TestCase):
 
     def test_menu_entry(self):
         K = pyglet.window.key; J, p = self.game()
-        p.open_menu(); e = next(x for x in p._entries() if x['l'] == 'settings.history')
+        p.open_menu(); e = next(x for x in p._entries() if x['l'] == 'menu.history')
         e['ok'](); self.assertEqual(p.screen_page, 'history'); self.assertEqual(len(p.hist.elements), 1)
         p.key_press(K.BACKSPACE, 0); self.assertEqual(p.screen_page, 'root'); self.assertTrue(p.opened)                  # back to the Pause menu, not to the game
         self.assertEqual(p._entries_history(), [])

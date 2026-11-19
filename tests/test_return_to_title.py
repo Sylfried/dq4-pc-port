@@ -25,7 +25,7 @@ APK = os.environ.get('DQ_APK'); SAVES = os.environ.get('DQ_SAVES'); REST = sys.a
 if __name__ == '__main__':
     _ap = argparse.ArgumentParser(); _ap.add_argument('--apk'); _ap.add_argument('--saves'); _a, REST = _ap.parse_known_args()
     APK = _a.apk or APK; SAVES = _a.saves or SAVES
-CAPTION = 'settings.return_title_screen'
+CAPTION = 'menu.return_title_screen'
 PAD_DOWN = 1; PAD_A = 0x10                                    # game gamepad sent to the menus: down 1, up 2, right 4, left 8, A 16, B 32 (Game._menu_input); the engine arranges Yes / No in one column (1 x 2 grid): the viewer's "right" goes out as "down"
 
 
@@ -65,7 +65,7 @@ class MenuLine(unittest.TestCase):
     def test_line_is_just_above_quit(self):
         """Last line of the root menu before "Quit the game", which is just below it."""
         J, p = menu(); libs = [e['l'] for e in p._entries() if e['t'] != 'sep']
-        self.assertEqual(libs[-2:], [CAPTION, 'settings.quit_game'])
+        self.assertEqual(libs[-2:], [CAPTION, 'menu.quit_game'])
 
     def test_no_more_pause_menu_confirmation_page(self):
         self.assertFalse(hasattr(PA.Pause, '_e_titre'))                                                  # the question is the game's (original box), not a menu page
@@ -90,9 +90,9 @@ class MenuLine(unittest.TestCase):
 
     def test_quit_through_the_game_box(self):
         """"Quit the game": where the game's box answers, the menu closes and the window asks the game's question (ask_quit: b0834000.mpt#96); elsewhere, the menu's Yes / No page."""
-        J, p = menu(possible=True); e = next(x for x in p._entries() if x['l'] == 'settings.quit_game'); e['ok']()
+        J, p = menu(possible=True); e = next(x for x in p._entries() if x['l'] == 'menu.quit_game'); e['ok']()
         self.assertFalse(p.opened); self.assertEqual([a for a in J.calls if a in ('quitter', 'quit')], ['quitter'])
-        J, p = menu(possible=False); e = next(x for x in p._entries() if x['l'] == 'settings.quit_game'); e['ok']()
+        J, p = menu(possible=False); e = next(x for x in p._entries() if x['l'] == 'menu.quit_game'); e['ok']()
         self.assertTrue(p.opened); self.assertEqual(p.screen_page, 'quit'); self.assertNotIn('quitter', J.calls)
         from dq456_pc.window import game as F
         self.assertIn('quit_app=True', inspect.getsource(F.Game.ask_quit)); self.assertIn('quit_requested', inspect.getsource(F.Game._step))

@@ -267,7 +267,7 @@ class TestTownCamera(unittest.TestCase):
         self.assertEqual(RG.DEFAULT_KEYS['cam_left'], ['LEFT', None]); self.assertEqual(RG.DEFAULT_KEYS['cam_right'], ['RIGHT', None])
         self.assertIs(RG.DEFAULT['camera_invert_lr'], False); self.assertNotIn('camera_invert_lr', RG.OBSOLETE_KEYS)
         self.assertNotIn('vitesse_camera', RG.DEFAULT); self.assertNotIn('vitesse_camera', RG.BOUNDS); self.assertIn('vitesse_camera', RG.OBSOLETE_KEYS)
-        self.assertEqual(dict(RG.ACTIONS)['cam_left'], 'settings.camera_left'); self.assertEqual(dict(RG.ACTIONS)['cam_right'], 'settings.camera_right')
+        self.assertEqual(dict(RG.ACTIONS)['cam_left'], 'controls.camera_left'); self.assertEqual(dict(RG.ACTIONS)['cam_right'], 'controls.camera_right')
         self.assertAlmostEqual(ENGINE.CAM_STEP, 360.0 * 0x200 / 65536.0)          # the reference speed (x1) is the game's: one notch of 2.8125 degrees per step, 84.4 degrees per second
 
     def test_old_settings_file_readable(self):

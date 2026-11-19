@@ -26,7 +26,7 @@ class Default(unittest.TestCase):
         self.assertEqual(RG.DEFAULT_KEYS['menu'], ['RETURN', 'TAB']); self.assertEqual(RG.Settings(None)['keys']['menu'], ['RETURN', 'TAB'])
         r = RG.Settings(None)
         self.assertEqual(r.action_of(K.TAB), 'menu'); self.assertEqual(r.codes('menu')[:2], (K.RETURN, K.TAB))          # (action_of(K.RETURN) is None: pyglet names 0xff0d "ENTER"; the game reads keys through `codes`, see Game._held)
-        self.assertEqual(dict(RG.ACTIONS)['menu'], 'settings.menu')
+        self.assertEqual(dict(RG.ACTIONS)['menu'], 'controls.menu')
 
     def test_tab_belongs_to_no_other_action(self):
         for a, ts in RG.DEFAULT_KEYS.items():
@@ -81,18 +81,18 @@ class Migration(unittest.TestCase):
 
 class CommandsPage(unittest.TestCase):
     def test_default_line_and_button(self):
-        J, p = TP.menu('controls'); e = TP.by_caption(p, 'settings.menu')
-        self.assertEqual((e['t'], e['act'], e['v']), ('key', 'menu', ['settings.enter', 'Tab', 'PAD_Y'])); self.assertTrue(e['is_default']())
+        J, p = TP.menu('controls'); e = TP.by_caption(p, 'controls.menu')
+        self.assertEqual((e['t'], e['act'], e['v']), ('key', 'menu', ['keys.enter', 'Tab', 'PAD_Y'])); self.assertTrue(e['is_default']())
         J.reg.bind('menu', 1, K.F2); J.reg.bind('menu', 0, K.E)
-        e = TP.by_caption(p, 'settings.menu'); self.assertEqual(e['v'], ['E', 'F2', 'PAD_Y']); self.assertFalse(e['is_default']())
-        e['default'](); e = TP.by_caption(p, 'settings.menu')                                                          # ↺: both keys come back
-        self.assertEqual((e['v'], J.reg['keys']['menu']), (['settings.enter', 'Tab', 'PAD_Y'], ['RETURN', 'TAB'])); self.assertTrue(e['is_default']())
+        e = TP.by_caption(p, 'controls.menu'); self.assertEqual(e['v'], ['E', 'F2', 'PAD_Y']); self.assertFalse(e['is_default']())
+        e['default'](); e = TP.by_caption(p, 'controls.menu')                                                          # ↺: both keys come back
+        self.assertEqual((e['v'], J.reg['keys']['menu']), (['keys.enter', 'Tab', 'PAD_Y'], ['RETURN', 'TAB'])); self.assertTrue(e['is_default']())
 
     def test_default_takes_tab_from_other_action(self):
         J, p = TP.menu('controls'); J.reg.bind('info', 0, K.TAB)                                            # Tab given to "Info": "Menu" only has Enter left
-        self.assertEqual(J.reg['keys']['menu'], ['RETURN', None]); e = TP.by_caption(p, 'settings.menu'); self.assertFalse(e['is_default']())
+        self.assertEqual(J.reg['keys']['menu'], ['RETURN', None]); e = TP.by_caption(p, 'controls.menu'); self.assertFalse(e['is_default']())
         e['default'](); self.assertEqual(J.reg['keys']['menu'], ['RETURN', 'TAB']); self.assertEqual(J.reg['keys']['info'], [None, None])      # ↺ takes Tab back (and says so: message)
-        self.assertIn('settings.screen_info', p.message[4])
+        self.assertIn('controls.screen_info', p.message[4])
         J.reg.bind('menu', 0, K.F3); J.reg.default_keys(); self.assertEqual(J.reg['keys']['menu'], ['RETURN', 'TAB'])         # "Restore default keys" too
 
     def test_tab_key_capture(self):

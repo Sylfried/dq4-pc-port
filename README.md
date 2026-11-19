@@ -8,7 +8,7 @@ This project plays the **Android versions of Dragon Quest IV, V and VI** on a Wi
 
 - **16:9 at any window size**, windowed or full screen, with the game's original windows and menus laid out as in the game. Display options: sprite filter (EPX x8 or pixel perfect), antialiasing, supersampling, sharpness, brightness, contrast, colour filter, vignette and edge blur.
 - **Mouse, keyboard and gamepad** (Xbox, PlayStation and Switch layouts): the mouse replaces touch input, keys follow your keyboard layout (AZERTY or QWERTY) and can be rebound; optional on-screen buttons and D-pad as on mobile, placed with a built-in interface editor.
-- **English or French**, for the game (each language reads its own APK files) and for the port's own menus.
+- **Nine languages for the port's own menus**: English, French, German, Spanish, Italian, Japanese, Korean, simplified and traditional Chinese, each chosen by its flag on the start menu or in the settings (by default, the computer's language), and **more added by the players** from the language screen (see [Languages](#languages)). The game itself speaks the language of the APK files it reads: each language has its own APK folder; without APK files there, the English ones are used.
 - **Sound**: the game's music and sound effects, read from the APK and played by the port, with a general volume and one per category (music, jingles and fanfares, sound effects, interface sounds).
 - **Saves**: the game's own adventure logs (import and export of the files from your phone) and **savestates** at any moment.
 - **History** of dialogues and battles, with favourites; a past battle can be **replayed** by the engine.
@@ -19,7 +19,7 @@ This project plays the **Android versions of Dragon Quest IV, V and VI** on a Wi
 
 Not available yet; game-changing additions will be options, off by default.
 
-- **More languages**: APK folders for German, Spanish, Italian, Japanese, Korean and Chinese, a language added by choosing its flag, each language named in its own language, and the port's own texts translated through a spreadsheet it exports and reads back (one column per language).
+- **The game's own texts in Japanese, Korean and Chinese**: the published APK files already hold them; the port does not show them yet (the game runs in English).
 - **Interface**: new default layouts for the larger screen, a taskbar icon per game, and an optional framed battle view over a blurred background.
 - **Tactics**: the hero's own tactics, and in DQ IV the formation and tactics buttons in battle from the first chapters.
 - **Extra modes**: monster rush (harder and harder battles, zone after zone) and boss rush (at the casino, each boss in its original scenery), with rewards such as casino tokens and equipment.
@@ -42,7 +42,7 @@ More details: [`docs/architecture.md`](docs/architecture.md).
 - Windows 10 or 11, and **Python 3.12, 3.13 or 3.14** from [python.org](https://www.python.org/downloads/) (tick "Add python.exe to PATH"). The launcher creates its own environment and installs the modules listed in `requirements.txt`.
 - **The game's APK files**, taken from your own Android installation of *Dragon Quest IV*, *V* or *VI*: `base.apk`, `split_config.arm64_v8a.apk` and `split_UnityDataAssetPack.apk` (for example with `adb shell pm path <package>` then `adb pull`).
   - English: the game's own APKs.
-  - French: the same three APKs patched with a French translation (a separate project, not included here).
+  - Another language: the same three APKs patched in that language by the translation project (a separate project, not included here: see [Languages](#languages)).
 - Optionally, your saves from the phone (`data1.dat` … `data5.dat`, `data9.dat`).
 
 ## Installation
@@ -51,11 +51,12 @@ More details: [`docs/architecture.md`](docs/architecture.md).
 2. Put your files in the `data` folder at the root of the project (its folders are already there, each with a short `README.txt`):
 
    ```
-   data\apk\dq4\en\  base.apk, split_config.arm64_v8a.apk, split_UnityDataAssetPack.apk   (English)
-   data\apk\dq4\fr\  the same three files, patched in French                               (optional)
-   data\saves\dq4\   data1.dat ... data5.dat, data9.dat copied from your phone             (optional)
+   data\apk\dq4\en-us\  base.apk, split_config.arm64_v8a.apk, split_UnityDataAssetPack.apk   (English)
+   data\apk\dq4\fr-fr\  the same three files, patched in French                               (optional)
+   data\apk\dq4\<code>\ the same three files for another language (de-de, es-es, ja-jp...)    (optional)
+   data\saves\dq4\      data1.dat ... data5.dat, data9.dat copied from your phone             (optional)
    ```
-   Same layout for the other games, in `dq5\` and `dq6\` instead of `dq4\`. The game uses the folder of the language chosen in the settings (read at startup). To keep your data elsewhere, set the `DQ_DATA` environment variable to that folder.
+   Same layout for the other games, in `dq5\` and `dq6\` instead of `dq4\`. The game uses the folder of the language chosen in the settings (read at startup); a folder without APK files falls back on `en-us`, then `fr-fr`. Folders of earlier versions (`fr`, `en`) are renamed at the first launch. To keep your data elsewhere, set the `DQ_DATA` environment variable to that folder.
 3. Double-click **`launch_dq4.bat`**, **`launch_dq5.bat`** or **`launch_dq6.bat`**. The first launch creates the Python environment and installs the modules (a few minutes). The first launch of each game then reads the game's original window layout from your APK (a few minutes, once only: it downloads the free tool [Il2CppDumper](https://github.com/Perfare/Il2CppDumper) the first time, so an internet connection is needed once; without it, that launch shows plain menus and the next one tries again), and the game opens; the port prepares its caches (maps, sprites, sounds) in `data\cache\<game>` in the background. The three games share the Python environment and the settings; each one has its own saves and cache.
 
 Everything the port writes (saves, savestates, settings, caches, logs) stays in `data`, whose content is ignored by git (only the `README.txt` of its folders is in the repository).
@@ -82,6 +83,50 @@ Savestates: a special key (Ctrl by default) + a digit loads a savestate; the set
 
 Bug reports are welcome in the issues (please never attach game files).
 
+## Languages
+
+Every language has a **code**, its language and its country in lower case (`en-us`, `fr-fr`, `pt-br`...), used for two folders that go together:
+
+- `dq456_pc\languages\<code>.json`: the port's own texts (menus, settings, messages);
+- `data\apk\<game>\<code>\`: the game's APK files in that language.
+
+Choosing a language shows the port's texts in it at once, and runs the game with the APK files of its folder; when that folder has none, the game runs in English (`en-us`, otherwise `fr-fr`) while the port's texts stay in the chosen language.
+
+### The port's texts
+
+All the languages are in one folder, `dq456_pc\languages\`, one file per language named by its code (`en-us.json`, `fr-fr.json`, `pt-br.json`...). Each file holds the language's name and flag, then every text of the port, one per line, in the order of the English file:
+
+```
+{
+ "name": "Français",
+ "flag": "fr",
+ "help": "Translate each \"en\" text into \"text\" ...",
+ "entries": [
+  {"key": "display.contrast", "en": "Contrast", "text": "Contraste"},
+  {"key": "window.fullscreen", "en": " (fullscreen)", "text": " (plein écran)"},
+  ...
+ ]
+}
+```
+
+- `key`: the name of the text, never changed (its first part is the menu or theme: `display`, `sound`, `history`...);
+- `en`: the English text, the reference to translate from;
+- `text`: the text displayed in this language; an empty `text` shows the English one;
+- codes that start with `%` (`%s`, `%d`, `%.1f`...) stay, in the same order: the port puts numbers and names there; `\n` starts a new line; spaces at the start or end of the English text stay too. A text that does not keep them is not used (English is shown);
+- `name`: the language's name in the language itself, as the language list shows it; `flag`: the code of its flag (`dq456_pc\assets\flags`).
+
+To add a language, on the start menu: **Language** (globe) > **Add a language** (these screens are in English, whatever the language chosen), choose its flag, type its folder code and its name, then **Create**. Its file is created with every English text and an empty `text`, and its APK folders are created. Translate the file (Notepad++, VS Code...: UTF-8), a little at a time if you like, then press **Load the texts**: the port reads it again and says how many texts are translated; a text that does not fit the English one stays in English and is listed in `data\logs\texts_<code>.txt`. **Edit its texts** opens the same panel for an existing language (and adds to its file the texts that a new version of the port added, empty).
+
+### The game's texts
+
+The game's texts come from the APK files. The translation project (a separate repository, `dq456-translate`) extracts the texts of your own APK files and builds patched APK files from a translation; put them in `data\apk\<game>\<code>\` to play the game in that language. The published APK files already hold the game's texts in English, Japanese, Korean and Chinese, but the port only shows the English ones for now.
+
+### Proposing a language
+
+1. Fork this repository (or create a branch if you can), add your language from the language screen and translate its file, `dq456_pc\languages\<code>.json`.
+2. Run `python tests/test_language.py`: it checks that every language has the keys of the English file in the same order, the same `%` codes as English, and a flag.
+3. Commit `dq456_pc\languages\<code>.json` and the `README.txt` of the new `data\apk\<game>\<code>\` folders, then open a pull request. Once reviewed, it is merged into `main` and published with the next release, for everyone.
+
 ## Development
 
 ```
@@ -93,8 +138,8 @@ dq456_pc/            the port (Python package); games.py: one profile per game (
   persistence/     settings, saves import / export, savestates
   render/          post-processing (antialiasing, filters, blur), title sky
   battle/          battle effects, battle speed, battle history
-  texts/           the port's own texts, one file per domain and language (fr/, en/)
-  assets/          key and button pictures (Kenney "Input Prompts", CC0)
+  languages/       the port's own texts: one file per language (en-us.json, fr-fr.json...)
+  assets/          key and button pictures (Kenney "Input Prompts", CC0), flags (public domain)
 tests/             the tests (test_*.py)
 tools/             the launcher shared by launch_dq4/5/6.bat, test runner, il2cpp structure dump, original window layout generator
 docs/              architecture and engine patches
@@ -103,12 +148,12 @@ docs/              architecture and engine patches
 The tests run on Linux or Windows. Those that need the game are skipped without it:
 
 ```
-DQ_APK=data/apk/dq4/fr DQ_APK_EN=data/apk/dq4/en DQ_SAVES=data/saves/dq4 DQ_MAP_CACHE=<cache folder> tools/run_tests.sh
+DQ_APK=data/apk/dq4/fr-fr DQ_APK_EN=data/apk/dq4/en-us DQ_SAVES=data/saves/dq4 DQ_MAP_CACHE=<cache folder> tools/run_tests.sh
 ```
 
 `DQ_MAP_CACHE` is built with `python -m dq456_pc.world.data <apk folder> <cache folder>`; the interface tests also need the layout file (`ui_layout.json`) in it.
 
-Texts: the code only holds keys (`settings.battle_speed`); `dq456_pc/language.py` returns the text of the current language from `dq456_pc/texts/<fr|en>/<domain>.py`. A new text needs an entry in both languages (checked by `tests/test_language.py`).
+Texts: the code only holds keys (`display.contrast`, `language.title`); `dq456_pc/language.py` returns the text of the current language from `dq456_pc/languages/<code>.json`, falling back to English (the only fallback: a text missing, empty or refused in a language, or a language file that cannot be read, shows the English one). A new text goes into `en-us.json` (its `en` and its `text`); `language.save_language(code)` then adds it, empty, to another language's file (checked by `tests/test_language.py`).
 
 ## Legal
 

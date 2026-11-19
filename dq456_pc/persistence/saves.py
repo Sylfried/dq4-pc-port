@@ -59,7 +59,7 @@ def default_export_name():
 def export_saves(write_dir, read_dir, destination):
     """Writes the .zip. -> (number of adventure logs, number of savestates). Raises ValueError if there is nothing to export."""
     j = effective_files(write_dir, read_dir); e = savestates(write_dir)
-    if not j and not e: raise ValueError(tr('menus.nothing_export_no_adventure_log'))
+    if not j and not e: raise ValueError(tr('saves.nothing_export_no_adventure_log'))
     folder = os.path.dirname(os.path.abspath(destination))
     if folder: os.makedirs(folder, exist_ok=True)
     tmp = destination + '.tmp'
@@ -79,14 +79,14 @@ def read_sources(paths):
         m = RE_LOGFILE.search(full_name)
         if m:
             name_str = m.group(1).lower(); d = read()
-            if len(d) != SIZES[name_str]: pb.append(tr('menus.size_instead') % (name_str, len(d), SIZES[name_str], origin)); return
+            if len(d) != SIZES[name_str]: pb.append(tr('saves.size_instead') % (name_str, len(d), SIZES[name_str], origin)); return
             reason = FJ.check(name_str, d)
-            if reason: pb.append(tr('menus.name_value_detail') % (name_str, reason, origin)); return
+            if reason: pb.append(tr('saves.name_value_detail') % (name_str, reason, origin)); return
             jr[name_str] = d; return
         m = RE_SAVESTATE.search(full_name) or RE_SAVESTATE_ISOLATED.match(os.path.basename(full_name))
         if m:
             d = read()
-            if len(d) < 1024: pb.append(tr('menus.file_too_small') % (savestate_name(m.group(1)), origin)); return
+            if len(d) < 1024: pb.append(tr('saves.file_too_small') % (savestate_name(m.group(1)), origin)); return
             label[savestate_name(m.group(1))] = d
 
     for c in paths:
@@ -99,7 +99,7 @@ def read_sources(paths):
                 with zipfile.ZipFile(c) as z:
                     for i in z.infolist():
                         if not i.is_dir() and i.file_size < 64 * 1024 * 1024: add(i.filename, lambda i=i, z=z: z.read(i), os.path.basename(c))
-            except zipfile.BadZipFile: pb.append(tr('menus.not_valid_zip_file') % os.path.basename(c))
+            except zipfile.BadZipFile: pb.append(tr('saves.not_valid_zip_file') % os.path.basename(c))
         else: add(os.path.basename(c), lambda c=c: open(c, 'rb').read(), os.path.dirname(c))
     return jr, label, pb
 
@@ -108,7 +108,7 @@ def import_saves(paths, write_dir, read_dir):
     """Copies the adventure logs / savestates found into the write folder, after copying those they replace into `before_import_<date>`. -> (number of adventure logs, number of savestates, copy folder or None, problems).
     Raises ValueError if nothing usable was found."""
     jr, label, pb = read_sources(paths)
-    if not jr and not label: raise ValueError(tr('menus.no_save_file_recognized') % ('; '.join(pb) if pb else tr('menus.expected_data1_dat_data5_dat')))
+    if not jr and not label: raise ValueError(tr('saves.no_save_file_recognized') % ('; '.join(pb) if pb else tr('saves.expected_data1_dat_data5_dat')))
     os.makedirs(write_dir, exist_ok=True)
     savestates_folder = CH.FOLDERS.savestates_folder(write_dir)
     copied = os.path.join(CH.FOLDERS.clones_folder(write_dir), 'before_import_' + timestamp()); n_clone = 0
@@ -124,13 +124,13 @@ def import_saves(paths, write_dir, read_dir):
     for name_str, d in jr.items():
         ex = atomic_write(os.path.join(write_dir, name_str), d)
         if ex is None: written_j += 1
-        else: pb.append(tr('menus.could_not_written_current_file') % (name_str, ex))
+        else: pb.append(tr('saves.could_not_written_current_file') % (name_str, ex))
     for name_str, d in label.items():
         p = os.path.join(savestates_folder, *name_str.split('/')); os.makedirs(os.path.dirname(p), exist_ok=True)
         ex = atomic_write(p, d)
         if ex is None: written_e += 1
-        else: pb.append(tr('menus.could_not_written_current_file') % (name_str, ex))
-    if not written_j and not written_e: raise ValueError(tr('menus.no_file_could_written') % '; '.join(pb))
+        else: pb.append(tr('saves.could_not_written_current_file') % (name_str, ex))
+    if not written_j and not written_e: raise ValueError(tr('saves.no_file_could_written') % '; '.join(pb))
     for name_str, d in rules_in(paths).items(): atomic_write(os.path.join(GR.folder(write_dir), name_str), d)          # (the rules of the games come with their logs: one file per game ID, the same game whatever the copy)
     return written_j, written_e, (copied if n_clone else None), pb
 
@@ -177,10 +177,10 @@ class Dialogue:
             kw = dict(parent=root, title=title_screen)
             if folder and os.path.isdir(folder): kw['initialdir'] = folder
             if mode == 'save':
-                p = filedialog.asksaveasfilename(defaultextension='.zip', filetypes=[(tr('menus.zip_archive'), '*.zip')], initialfile=name_str or default_export_name(), **kw)
+                p = filedialog.asksaveasfilename(defaultextension='.zip', filetypes=[(tr('saves.zip_archive'), '*.zip')], initialfile=name_str or default_export_name(), **kw)
                 self.result = [p] if p else []
             else:
-                ps = filedialog.askopenfilenames(filetypes=[(tr('menus.saves_zip_data_dat_state'), '*.zip *.dat *.dqs'), (tr('menus.all_files'), '*.*')], **kw)
+                ps = filedialog.askopenfilenames(filetypes=[(tr('saves.saves_zip_data_dat_state'), '*.zip *.dat *.dqs'), (tr('saves.all_files'), '*.*')], **kw)
                 self.result = list(ps) if ps else []
         except Exception as ex:
             self.unavailable = True; self.error = repr(ex); self.result = []

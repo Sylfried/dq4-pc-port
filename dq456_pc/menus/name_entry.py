@@ -16,8 +16,8 @@ ALPHABET = ('abcdefghijklmnopqrstuvwxyz -,.!?' + EMPTY_CELL * 3, 'ABCDEFGHIJKLMN
 ACCENTS = ('àáâäçèéêëìíîïñòóôöùúûüß' + EMPTY_CELL * 12, 'ÀÁÂÄÇÈÉÊËÌÍÎÏÑÒÓÔÖÙÚÛÜß' + EMPTY_CELL * 12)                      # C_AA
 PAGES = (ALPHABET, ACCENTS)           # C_LOCALIZE
 FUNCTIONS = ('Alphabet', 'à À', 'Maj.', 'Suppr.', 'OK')                   # C_ALPHABET_ETC (not localized in the game)
-TITLE = N_('menus.enter_name')                      # (drawn by Pause._label, which translates them; the FUNCTIONS labels are the game's and stay untouched)
-KEYBOARD_HELPTEXT = (N_('menus.keyboard_type_name'), N_('menus.enter_confirm_esc_back'))
+TITLE = N_('new_game.enter_name')                      # (drawn by Pause._label, which translates them; the FUNCTIONS labels are the game's and stay untouched)
+KEYBOARD_HELPTEXT = (N_('new_game.keyboard_type_name'), N_('new_game.enter_confirm_esc_back'))
 COLS, LINES = 5, 7
 SFX_BUTTON = 300                       # press sound effect of a menu button (like window.SFX_BUTTON)
 GRID_COUNT = COLS * LINES               # 35 cells; then 35 to 39 = function buttons; 40 = Back

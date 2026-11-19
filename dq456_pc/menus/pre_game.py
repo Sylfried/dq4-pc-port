@@ -211,7 +211,7 @@ LICENSE_TEXT = (-198.0, -262.0, 186.0, 272.0)                  # text area (x0, 
 LICENSE_POLICY = (-198.0, -334.0, 90.0, -284.0)              # "Privacy Policy" button
 LICENSE_BACK = (136.0, -337.0, 198.0, -285.0)
 LICENSE_TITLE_Y = 302.0
-LICENSE_TITLE = N_('menus.license')                    # (drawn by Pause._label, which translates it; "Privacy Policy" is the game's text)
+LICENSE_TITLE = N_('menu.license')                    # (drawn by Pause._label, which translates it; "Privacy Policy" is the game's text)
 
 
 # Text added at the top of the License screen (in English, like the original list): what the port is and what it uses ({name}, {library}: the running game, games.py). The original list (TextAsset

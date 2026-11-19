@@ -28,7 +28,7 @@ def settings_file(argv, d):
 
 
 def set_language(argv, d):
-    """the tool's language ("language" setting of settings.json) for console messages and help, before the settings are loaded. -> 'fr' or 'en'."""
+    """the tool's language ("language" setting of settings.json) for console messages and help, before the settings are loaded. -> a code of language.LANGUAGES."""
     return LG.select_language(LG.read_setting(settings_file(argv, d)))
 
 
@@ -37,7 +37,7 @@ def build_parser(d):
     g = d.game
     ap = argparse.ArgumentParser(prog='dq456_pc')
     ap.add_argument('--game', default=g, choices=sorted(GM.GAMES), help='the game: %s (default dq4; the environment variable DQ_GAME does the same; launch_dq5.bat and launch_dq6.bat set it)' % ', '.join('%s = %s' % (p.key, p.name) for p in GM.GAMES.values()))
-    ap.add_argument('--apk', default=None, help='folder of the 3 APK files; default: data\\apk\\' + g + '\\fr or data\\apk\\' + g + '\\en, whichever matches the language chosen in the Esc menu (read when the game starts, and again when the language changes: the game restarts on the title screen)')
+    ap.add_argument('--apk', default=None, help='folder of the 3 APK files; default: data\\apk\\' + g + '\\<language>, the language chosen in the Esc menu (en, fr, de...; without APK files there: the English ones, otherwise the French ones; read when the game starts, and again when the language changes: the game restarts on the title screen)')
     ap.add_argument('--saves-read', dest='saves_read', default=None, help='extra read-only folder containing data1.dat... (tests; default: none, the game reads and writes in data\\saves\\' + g + ')')
     ap.add_argument('--saves-write', dest='saves_write', default=d.portage, help='saves folder (data1.dat... read and written by the game); default data\\saves\\' + g + ' (savestates are in data\\saves\\' + g + '\\savestates)')
     ap.add_argument('--cache', default=None, help='folder of the files computed from the APKs; default data\\cache\\' + g + '\\fr (French APK) or data\\cache\\' + g + '\\en (English APK)')

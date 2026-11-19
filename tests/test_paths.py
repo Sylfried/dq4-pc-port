@@ -23,14 +23,14 @@ class Layout(unittest.TestCase):
     def test_default(self):
         d = CH.Folders('/projet', env={})
         self.assertEqual(d.data, os.path.normpath('/projet/data'))
-        for name_str, expected in (('apk', 'data/apk/dq4/fr'), ('apk_fr', 'data/apk/dq4/fr'), ('apk_en', 'data/apk/dq4/en'), ('apk_root', 'data/apk'), ('apk_game', 'data/apk/dq4'), ('cache_en', 'data/cache/dq4/en'), ('cache_root', 'data/cache'), ('old_cache_en', 'data/cache_en'), ('mobile', 'data/saves/dq4/mobile'), ('portage', 'data/saves/dq4'), ('old_port_dir', 'data/saves/dq4/portage'), ('savestates', 'data/saves/dq4/savestates'), ('saves_root', 'data/saves'),
-                             ('cache', 'data/cache/dq4/fr'), ('settings', 'data/settings/settings.json'), ('favorites', 'data/settings/history_favorites.json'),
+        for name_str, expected in (('apk', 'data/apk/dq4/fr-fr'), ('apk_fr', 'data/apk/dq4/fr-fr'), ('apk_en', 'data/apk/dq4/en-us'), ('apk_root', 'data/apk'), ('apk_game', 'data/apk/dq4'), ('cache_en', 'data/cache/dq4/en-us'), ('cache_root', 'data/cache'), ('old_cache_en', 'data/cache_en'), ('mobile', 'data/saves/dq4/mobile'), ('portage', 'data/saves/dq4'), ('old_port_dir', 'data/saves/dq4/portage'), ('savestates', 'data/saves/dq4/savestates'), ('saves_root', 'data/saves'),
+                             ('cache', 'data/cache/dq4/fr-fr'), ('settings', 'data/settings/settings.json'), ('favorites', 'data/settings/history_favorites.json'),
                              ('window_logfile', 'data/logs/window_errors.log')):
             self.assertEqual(getattr(d, name_str), os.path.normpath('/projet/' + expected), name_str)
 
     def test_environment_variables(self):
         d = CH.Folders('/projet', env={'DQ_DATA': '/ailleurs/mes_donnees'})
-        self.assertEqual(d.apk, os.path.normpath('/ailleurs/mes_donnees/apk/dq4/fr')); self.assertEqual(d.apk_en, os.path.normpath('/ailleurs/mes_donnees/apk/dq4/en')); self.assertEqual(d.cache, os.path.normpath('/ailleurs/mes_donnees/cache/dq4/fr'))
+        self.assertEqual(d.apk, os.path.normpath('/ailleurs/mes_donnees/apk/dq4/fr-fr')); self.assertEqual(d.apk_en, os.path.normpath('/ailleurs/mes_donnees/apk/dq4/en-us')); self.assertEqual(d.cache, os.path.normpath('/ailleurs/mes_donnees/cache/dq4/fr-fr'))
         d = CH.Folders('/projet', env={'DQ4_GAMES': '/jeux/DQ4'})                      # old behavior: APK and phone saves over there, the rest in donnees
         self.assertEqual(d.apk, os.path.normpath('/jeux/DQ4/patched_apks')); self.assertEqual(d.apk_en, os.path.normpath('/jeux/DQ4/patched_apks_en')); self.assertEqual(d.mobile, os.path.normpath('/jeux/DQ4/saves'))
         self.assertEqual(d.portage, os.path.normpath('/projet/data/saves/dq4'))
@@ -68,13 +68,13 @@ class Migration(unittest.TestCase):
     def test_complete_resume(self):
         done = CH.migrate(self.d, log=lambda *a: None)
         self.assertGreaterEqual(len(done), 6)
-        self.assertEqual(self.read('data', 'apk', 'dq4', 'fr', 'base.apk'), b'APK1')
+        self.assertEqual(self.read('data', 'apk', 'dq4', 'fr-fr', 'base.apk'), b'APK1')
         self.assertEqual(self.read('data', 'saves', 'dq4', 'data1.dat'), b'P1')                                        # the earlier port's adventure logs take precedence over the phone copy (T1)
         self.assertEqual(self.read('data', 'saves', 'dq4', 'data2.dat'), b'T2')                                        # ... which fills in what is missing (the most recent one only)
         self.assertFalse(os.path.exists(os.path.join(self.t, 'data', 'saves', 'dq4', 'data3.dat')))             # (not the one from an older date)
         self.assertFalse(os.path.exists(os.path.join(self.t, 'data', 'saves', 'dq4', 'mobile'))); self.assertFalse(os.path.exists(os.path.join(self.t, 'data', 'saves', 'dq4', 'portage')))
         self.assertEqual(os.listdir(os.path.join(self.t, 'data', 'saves')), ['dq4'])
-        self.assertEqual(self.read('data', 'cache', 'dq4', 'fr', 'carte10_a.pkl'), b'CACHE'); self.assertEqual(self.read('data', 'cache', 'dq4', 'fr', 'il2cpp', 'dump.cs'), b'DUMP')
+        self.assertEqual(self.read('data', 'cache', 'dq4', 'fr-fr', 'carte10_a.pkl'), b'CACHE'); self.assertEqual(self.read('data', 'cache', 'dq4', 'fr-fr', 'il2cpp', 'dump.cs'), b'DUMP')
         self.assertEqual(self.read('data', 'saves', 'dq4', 'savestates', 'state_01.dqs'), b'E1')
         self.assertEqual(self.read('data', 'saves', 'dq4', 'before_import_20261101_101010', 'data2.dat'), b'AV')
         self.assertEqual(self.read('data', 'settings', 'settings.json'), b'{"a": 1}'); self.assertEqual(self.read('data', 'settings', 'history_favorites.json'), b'[]')
@@ -104,7 +104,7 @@ class Migration(unittest.TestCase):
 
     def test_layout_already_in_use_nothing_is_copied(self):                 # the resume took place with an older version, then avant_import_... was deleted by hand
         write(os.path.join(self.t, 'data', 'saves', 'dq4', 'data3.dat'), b'A_MOI'); write(os.path.join(self.t, 'data', 'settings', 'settings.json'), b'{}')
-        write(os.path.join(self.t, 'data', 'cache', 'dq4', 'fr', 'x.pkl'), b'C'); write(os.path.join(self.t, 'data', 'apk', 'dq4', 'fr', 'base.apk'), b'A'); write(os.path.join(self.t, 'data', 'logs', 'window_errors.log'), b'J')
+        write(os.path.join(self.t, 'data', 'cache', 'dq4', 'fr-fr', 'x.pkl'), b'C'); write(os.path.join(self.t, 'data', 'apk', 'dq4', 'fr-fr', 'base.apk'), b'A'); write(os.path.join(self.t, 'data', 'logs', 'window_errors.log'), b'J')
         self.assertEqual(CH.migrate(self.d, log=lambda *a: None), [])
         self.assertEqual(sorted(os.listdir(os.path.join(self.t, 'data', 'saves', 'dq4'))), ['data3.dat'])
         self.assertEqual(self.read('data', 'settings', 'settings.json'), b'{}')
@@ -175,7 +175,7 @@ class EnglishNames(unittest.TestCase):
         done = CH.migrate(self.d, log=lambda *a: None)
         self.assertTrue(any('donnees' in x and 'data' in x for x in done), done)
         self.assertFalse(os.path.exists(os.path.join(self.t, 'donnees')))
-        self.assertEqual(self.read('data', 'apk', 'dq4', 'fr', 'base.apk'), b'A'); self.assertEqual(self.read('data', 'cache', 'dq4', 'fr', 'x.pkl'), b'C')          # (the cache of the old layout goes into `cache\\dq4\\fr`; the APK of the old layout goes straight into `apk\\fr`)
+        self.assertEqual(self.read('data', 'apk', 'dq4', 'fr-fr', 'base.apk'), b'A'); self.assertEqual(self.read('data', 'cache', 'dq4', 'fr-fr', 'x.pkl'), b'C')          # (the cache of the old layout goes into `cache\\dq4\\fr`; the APK of the old layout goes straight into `apk\\fr`)
         self.assertEqual(self.read('data', 'saves', 'dq4', 'data1.dat'), b'D1')
         self.assertEqual(self.read('data', 'saves', 'dq4', 'savestates', 'state_01.dqs'), b'E1'); self.assertEqual(self.read('data', 'saves', 'dq4', 'savestates', 'state_09.dqs'), b'E9')
         self.assertEqual(self.read('data', 'saves', 'dq4', 'before_import_20261101_101010', 'data2.dat'), b'AV')
@@ -222,7 +222,7 @@ class EnglishNames(unittest.TestCase):
             return actual(src, dst)
         with mock.patch('dq456_pc.paths.os.replace', side_effect=refuse_folders): done = CH.migrate(self.d, log=lambda *a: None)
         self.assertFalse(any('NOT renamed' in x for x in done), done); self.assertFalse(os.path.exists(os.path.join(self.t, 'donnees')))
-        self.assertEqual(self.read('data', 'saves', 'dq4', 'savestates', 'state_01.dqs'), b'E1'); self.assertEqual(self.read('data', 'apk', 'dq4', 'fr', 'base.apk'), b'A'); self.assertEqual(self.read('data', 'settings', 'settings.json'), b'{"a": 1}')
+        self.assertEqual(self.read('data', 'saves', 'dq4', 'savestates', 'state_01.dqs'), b'E1'); self.assertEqual(self.read('data', 'apk', 'dq4', 'fr-fr', 'base.apk'), b'A'); self.assertEqual(self.read('data', 'settings', 'settings.json'), b'{"a": 1}')
         self.assertEqual(CH.migrate(self.d, log=lambda *a: None), [])
 
     def test_nothing_can_be_renamed_then_it_is_retried(self):
@@ -357,19 +357,19 @@ class GameLanguage(unittest.TestCase):                 # the APKs in the chosen 
 
     def test_each_language_has_its_apk_and_cache_folders(self):
         d = self.d
-        self.assertEqual(d.apk_for('fr'), d.apk_fr); self.assertEqual(d.apk_for('en'), d.apk_en); self.assertNotEqual(d.apk_fr, d.apk_en)
-        self.assertEqual(d.cache_for('fr'), d.cache); self.assertEqual(d.cache_for('en'), d.cache_en); self.assertNotEqual(d.cache, d.cache_en)
+        self.assertEqual(d.apk_for('fr-fr'), d.apk_fr); self.assertEqual(d.apk_for('en-us'), d.apk_en); self.assertNotEqual(d.apk_fr, d.apk_en)
+        self.assertEqual(d.cache_for('fr-fr'), d.cache); self.assertEqual(d.cache_for('en-us'), d.cache_en); self.assertNotEqual(d.cache, d.cache_en)
 
     def test_the_folder_of_the_chosen_language_is_used(self):
         write(os.path.join(self.d.apk_fr, 'base.apk')); write(os.path.join(self.d.apk_en, 'base.apk'))
-        self.assertEqual(self.d.choose_apk('fr'), (self.d.apk_fr, 'fr')); self.assertEqual(self.d.choose_apk('en'), (self.d.apk_en, 'en'))
+        self.assertEqual(self.d.choose_apk('fr-fr'), (self.d.apk_fr, 'fr-fr')); self.assertEqual(self.d.choose_apk('en-us'), (self.d.apk_en, 'en-us'))
 
     def test_a_missing_language_falls_back_on_the_other_one(self):
-        write(os.path.join(self.d.apk_fr, 'base.apk')); self.assertEqual(self.d.choose_apk('en'), (self.d.apk_fr, 'fr'))
-        os.remove(os.path.join(self.d.apk_fr, 'base.apk')); write(os.path.join(self.d.apk_en, 'base.apk')); self.assertEqual(self.d.choose_apk('fr'), (self.d.apk_en, 'en'))
+        write(os.path.join(self.d.apk_fr, 'base.apk')); self.assertEqual(self.d.choose_apk('en-us'), (self.d.apk_fr, 'fr-fr'))
+        os.remove(os.path.join(self.d.apk_fr, 'base.apk')); write(os.path.join(self.d.apk_en, 'base.apk')); self.assertEqual(self.d.choose_apk('fr-fr'), (self.d.apk_en, 'en-us'))
 
     def test_no_apk_at_all_keeps_the_chosen_language_folder(self):                       # (it is the one the startup error message does not name alone: it also cites the other)
-        self.assertEqual(self.d.choose_apk('en'), (self.d.apk_en, 'en')); self.assertEqual(self.d.choose_apk('fr'), (self.d.apk_fr, 'fr'))
+        self.assertEqual(self.d.choose_apk('en-us'), (self.d.apk_en, 'en-us')); self.assertEqual(self.d.choose_apk('fr-fr'), (self.d.apk_fr, 'fr-fr'))
 
     def test_old_games_folder_stays_the_french_one(self):
         d = CH.Folders(self.t, env={'DQ4_JEUX': os.path.join(self.t, 'j', 'DQ4')})
@@ -400,10 +400,10 @@ class GameLanguage(unittest.TestCase):                 # the APKs in the chosen 
 
     def test_the_english_cache_gets_only_the_ui_layout(self):
         write(os.path.join(self.d.cache, 'ui_layout.json'), b'{"a": 1}'); write(os.path.join(self.d.cache, 'tex_1.npy'), b'T')
-        self.assertEqual(CH.language_cache(self.d, 'fr', log=lambda *a: None), self.d.cache); self.assertFalse(os.path.exists(self.d.cache_en))
-        self.assertEqual(CH.language_cache(self.d, 'en', log=lambda *a: None), self.d.cache_en)
+        self.assertEqual(CH.language_cache(self.d, 'fr-fr', log=lambda *a: None), self.d.cache); self.assertFalse(os.path.exists(self.d.cache_en))
+        self.assertEqual(CH.language_cache(self.d, 'en-us', log=lambda *a: None), self.d.cache_en)
         self.assertEqual(os.listdir(self.d.cache_en), ['ui_layout.json'])
-        CH.language_cache(self.d, 'en', log=lambda *a: None)                                                                  # (2e demarrage : rien a refaire)
+        CH.language_cache(self.d, 'en-us', log=lambda *a: None)                                                                  # (2e demarrage : rien a refaire)
         self.assertEqual(os.listdir(self.d.cache_en), ['ui_layout.json'])
 
 
@@ -413,8 +413,8 @@ class Games(unittest.TestCase):                        # one folder per game in 
         for g in ('dq4', 'dq5', 'dq6'):
             d = CH.Folders('/projet', env={}, game=g)
             self.assertEqual(d.game, g)
-            for name_str, expected in (('apk_fr', 'data/apk/%s/fr'), ('apk_en', 'data/apk/%s/en'), ('saves', 'data/saves/%s'), ('portage', 'data/saves/%s'), ('savestates', 'data/saves/%s/savestates'),
-                                       ('cache', 'data/cache/%s/fr'), ('cache_en', 'data/cache/%s/en')):
+            for name_str, expected in (('apk_fr', 'data/apk/%s/fr-fr'), ('apk_en', 'data/apk/%s/en-us'), ('saves', 'data/saves/%s'), ('portage', 'data/saves/%s'), ('savestates', 'data/saves/%s/savestates'),
+                                       ('cache', 'data/cache/%s/fr-fr'), ('cache_en', 'data/cache/%s/en-us')):
                 self.assertEqual(getattr(d, name_str), os.path.normpath('/projet/' + expected % g), (g, name_str))
             self.assertEqual(d.settings, os.path.normpath('/projet/data/settings/settings.json'))
 
@@ -427,12 +427,33 @@ class Games(unittest.TestCase):                        # one folder per game in 
     def test_for_game_keeps_the_data_folder(self):
         d = CH.Folders('/projet', env={'DQ_DATA': '/ailleurs/d'}, game='dq5')
         d4 = d.for_game('dq4')
-        self.assertEqual((d4.game, d4.data, d4.apk_fr), ('dq4', d.data, os.path.normpath('/ailleurs/d/apk/dq4/fr')))
+        self.assertEqual((d4.game, d4.data, d4.apk_fr), ('dq4', d.data, os.path.normpath('/ailleurs/d/apk/dq4/fr-fr')))
         self.assertIs(d.for_game('dq5'), d)
 
     def test_old_games_folder_is_dq4_only(self):
         self.assertIsNone(CH.Folders('/projet', env={'DQ4_GAMES': '/jeux/DQ4'}, game='dq5').old_games)
-        self.assertEqual(CH.Folders('/projet', env={'DQ4_GAMES': '/jeux/DQ4'}, game='dq5').apk_fr, os.path.normpath('/projet/data/apk/dq5/fr'))
+        self.assertEqual(CH.Folders('/projet', env={'DQ4_GAMES': '/jeux/DQ4'}, game='dq5').apk_fr, os.path.normpath('/projet/data/apk/dq5/fr-fr'))
+
+
+class LanguageFolders(unittest.TestCase):                 # data\apk\<game>\fr, en... and data\cache\<game>\fr, en -> fr-fr, en-us...
+    def setUp(self): self.t = tempfile.mkdtemp(prefix='lgf_'); self.d = CH.Folders(self.t, env={})
+    def tearDown(self): shutil.rmtree(self.t, ignore_errors=True)
+    def read(self, *p):
+        with open(os.path.join(self.t, 'data', *p), 'rb') as f: return f.read()
+
+    def test_codes_of_earlier_versions_are_renamed(self):
+        for g in ('dq4', 'dq5'):
+            write(os.path.join(self.t, 'data', 'apk', g, 'fr', 'base.apk'), b'F' + g.encode()); write(os.path.join(self.t, 'data', 'apk', g, 'fr', 'README.txt'), b'old')
+            write(os.path.join(self.t, 'data', 'apk', g, 'fr-fr', 'README.txt'), b'new'); write(os.path.join(self.t, 'data', 'apk', g, 'en', 'base.apk'), b'E')
+            write(os.path.join(self.t, 'data', 'cache', g, 'en', 'x.pkl'), b'C')
+        write(os.path.join(self.t, 'data', 'apk', 'dq4', 'en-us', 'base.apk'), b'KEPT')
+        done = CH.language_folders(self.d)
+        for g in ('dq4', 'dq5'):
+            self.assertEqual(self.read('apk', g, 'fr-fr', 'base.apk'), b'F' + g.encode()); self.assertEqual(self.read('apk', g, 'fr-fr', 'README.txt'), b'new')
+            self.assertFalse(os.path.exists(os.path.join(self.t, 'data', 'apk', g, 'fr'))); self.assertEqual(self.read('cache', g, 'en-us', 'x.pkl'), b'C')
+        self.assertEqual(self.read('apk', 'dq4', 'en-us', 'base.apk'), b'KEPT'); self.assertEqual(self.read('apk', 'dq4', 'en', 'base.apk'), b'E')          # (never overwritten: it stays)
+        self.assertEqual(self.read('apk', 'dq5', 'en-us', 'base.apk'), b'E')
+        self.assertTrue(any('NOT moved' in x for x in done), done); self.assertEqual(CH.language_folders(self.d), [x for x in done if 'NOT moved' in x])          # (nothing more to do)
 
 
 class CachePerGame(unittest.TestCase):                 # data\cache and data\cache_en (DQ4, earlier versions) -> data\cache\dq4\fr and \en
@@ -447,16 +468,16 @@ class CachePerGame(unittest.TestCase):                 # data\cache and data\cac
         write(os.path.join(ce, 'map15_a.pkl'), b'ME'); write(os.path.join(c, 'dq5', 'fr', 'x.pkl'), b'D5')
         done = CH.cache_per_game(self.d)
         self.assertEqual(len(done), 1, done); self.assertIn('cache arranged by game', done[0])
-        self.assertEqual(self.read('cache', 'dq4', 'fr', 'map15_a.pkl'), b'M'); self.assertEqual(self.read('cache', 'dq4', 'fr', 'il2cpp', 'dump.cs'), b'D')
-        self.assertEqual(self.read('cache', 'dq4', 'en', 'map15_a.pkl'), b'ME'); self.assertEqual(self.read('cache', 'dq5', 'fr', 'x.pkl'), b'D5')          # (the other games' folders stay)
+        self.assertEqual(self.read('cache', 'dq4', 'fr-fr', 'map15_a.pkl'), b'M'); self.assertEqual(self.read('cache', 'dq4', 'fr-fr', 'il2cpp', 'dump.cs'), b'D')
+        self.assertEqual(self.read('cache', 'dq4', 'en-us', 'map15_a.pkl'), b'ME'); self.assertEqual(self.read('cache', 'dq5', 'fr', 'x.pkl'), b'D5')          # (the other games' folders stay: language_folders renames them)
         self.assertEqual(sorted(os.listdir(c)), ['dq4', 'dq5']); self.assertFalse(os.path.exists(ce))
         self.assertEqual(CH.cache_per_game(self.d), [])                                                              # (2nd startup: nothing left to move, silence)
 
     def test_a_file_already_in_place_is_kept_silently(self):
         c = os.path.join(self.t, 'data', 'cache')
-        write(os.path.join(c, 'a.pkl'), b'OLD'); write(os.path.join(c, 'dq4', 'fr', 'a.pkl'), b'NEW')
+        write(os.path.join(c, 'a.pkl'), b'OLD'); write(os.path.join(c, 'dq4', 'fr-fr', 'a.pkl'), b'NEW')
         self.assertEqual(CH.cache_per_game(self.d), [])                                                                # (only a cache: no message at each launch)
-        self.assertEqual(self.read('cache', 'dq4', 'fr', 'a.pkl'), b'NEW'); self.assertEqual(self.read('cache', 'a.pkl'), b'OLD')       # (never overwritten, nothing deleted)
+        self.assertEqual(self.read('cache', 'dq4', 'fr-fr', 'a.pkl'), b'NEW'); self.assertEqual(self.read('cache', 'a.pkl'), b'OLD')       # (never overwritten, nothing deleted)
 
     def test_first_installation_creates_nothing(self):
         self.assertEqual(CH.cache_per_game(self.d), []); self.assertFalse(os.path.exists(self.d.data))
@@ -465,13 +486,13 @@ class CachePerGame(unittest.TestCase):                 # data\cache and data\cac
         sv = os.path.join(self.t, 'data', 'saves')
         write(os.path.join(sv, 'data1.dat'), b'D1'); write(os.path.join(self.t, 'data', 'cache', 'x.pkl'), b'C'); write(os.path.join(self.t, 'data', 'apk', 'base.apk'), b'A')
         CH.migrate(CH.Folders(self.t, env={}, game='dq5'), log=lambda *a: None)
-        self.assertEqual(self.read('saves', 'dq4', 'data1.dat'), b'D1'); self.assertEqual(self.read('cache', 'dq4', 'fr', 'x.pkl'), b'C'); self.assertEqual(self.read('apk', 'dq4', 'fr', 'base.apk'), b'A')
+        self.assertEqual(self.read('saves', 'dq4', 'data1.dat'), b'D1'); self.assertEqual(self.read('cache', 'dq4', 'fr-fr', 'x.pkl'), b'C'); self.assertEqual(self.read('apk', 'dq4', 'fr-fr', 'base.apk'), b'A')
         self.assertFalse(os.path.exists(os.path.join(sv, 'dq5'))); self.assertFalse(os.path.exists(os.path.join(self.t, 'data', 'apk', 'dq5')))
 
     def test_the_english_cache_gets_the_ui_layout_of_its_game(self):
         d = CH.Folders(self.t, env={}, game='dq5')
         write(os.path.join(d.cache, 'ui_layout.json'), b'{"a": 1}')
-        self.assertEqual(CH.language_cache(d, 'en', log=lambda *a: None), os.path.join(self.t, 'data', 'cache', 'dq5', 'en'))
+        self.assertEqual(CH.language_cache(d, 'en-us', log=lambda *a: None), os.path.join(self.t, 'data', 'cache', 'dq5', 'en-us'))
         self.assertEqual(os.listdir(d.cache_en), ['ui_layout.json'])
 
 

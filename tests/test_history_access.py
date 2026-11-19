@@ -78,7 +78,7 @@ def menu(j, stack=None):
 
 
 def history_line(p):
-    return next(entry for entry in p._entries_root() if entry.get('l') == 'settings.history')
+    return next(entry for entry in p._entries_root() if entry.get('l') == 'menu.history')
 
 
 class TestMenu(unittest.TestCase):
@@ -88,7 +88,7 @@ class TestMenu(unittest.TestCase):
     def test_line_grayed_otherwise_with_tooltip(self):
         for kw in (dict(part=ENGINE.PART_BATTLE), dict(msg=True), dict(flag=ENGINE.PLAYER_LOCKED_FLAG), dict(menu=2)):
             p = menu(fake_game(**kw)); entry = history_line(p); self.assertTrue(PA.Pause._inactive(entry), kw); self.assertFalse(p._active(entry), kw)
-            self.assertIn('settings.only_available_when_control_character', entry.get('hint', ''))
+            self.assertIn('menu.only_available_when_control_character', entry.get('hint', ''))
 
     def test_line_follows_game_state_each_frame(self):
         j = fake_game(); p = menu(j); self.assertFalse(PA.Pause._inactive(history_line(p)))

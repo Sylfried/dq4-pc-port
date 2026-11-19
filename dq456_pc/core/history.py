@@ -21,6 +21,7 @@ A dialogue is shown as in the game: a message window, with the speaker's name in
 it (the words of a character without a name start with "*:" in the FR patch: that start is kept). No "who said this" or "where" is deduced.
 """
 import json, os, re, shutil, struct, threading, time, uuid
+from dq456_pc import language as LG
 from dq456_pc.language import tr, N_
 from dq456_pc.core.legacy_state import renamed_history
 
@@ -54,11 +55,11 @@ PART_TOWN, PART_BATTLE, PART_FIELD = 0xc, 0xd, 0xe
 KIND_NAME, KIND_GENERAL = 'n', 'g'                    # message with a name that the game displays / without a name
 CATEGORY_TERRAIN, CATEGORY_BATTLE = 't', 'c'                      # out-of-battle message / battle message (never stored in the dialogues)
 TYPE_DIALOGUE, BATTLE_TYPE = 'd', 'c'
-MISSING = N_('menus.message_not_found_game_files')            # (translated when it replaces the text of a favorite: see History._resolve)
+MISSING = N_('history.message_not_found_game_files')            # (translated when it replaces the text of a favorite: see History._resolve)
 
 ENTRIES_TYPE = {'dialogues': TYPE_DIALOGUE, 'battles': BATTLE_TYPE}              # history list -> type of its elements (History.entries, "Favorites only" filter)
 OUTCOMES = ('victory', 'escape', 'defeat')
-OUTCOME_CAPTION = {'victory': N_('menus.victory'), 'escape': N_('menus.escaped'), 'defeat': N_('menus.defeat')}            # (translated by the window when drawing: tr(OUTCOME_CAPTION[...]))
+OUTCOME_CAPTION = {'victory': N_('history.victory'), 'escape': N_('history.escaped'), 'defeat': N_('history.defeat')}            # (translated by the window when drawing: tr(OUTCOME_CAPTION[...]))
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------- elements
@@ -262,11 +263,12 @@ def wrap_text(text, width_px, measure):
 
 
 def plural(n, singular, plural_form):
-    """"1 vaincu", "2 vaincus": the singular or plural template (`singular`, `plural_form`: template texts "%d vaincu" / "%d vaincus", N_; English has only one form but keeps it as two)."""
-    return tr(singular if n < 2 else plural_form) % n
+    """"1 vaincu", "2 vaincus": the singular or plural template (`singular`, `plural_form`: template texts "%d vaincu" / "%d vaincus", N_; English has only one form but keeps it as two).
+    The language's rule: in French 0 and 1 are singular, in the other languages only 1 is ("0 derrotados"); Japanese, Korean and Chinese write both forms the same."""
+    return tr(singular if LG.plural_one(n) else plural_form) % n
 
 
-SPELLS = ((N_('menus.count_defeated_one'), N_('menus.count_defeated_many')), (N_('menus.count_fled_one'), N_('menus.count_fled_many')), (N_('menus.count_vanished_one'), N_('menus.count_vanished_many')), (N_('menus.count_remained_one'), N_('menus.count_remained_many')))           # defeated, fled, vanished, remaining
+SPELLS = ((N_('history.count_defeated_one'), N_('history.count_defeated_many')), (N_('history.count_fled_one'), N_('history.count_fled_many')), (N_('history.count_vanished_one'), N_('history.count_vanished_many')), (N_('history.count_remained_one'), N_('history.count_remained_many')))           # defeated, fled, vanished, remaining
 
 
 def species_line(e):
@@ -276,19 +278,19 @@ def species_line(e):
     base = '%s ×%d' % (e['name'], tot) if tot > 1 else e['name']
     if vai >= tot: return base
     remainder = max(0, tot - vai - fui - dis)
-    if tot == 1: return (tr('menus.name_fled') if fui else tr('menus.name_vanished') if dis else tr('menus.name_remained')) % base
+    if tot == 1: return (tr('history.name_fled') if fui else tr('history.name_vanished') if dis else tr('history.name_remained')) % base
     spells = [plural(n, *words) for n, words in zip((vai, fui, dis, remainder), SPELLS) if n > 0]
-    return tr('menus.name_value') % (base, ', '.join(spells))
+    return tr('history.name_value') % (base, ', '.join(spells))
 
 
 def battle_lines(c):
     """Text lines of a battle (Element of type 'c'), one per row: one per enemy species (species_line: who was there, who is defeated, fled, vanished or remaining), then, for a victory, the gold and experience
     won, then the items obtained ("Objets : Herbe médicinale, Pierre de vie"). Nothing is written when there was no item."""
     out = [species_line(e) for e in c.enemies]
-    if not out: out.append(tr('menus.unknown_enemies'))
+    if not out: out.append(tr('history.unknown_enemies'))
     if c.outcome == 'victory':
-        out.append(tr('menus.gold_experience') % (c.gold, c.xp))          # (non-breaking spaces: line wrapping does not make them disappear)
-        if c.objects: out.append(tr('menus.items') % ', '.join(o['name'] for o in c.objects))
+        out.append(tr('history.gold_experience') % (c.gold, c.xp))          # (non-breaking spaces: line wrapping does not make them disappear)
+        if c.objects: out.append(tr('history.items') % ', '.join(o['name'] for o in c.objects))
     return out
 
 

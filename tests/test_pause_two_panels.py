@@ -52,7 +52,7 @@ class TwoPanels(unittest.TestCase):
             xl, xr, top, wl, wr, kk, hf = p._two_panels(J.width, J.height, k)
             return img[int(top - hf + 8):int(top - hf + PA.HELP_H * kk - 12), int(xr + 30):int(xr + wr - 30)][..., :3].max()
         p.selected['root'] = 0; self.assertLess(zone(TI.render_texture(p)), 60)
-        p.selected['root'] = next(i for i, x in enumerate(p._entries_root()) if x['l'] == 'settings.quit_game'); self.assertGreater(zone(TI.render_texture(p)), 120)
+        p.selected['root'] = next(i for i, x in enumerate(p._entries_root()) if x['l'] == 'menu.quit_game'); self.assertGreater(zone(TI.render_texture(p)), 120)
         J, p = opened('difficulty'); p.selected['difficulty'] = 2; self.assertGreater(zone(TI.render_texture(p)), 120)
 
     def test_same_frame_content_at_the_top(self):
@@ -86,8 +86,8 @@ class TwoPanels(unittest.TestCase):
         L, R = J.reg.codes('L')[0], J.reg.codes('R')[0]                                                  # (the previous / next page keys: Q / R on a QWERTY keyboard)
         p.key_press(R); self.assertEqual(p.stack, ['root', 'controls'])
         p.key_press(L); p.key_press(L); self.assertEqual(p.stack, ['root', 'display'])
-        p.key_press(L); self.assertEqual(p.stack, ['root']); self.assertEqual(p._entries_root()[p.selected['root']]['l'], 'settings.resume'); self.assertTrue(p.opened)
-        p.key_press(L); self.assertEqual(p.stack, ['root']); self.assertEqual(p._entries_root()[p.selected['root']]['l'], 'settings.quit_game')          # (loops: the last line)
+        p.key_press(L); self.assertEqual(p.stack, ['root']); self.assertEqual(p._entries_root()[p.selected['root']]['l'], 'menu.resume'); self.assertTrue(p.opened)
+        p.key_press(L); self.assertEqual(p.stack, ['root']); self.assertEqual(p._entries_root()[p.selected['root']]['l'], 'menu.quit_game')          # (loops: the last line)
 
     def test_click_on_the_root_opens_its_page(self):
         J, p = root_menu(); TI.render_texture(p)

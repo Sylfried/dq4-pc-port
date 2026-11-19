@@ -9,7 +9,6 @@ from dq456_pc.menus import saves_screen as ES
 from dq456_pc.menus import language_screen as LS
 from dq456_pc.render import title_sky as CT
 from dq456_pc.render import postfx as PF
-from dq456_pc import paths as CH
 from dq456_pc.menus import flags as FL
 from dq456_pc.menus import ui_menu as UI
 from dq456_pc.window.constants import EXTENDED_SKIES, SCENERY_BIAS, SFX_BUTTON
@@ -156,22 +155,13 @@ class TitleMixin:
         return bool(wnd and wnd.typ == 53)
 
     # ---- language plate of the start menu
-    def other_game_language(self):
-        """The game language the language plate switches to ('en' from French, 'fr' from English), or None if its APK files are missing (or the APK files are forced: --apk, tests)."""
-        other = 'en' if self.game_language == 'fr' else 'fr'
-        if getattr(self.args, 'apk_forced', False): return None
-        try: return other if CH.FOLDERS.choose_apk(other)[1] == other else None
-        except Exception: return None
-
     def _language_plate(self, wnd):
-        """Every frame of the start menu: the globe on the language plate (texture drawn once), grayed if the other language cannot be loaded."""
+        """Every frame of the start menu: the globe on the language plate (texture drawn once); always active: every language of the port can be chosen, with or without its own APK files."""
         if 'globe' not in self.ui_render.tex: self.ui_render.add_texture('globe', FL.globe(UI.GLOBE_PX))
-        if getattr(self, '_other_language', 0) == 0: self._other_language = self.other_game_language()          # (the APK folders are looked at once per game)
-        wnd.set_language_globe(self._other_language is not None)
+        wnd.set_language_globe(True)
 
     def open_language_screen(self):
-        """Language plate confirmed (click, Enter, A): the language screen, where each language is chosen by its flag; nothing when the other language cannot be loaded."""
-        if self.other_game_language() is None: return
+        """Language plate confirmed (click, Enter, A): the language screen, where each language is chosen by its flag."""
         self.port_screen = LS.LanguageScreen(self); self.press_state = None; self.hover_node = None
 
     def _open_saves(self):
@@ -184,7 +174,7 @@ class TitleMixin:
 
     def _after_import(self):
         """Adventure logs have just been imported (the engine's catalog was already re-read by the "Saves" screen)."""
-        self.toast(N_('menus.saves_imported'))                      # (N_: marks the text, which toast() translates)
+        self.toast(N_('saves.saves_imported'))                      # (N_: marks the text, which toast() translates)
 
     def _initial_border(self, wnd, cx, cy, s, visible_ones=False):
         """Black frame (like the port's other menus) behind the whole start menu (or the centered pre-game window)."""

@@ -323,7 +323,7 @@ class Window:
         self.pictures = next((v for k, v in PICTURE_WINDOWS.items() if name_str.startswith(k)), None); self.picture_index = name_str.startswith('Make_ShopPicture(')
         self.start_menu = self.t.get('name', '').startswith('Make_StartMenuSecond')
         if self.start_menu:     # start menu: the "Sauv. cloud" entry (button 8) no longer exists for the engine (byte g_isAmazon); the port puts its "Saves" button (export / import) there, label set here
-            self.param_str(5, 0, tr('menus.saves'))
+            self.param_str(5, 0, tr('saves.saves'))
             self.language_plate = self._add_language_plate()
         if name_str.startswith('Make_Chapter('):               # chapter title: the exporter sees the quad of MenuParts.CreateFromTexture("Menu/map/hyodai1", bFitWidth = true, haspect = 1) with its default mesh (square of 450) and no texture (created by the code)
             for node in self.N.values():                  # CreateFromTexture fits the width (450) and deduces the height from the texture (256 x 128: 225): gold banner on a blue background, centered
@@ -431,7 +431,7 @@ class Window:
                 if o + j < len(node['uv']): node['uv'][o + j] = list(uv)
 
     def param_str(self, i, no, s):
-        if getattr(self, 'start_menu', False) and (i, no) == (5, 0): s = tr('menus.saves')          # (DQ V / VI ignore g_isAmazon there and keep sending "Sauv. cloud": the port's button keeps its own label)
+        if getattr(self, 'start_menu', False) and (i, no) == (5, 0): s = tr('saves.saves')          # (DQ V / VI ignore g_isAmazon there and keep sending "Sauv. cloud": the port's button keeps its own label)
         if self.church: self.church_texts[(i, no)] = s
         p = self.params.get((i, no))
         if not p: return
@@ -856,7 +856,7 @@ class Window:
         return self.N[nid]
 
     def set_language_globe(self, available):
-        """The globe of the language plate; grayed (gray shader, no hover or confirmation) when the other language's APK files are missing: there is nothing to choose."""
+        """The globe of the language plate; grayed (gray shader, no hover or confirmation) when `available` is False (the port keeps it active: every language can be chosen)."""
         pl = getattr(self, 'language_plate', None)
         if pl is None: return
         pl['state'] = STATE_NORMAL if available else STATE_GRAYED

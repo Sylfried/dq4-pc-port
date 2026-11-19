@@ -80,7 +80,7 @@ class Migration(unittest.TestCase):
         self.assertFalse(r['sound']); self.assertEqual(r['keys']['up'][0], 'O')
 
     def test_language_read_before_the_settings(self):
-        for content, wanted in (({'langue': 'systeme'}, 'system'), ({'langue': 'en'}, 'en'), ({'language': 'fr'}, 'fr'), ({'langue': 'systeme', 'language': 'en'}, 'en'), ({'langue': 'xx'}, 'system')):
+        for content, wanted in (({'langue': 'systeme'}, 'system'), ({'langue': 'en'}, 'en-us'), ({'language': 'fr'}, 'fr-fr'), ({'langue': 'systeme', 'language': 'en'}, 'en-us'), ({'language': 'zh-tw'}, 'zh-tw'), ({'langue': 'xx'}, 'system')):
             _, path = load(content); self.assertEqual(LG.read_setting(path), wanted, content)
 
     def test_old_legacy_migrations_still_work_after_the_renaming(self):

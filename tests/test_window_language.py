@@ -25,7 +25,7 @@ from dq456_pc.persistence import savestates as SS, logfile_format as FJ, saves a
 french = TL.french
 
 
-OWN_KEYS = set(TL.catalog_by_file('fr')['window']) | set(TL.catalog_by_file('fr')['misc'])        # the keys of this group (texts/<language>/window.py and misc.py)
+OWN_KEYS = set(TL.LG.section_texts('fr-fr', 'window'))        # the keys of this group (the keys "window.*" of dq456_pc/languages/<language>.json)
 FR, EN = LG.catalog('fr'), LG.catalog('en')
 FOLDER = os.path.join(ROOT, 'dq456_pc')
 WINDOW_FILES = [os.path.join('dq456_pc', 'window', f) for f in ('game.py', 'full_screen.py', 'field.py', 'keyboard_mouse.py', 'camera.py', 'options.py', 'helpers.py', 'battle_scene.py', 'snapshots.py')]
@@ -89,10 +89,9 @@ class Coverage(unittest.TestCase):
         self.assertEqual(missing_items, [])
 
     def test_no_orphan_key(self):
-        """Every key of window.py and misc.py is used in the code (a text changed or removed in the code does not leave its translation behind)."""
+        """Every key "window.*" is used in the code (a text changed or removed in the code does not leave its translation behind)."""
         used = set()
         for d, _, fs in os.walk(FOLDER):
-            if os.sep + 'texts' in d: continue
             for f in fs:
                 if f.endswith('.py') and '__pycache__' not in d:
                     for n in ast.walk(tree(os.path.relpath(os.path.join(d, f), ROOT))):
@@ -169,7 +168,7 @@ class CommandLine(unittest.TestCase):
         with entry('fr'): fr = self.helpers()
         with entry('en'): ang = self.helpers()
         self.assertEqual(fr, ang); self.assertGreaterEqual(len(fr), 33)                                                  # (the help is a console text: English, whatever the tool language)
-        self.assertEqual(fr['--apk'], 'folder of the 3 APK files; default: data\\apk\\dq4\\fr or data\\apk\\dq4\\en, whichever matches the language chosen in the Esc menu (read when the game starts, and again when the language changes: the game restarts on the title screen)')
+        self.assertEqual(fr['--apk'], 'folder of the 3 APK files; default: data\\apk\\dq4\\<language>, the language chosen in the Esc menu (en, fr, de...; without APK files there: the English ones, otherwise the French ones; read when the game starts, and again when the language changes: the game restarts on the title screen)')
         self.assertEqual(fr['--no-sound'], 'turns the sound off for this session (the Esc menu can turn it back on)')
         for option in fr:
             self.assertFalse(french(fr[option]), '%s : %r' % (option, fr[option]))
@@ -188,10 +187,10 @@ class CommandLine(unittest.TestCase):
         self.assertEqual(P.settings_file(['--settings'], self.d), self.d.settings)                  # missing value: the parser will complain about it
 
     def test_language_comes_from_setting_not_computer(self):
-        self.settings('en'); self.assertEqual(P.set_language([], self.d), 'en')
-        self.settings('fr'); self.assertEqual(P.set_language([], self.d), 'fr')
+        self.settings('en'); self.assertEqual(P.set_language([], self.d), 'en-us')
+        self.settings('fr'); self.assertEqual(P.set_language([], self.d), 'fr-fr')
         other = self.settings('en', os.path.join(self.t, 'autre', 'settings.json'))
-        self.assertEqual(P.set_language(['--settings', other], self.d), 'en')                           # --settings wins over the default file ('fr')
+        self.assertEqual(P.set_language(['--settings', other], self.d), 'en-us')                           # --settings wins over the default file ('fr')
         os.remove(self.d.settings); self.assertEqual(P.set_language([], self.d), LG.select_language('system'))     # no file: the computer's language
 
     def main(self, argv):
@@ -218,10 +217,10 @@ class CommandLine(unittest.TestCase):
     def test_language_is_set_before_migration(self):
         """The migration messages (paths.migrate) are in the language of the setting: default reglages.json, or that of --settings; and the language does not depend on the computer's."""
         empty = os.path.join(self.t, 'vide'); os.makedirs(empty)
-        self.settings('en'); views, _, _ = self.main(['--apk', empty]); self.assertEqual(views, ['en'])
-        self.settings('fr'); views, _, _ = self.main(['--apk', empty]); self.assertEqual(views, ['fr'])
+        self.settings('en'); views, _, _ = self.main(['--apk', empty]); self.assertEqual(views, ['en-us'])
+        self.settings('fr'); views, _, _ = self.main(['--apk', empty]); self.assertEqual(views, ['fr-fr'])
         other = self.settings('en', os.path.join(self.t, 'autre.json')); views, text, _ = self.main(['--apk', empty, '--settings', other])
-        self.assertEqual(views, ['en']); self.assertIn('The APK files of Dragon Quest IV were not found.', text)
+        self.assertEqual(views, ['en-us']); self.assertIn('The APK files of Dragon Quest IV were not found.', text)
 
     def test_migration_impossible(self):
         CH.FOLDERS = self.d
@@ -270,7 +269,7 @@ class Resume(unittest.TestCase):
 
     def test_in_french_the_text_is_english_too(self):
         with entry('fr'): done, lines = self.migrate()                                                                    # (the migration sentences are console messages: English, whatever the language)
-        for ph in ('cache moved: dq4_pc\\cache -> data\\cache\\dq4\\fr', '1 APK file(s) copied: jeux\\DQ4\\patched_apks -> data\\apk\\dq4\\fr',
+        for ph in ('cache moved: dq4_pc\\cache -> data\\cache\\dq4\\fr-fr', '1 APK file(s) copied: jeux\\DQ4\\patched_apks -> data\\apk\\dq4\\fr-fr',
                    '1 settings file(s) copied: dq4_pc -> data\\settings', 'error log copied: data\\logs'):
             self.assertIn(ph, done)
         self.assertTrue(any(ph.startswith('old folders moved: ') for ph in done), done)
@@ -278,7 +277,7 @@ class Resume(unittest.TestCase):
 
     def test_in_english_no_french_word_left(self):
         with entry('en'): done, lines = self.migrate()
-        self.assertIn('cache moved: dq4_pc\\cache -> data\\cache\\dq4\\fr', done); self.assertIn('1 APK file(s) copied: jeux\\DQ4\\patched_apks -> data\\apk\\dq4\\fr', done)
+        self.assertIn('cache moved: dq4_pc\\cache -> data\\cache\\dq4\\fr-fr', done); self.assertIn('1 APK file(s) copied: jeux\\DQ4\\patched_apks -> data\\apk\\dq4\\fr-fr', done)
         self.assertIn('1 settings file(s) copied: dq4_pc -> data\\settings', done); self.assertIn('error log copied: data\\logs', done)
         self.assertGreaterEqual(len(done), 6); self.assertEqual(lines, ['Migration: ' + ph for ph in done])
         for ph in lines: self.assertFalse(french(ph), ph)
@@ -299,7 +298,7 @@ class Resume(unittest.TestCase):
         with mock.patch.dict(os.environ, {'DQ_DATA': data}), mock.patch('os.replace'), mock.patch('shutil.copy2'), mock.patch('shutil.copyfile'):
             LG.select_language('fr')
             with warnings.catch_warnings(): warnings.simplefilter('ignore'); output(runpy.run_module, 'dq456_pc.paths', run_name='__main__')
-        self.assertEqual(LG.current_language(), 'en')
+        self.assertEqual(LG.current_language(), 'en-us')
 
 
 # ======================================================================================================================================================
@@ -446,7 +445,7 @@ class Window(unittest.TestCase):
     def test_savestate_failure(self):
         for code, att in (('fr', "Chargement de l'état 3 impossible : OSError('disque')"), ('en', "Loading state 3 failed: OSError('disque')")):                  # (the window's small message follows the language)
             with entry(code):
-                j = self.fake(); _, text = output(WND.Game._note_state_failure, j, LG.tr('window.loading_state') % 3, 'Loading savestate 3', OSError('disque'))
+                j = self.fake(); _, text = output(WND.Game._note_state_failure, j, LG.tr('save_states.loading_state') % 3, 'Loading savestate 3', OSError('disque'))
             console = "Loading savestate 3 failed: OSError('disque') ---\n"                                                                                        # (the console and the log: English in both languages)
             self.assertEqual(j.msgs, [att]); self.assertIn(console, text); self.assertTrue(self.logfile().endswith(console)); self.assertFalse(french(text.replace('disque', '')))
         self.assertFalse(french(j.msgs[0].replace('disque', '')))
@@ -495,7 +494,7 @@ class Window(unittest.TestCase):
             calls = []
             with entry(code), mock.patch('subprocess.Popen', lambda *a, **kw: calls.append(kw) or types.SimpleNamespace()):
                 WND.Game._launch_preparation(types.SimpleNamespace(engine=types.SimpleNamespace(apk_data='x.apk')), 'cache')
-            self.assertEqual(calls[0]['env']['DQ_LANGUAGE'], code)
+            self.assertEqual(calls[0]['env']['DQ_LANGUAGE'], LG.OLD_CODES[code])
         with entry('en'), mock.patch('subprocess.Popen', side_effect=OSError('non')), mock.patch('threading.Thread'):
             j = types.SimpleNamespace(engine=types.SimpleNamespace(apk_data='x.apk'), data=types.SimpleNamespace(prepare=None), prep_stop=None)
             _, text = output(WND.Game._launch_preparation, j, 'cache')

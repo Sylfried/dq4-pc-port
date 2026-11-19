@@ -51,44 +51,44 @@ HELP_H = 96.0                                        # two windows: height of th
 HERO_SHEETS = (100, 103)                             # the hero's sprite sheets (h100 male, h103 female): the pictures of the gender page of a new game
 FRONT_ROW = 4; WALK = (2, 1, 0, 1); WALK_STEP = 0.1    # facing the camera (row 4 of 8), walking: the poses the engine sends in a town, 3 frames of 1/30 s each (on the world map: 6)
 SPRITE_SIZE = 0.75                                    # gender page: the heroes at 3/4 of the largest whole multiple that fits
-GENDER_HINT = 'settings.gender_hero_new_game   settings.left_right_choose'          # (help of the gender page)
+GENDER_HINT = 'new_game.gender_hero_new_game   new_game.left_right_choose'          # (help of the gender page)
 DEVICE_ROW = 48.0                                    # "Controls": height of the Clavier / Manette row, centered just under the page's title (fixed: the lines scroll under it)
 GAME_SIZE = 1.0                                  # scale of the texts in the game font (relative to the system fonts)
 MSAA_CHOICES = (0, 2, 4, 8)
 # mouse gestures on the field ("Controls" page, read-only: these are not keys): (gesture, effect); the camera only turns left / right and recenters
-KEY_SIDE = {'LSHIFT': N_('settings.key_side_left'), 'RSHIFT': N_('settings.key_side_right'), 'LCTRL': N_('settings.key_side_left'), 'RCTRL': N_('settings.key_side_right')}          # "Controls": the keys that exist on both sides share their picture; a small word beside it says which one (Alt and Alt Gr have pictures of their own: no word)
-MOUSE_GESTURES = ((N_('settings.hold_middle_click_move'), N_('settings.rotates_camera')),
-                 (N_('settings.middle_click'), N_('settings.recenters_camera')))          # (French texts, translated as they are drawn)
+KEY_SIDE = {'LSHIFT': N_('keys.key_side_left'), 'RSHIFT': N_('keys.key_side_right'), 'LCTRL': N_('keys.key_side_left'), 'RCTRL': N_('keys.key_side_right')}          # "Controls": the keys that exist on both sides share their picture; a small word beside it says which one (Alt and Alt Gr have pictures of their own: no word)
+MOUSE_GESTURES = ((N_('controls.hold_middle_click_move'), N_('controls.rotates_camera')),
+                 (N_('controls.middle_click'), N_('controls.recenters_camera')))          # (French texts, translated as they are drawn)
 # interface editor: names of the game windows (Make_* functions of MenuPortItemTable; 'boutons' = buttons and D-pad of the screen, 'msg' = dialogues) and groupings
 # of the "Interface to edit" list. A game window appears there only if it has a mesh to adjust (RG.REMOVED_WINDOWS: game launch, network, windows without a mesh);
 # an unknown window goes into "Other".
-WINDOW_NAMES = {'buttons': N_('settings.screen_buttons_d_pad'), 'vehicle_button': N_('settings.vehicle_button'), 'speed_button': N_('settings.battle_speed_button'), 'msg': N_('settings.dialogue_messages'), 'YesNo': N_('settings.yes_no'), 'Chapter': N_('settings.chapter_title'),
-                 'RootMenu': N_('settings.main_menu'), 'LeftCharaList': N_('settings.character_list'), 'TargetCharaList': N_('settings.character_selection'), 'Money': N_('settings.gold'), 'Pageing': N_('settings.page_arrows'),
-                 'ItemList': N_('settings.item_list'), 'ItemInfo': N_('settings.item_info'), 'OperationItemList': N_('settings.item_actions'),
-                 'Status': N_('settings.character_status'), 'Chapter2Status': N_('settings.chapter_2_status'), 'MemberShift': N_('settings.party_order'), 'MemberShiftButton': N_('settings.party_order_buttons'),
-                 'NameButton': N_('settings.miscellaneous_button_list'), 'BCInfo': N_('settings.quick_save'), 'Senreki': N_('settings.adventure_log'), 'MonsterEncyclopedia': N_('settings.bestiary'),
-                 'CityMap': N_('settings.map_overview_town_world'), 'WorldLargeMap': N_('settings.map_large_world_map'), 'MapButton': N_('settings.map_mode_back_buttons'), 'ShopMap': N_('settings.map_shop_list'),
-                 'BattleUpStatus': N_('settings.battle_party_banner'), 'BattleRoot': N_('settings.battle_main_menu'), 'BattleAction': N_('settings.battle_actions'), 'BattleTarget': N_('settings.battle_targets'), 'BattleGo': N_('settings.battle_go_ahead'),
-                 'BattleIM': N_('settings.battle_items_spells'), 'BattleInfo': N_('settings.battle_party_info'), 'BattleEnemyTarget': N_('settings.battle_enemy_target'), 'BattlePartyTarget': N_('settings.battle_ally_target'),
-                 'BattleChangeButton': N_('settings.battle_change'), 'BattleChangeInfo': N_('settings.battle_change_info'),
-                 'ShopRoot': N_('settings.shop_menu'), 'ShopBuy': N_('settings.shop_buy'), 'ShopBuyInfo': N_('settings.shop_item_info'), 'ShopSellItemList': N_('settings.shop_sell'), 'ShopSellItemInfo': N_('settings.shop_sell_info'),
-                 'TorunekoMiseban': N_('settings.torneko_s_shop'), 'BankDeposit': N_('settings.bank_deposit'), 'BankDraw': N_('settings.bank_withdraw'), 'ChurchRoot': N_('settings.church_menu'), 'ChurchWork': N_('settings.church_services'),
-                 'Casino_CoinShop': N_('settings.casino_coins'), 'Casino_GiftList': N_('settings.casino_prizes'), 'Casino_GiftTarget': N_('settings.casino_recipient'), 'Casino_Slot': N_('settings.casino_slot_machine'), 'Casino_Poker': N_('settings.casino_poker'),
-                 'Casino_FightStadiumSelect': N_('settings.casino_arena_selection'), 'Casino_FightStadiumBet': N_('settings.casino_arena_bet'), 'Casino_FightStadiumCoin': N_('settings.casino_arena_coins')}
-INTERFACE_GROUPS = ((N_('settings.touch_screen'), ('buttons', 'vehicle_button')),
-                     (N_('settings.dialogue'), ('msg', 'YesNo', 'Chapter')),
-                     (N_('settings.game_menu'), ('RootMenu', 'LeftCharaList', 'TargetCharaList', 'Money', 'Pageing')),
-                     (N_('settings.items'), ('ItemList', 'ItemInfo', 'OperationItemList')),
-                     (N_('settings.party_status'), ('Status', 'Chapter2Status', 'MemberShift', 'MemberShiftButton')),
-                     (N_('settings.miscellaneous'), ('NameButton', 'BCInfo', 'Senreki', 'MonsterEncyclopedia')),
-                     (N_('settings.maps'), ('CityMap', 'WorldLargeMap', 'MapButton', 'ShopMap')),
-                     (N_('settings.battle'), ('speed_button', 'BattleUpStatus', 'BattleRoot', 'BattleAction', 'BattleTarget', 'BattleGo', 'BattleIM', 'BattleInfo', 'BattleEnemyTarget', 'BattlePartyTarget', 'BattleChangeButton', 'BattleChangeInfo')),
-                     (N_('settings.shops_bank'), ('ShopRoot', 'ShopBuy', 'ShopBuyInfo', 'ShopSellItemList', 'ShopSellItemInfo', 'TorunekoMiseban', 'BankDeposit', 'BankDraw')),
-                     (N_('settings.churches'), ('ChurchRoot', 'ChurchWork')),
-                     (N_('settings.casino'), ('Casino_CoinShop', 'Casino_GiftList', 'Casino_GiftTarget', 'Casino_Slot', 'Casino_Poker', 'Casino_FightStadiumSelect', 'Casino_FightStadiumBet', 'Casino_FightStadiumCoin')))
+WINDOW_NAMES = {'buttons': N_('interface.screen_buttons_d_pad'), 'vehicle_button': N_('interface.vehicle_button'), 'speed_button': N_('interface.battle_speed_button'), 'msg': N_('interface.dialogue_messages'), 'YesNo': N_('interface.yes_no'), 'Chapter': N_('interface.chapter_title'),
+                 'RootMenu': N_('interface.main_menu'), 'LeftCharaList': N_('interface.character_list'), 'TargetCharaList': N_('interface.character_selection'), 'Money': N_('interface.gold'), 'Pageing': N_('interface.page_arrows'),
+                 'ItemList': N_('interface.item_list'), 'ItemInfo': N_('interface.item_info'), 'OperationItemList': N_('interface.item_actions'),
+                 'Status': N_('interface.character_status'), 'Chapter2Status': N_('interface.chapter_2_status'), 'MemberShift': N_('interface.party_order'), 'MemberShiftButton': N_('interface.party_order_buttons'),
+                 'NameButton': N_('interface.miscellaneous_button_list'), 'BCInfo': N_('interface.quick_save'), 'Senreki': N_('interface.adventure_log'), 'MonsterEncyclopedia': N_('interface.bestiary'),
+                 'CityMap': N_('interface.map_overview_town_world'), 'WorldLargeMap': N_('interface.map_large_world_map'), 'MapButton': N_('interface.map_mode_back_buttons'), 'ShopMap': N_('interface.map_shop_list'),
+                 'BattleUpStatus': N_('interface.battle_party_banner'), 'BattleRoot': N_('interface.battle_main_menu'), 'BattleAction': N_('interface.battle_actions'), 'BattleTarget': N_('interface.battle_targets'), 'BattleGo': N_('interface.battle_go_ahead'),
+                 'BattleIM': N_('interface.battle_items_spells'), 'BattleInfo': N_('interface.battle_party_info'), 'BattleEnemyTarget': N_('interface.battle_enemy_target'), 'BattlePartyTarget': N_('interface.battle_ally_target'),
+                 'BattleChangeButton': N_('interface.battle_change'), 'BattleChangeInfo': N_('interface.battle_change_info'),
+                 'ShopRoot': N_('interface.shop_menu'), 'ShopBuy': N_('interface.shop_buy'), 'ShopBuyInfo': N_('interface.shop_item_info'), 'ShopSellItemList': N_('interface.shop_sell'), 'ShopSellItemInfo': N_('interface.shop_sell_info'),
+                 'TorunekoMiseban': N_('interface.torneko_s_shop'), 'BankDeposit': N_('interface.bank_deposit'), 'BankDraw': N_('interface.bank_withdraw'), 'ChurchRoot': N_('interface.church_menu'), 'ChurchWork': N_('interface.church_services'),
+                 'Casino_CoinShop': N_('interface.casino_coins'), 'Casino_GiftList': N_('interface.casino_prizes'), 'Casino_GiftTarget': N_('interface.casino_recipient'), 'Casino_Slot': N_('interface.casino_slot_machine'), 'Casino_Poker': N_('interface.casino_poker'),
+                 'Casino_FightStadiumSelect': N_('interface.casino_arena_selection'), 'Casino_FightStadiumBet': N_('interface.casino_arena_bet'), 'Casino_FightStadiumCoin': N_('interface.casino_arena_coins')}
+INTERFACE_GROUPS = ((N_('interface.touch_screen'), ('buttons', 'vehicle_button')),
+                     (N_('interface.dialogue'), ('msg', 'YesNo', 'Chapter')),
+                     (N_('interface.game_menu'), ('RootMenu', 'LeftCharaList', 'TargetCharaList', 'Money', 'Pageing')),
+                     (N_('interface.items'), ('ItemList', 'ItemInfo', 'OperationItemList')),
+                     (N_('interface.party_status'), ('Status', 'Chapter2Status', 'MemberShift', 'MemberShiftButton')),
+                     (N_('interface.miscellaneous'), ('NameButton', 'BCInfo', 'Senreki', 'MonsterEncyclopedia')),
+                     (N_('interface.maps'), ('CityMap', 'WorldLargeMap', 'MapButton', 'ShopMap')),
+                     (N_('save_states.battle'), ('speed_button', 'BattleUpStatus', 'BattleRoot', 'BattleAction', 'BattleTarget', 'BattleGo', 'BattleIM', 'BattleInfo', 'BattleEnemyTarget', 'BattlePartyTarget', 'BattleChangeButton', 'BattleChangeInfo')),
+                     (N_('interface.shops_bank'), ('ShopRoot', 'ShopBuy', 'ShopBuyInfo', 'ShopSellItemList', 'ShopSellItemInfo', 'TorunekoMiseban', 'BankDeposit', 'BankDraw')),
+                     (N_('interface.churches'), ('ChurchRoot', 'ChurchWork')),
+                     (N_('interface.casino'), ('Casino_CoinShop', 'Casino_GiftList', 'Casino_GiftTarget', 'Casino_Slot', 'Casino_Poker', 'Casino_FightStadiumSelect', 'Casino_FightStadiumBet', 'Casino_FightStadiumCoin')))
 OWN_INTERFACES = (RG.SCREEN_TARGET, 'msg', RG.SPEED_TARGET, RG.VEHICLE_TARGET)         # editor interfaces that are not Make_* windows of the engine: buttons and D-pad of the screen, dialogues, battle speed button, DQ VI's vehicle button
 HUD_TARGETS = (RG.SCREEN_TARGET, RG.SPEED_TARGET, RG.VEHICLE_TARGET)          # editor interfaces made of on-screen buttons (hud_mobile.editor_names), placed by dragging them
-LEGACY_LOCATIONS = {'Carte du monde': 'settings.world_map', 'Combat': 'settings.battle'}     # location of a savestate written by an older version (French text instead of a key)
+LEGACY_LOCATIONS = {'Carte du monde': 'save_states.world_map', 'Combat': 'save_states.battle'}     # location of a savestate written by an older version (French text instead of a key)
 HEADER = '#'                                                    # value of a drop-down list that is a group subheading ("#Dialogues"): never chosen, skipped by the cursor
 WITHOUT_EDITING = RG.REMOVED_WINDOWS
 LONG_PRESS_DELAY = float(os.environ['DQ_LONG_PRESS']) if os.environ.get('DQ_LONG_PRESS') else None      # editor panel: press held without moving (seconds) before it lifts; None = Windows' click / hold limit (inputs.system_click; 0.35 s before)
@@ -109,7 +109,7 @@ def system_double_click():
     return delay, w, h
 
 SELECTION_BORDER = (255, 235, 130)                               # yellow frame of the element chosen in the editor preview (the same as that of the screen buttons: hud_mobile.py)
-HIDDEN_WORDS = (N_('settings.hidden_feminine'), N_('settings.hidden_masculine'))                             # label of a hidden element in the editor preview: feminine (window, D-pad), masculine (buttons)
+HIDDEN_WORDS = (N_('interface.hidden_feminine'), N_('interface.hidden_masculine'))                             # label of a hidden element in the editor preview: feminine (window, D-pad), masculine (buttons)
 
 
 class Pause:
@@ -147,7 +147,8 @@ class Pause:
             if os.path.exists(f):
                 try: pyglet.font.add_file(f); self._pol = ('FOT-GMaruGo Pro', 'FOT-GMaruGo Pro M', 'GMaruGoPro-M')
                 except Exception as ex: print('game font not loaded:', ex, flush=True)
-        return self.J._lbl(tr(text) if translate else text, size_value * (1.0 if not self._pol else GAME_SIZE), color, self._pol)          # (any text drawn by the pages goes through translation; a text without a translation stays as is)
+        own = LG.language_of_name(text) if isinstance(text, str) else None          # (a language's own name: written with that language's fonts)
+        return self.J._lbl(tr(text) if translate else text, size_value * (1.0 if not self._pol else GAME_SIZE), color, LG.font_families(self._pol, own))          # (any text drawn by the pages goes through translation; a text without a translation stays as is)
 
     # ---- game menu sprites
     def _sheet(self, name_str):
@@ -340,30 +341,30 @@ class Pause:
     def _entries_root(self):
         if self.new_game:                                  # panel of a new game: its rules, the application's settings, the hero's name (the game's name entry, drawn on the right), then the start
             ready = self._hero_ready()                     # ("Start the adventure" grayed as long as the hero has no name or no gender)
-            return [dict(t='act', l='settings.difficulty', ok=self._go('difficulty'), sub=True, page='difficulty'),
-                    dict(t='act', l='settings.randomizer', ok=self._go('randomizer'), sub=True, page='randomizer'),
-                    dict(t='act', l='settings.display', ok=self._go('display'), sub=True, page='display'),
-                    dict(t='act', l='settings.sound', ok=self._go('sound'), sub=True, page='sound'),
-                    dict(t='act', l='settings.controls', ok=self._go('controls'), sub=True, page='controls'),
-                    dict(t='act', l='settings.hero_name', ok=self._go('name'), sub=True, page='name', hint='settings.name_hero_new_game'),
+            return [dict(t='act', l='menu.difficulty', ok=self._go('difficulty'), sub=True, page='difficulty'),
+                    dict(t='act', l='menu.randomizer', ok=self._go('randomizer'), sub=True, page='randomizer'),
+                    dict(t='act', l='menu.display', ok=self._go('display'), sub=True, page='display'),
+                    dict(t='act', l='menu.sound', ok=self._go('sound'), sub=True, page='sound'),
+                    dict(t='act', l='menu.controls', ok=self._go('controls'), sub=True, page='controls'),
+                    dict(t='act', l='new_game.hero_name', ok=self._go('name'), sub=True, page='name', hint='new_game.name_hero_new_game'),
                     *([] if ENGINE.ENGINE_V2 else [          # (DQ V / VI: the hero is a boy, the game asks no gender)
-                        dict(t='act', l='settings.hero_gender', ok=self._go('gender'), sub=True, page='gender', hint='settings.gender_hero_new_game')]),
-                    dict(t='act', l='settings.start_adventure', ok=self._start_adventure, off=lambda: not self._hero_ready(), hint='settings.rules_saved_with_game' if ready else 'settings.choose_name_gender_first')]
-        return [dict(t='act', l='settings.resume', ok=self.shutdown),
-                dict(t='act', l='settings.display', ok=self._go('display'), sub=True, page='display'),
-                dict(t='act', l='settings.sound', ok=self._go('sound'), sub=True, page='sound'),
-                dict(t='act', l='settings.controls', ok=self._go('controls'), sub=True, page='controls'),
-                dict(t='act', l='settings.save_states', ok=self._go('states'), sub=True, page='states'),
-                dict(t='act', l='settings.history', ok=lambda: (self.hist.enter(), self._go('history')()), sub=True, page='history', off=lambda: not getattr(self.J, 'history_possible', lambda: True)(),
-                     hint='settings.only_available_when_control_character'),
-                dict(t='act', l='settings.achievements', ok=self._go('achievements'), sub=True, page='achievements'),
-                dict(t='act', l='settings.difficulty', ok=self._go('difficulty'), sub=True, page='difficulty'),
-                dict(t='act', l='settings.cheats', ok=self._go('cheats'), sub=True, page='cheats'),
-                dict(t='act', l='settings.randomizer', ok=self._go('randomizer'), sub=True, page='randomizer'),
-                dict(t='act', l='settings.return_title_screen', ok=self._return_to_title, off=lambda: not getattr(self.J, 'back_to_title_possible', lambda: True)(),
-                     hint='settings.only_available_towns_world_map'),          # (the menu closes, the game opens its Yes / No box: the only way back to the game's title)
-                dict(t='act', l='settings.quit_game', ok=self._quit_game, page='quit',          # (no chevron, even though the line opens the Yes / No confirmation)
-                     hint='settings.closes_game_settings_history_saved')]          # same Yes / No confirmation page as the start menu (page 'quitter', "No" preselected); "Yes" -> Game.quit_game: on_close then exit
+                        dict(t='act', l='new_game.hero_gender', ok=self._go('gender'), sub=True, page='gender', hint='new_game.gender_hero_new_game')]),
+                    dict(t='act', l='new_game.start_adventure', ok=self._start_adventure, off=lambda: not self._hero_ready(), hint='new_game.rules_saved_with_game' if ready else 'new_game.choose_name_gender_first')]
+        return [dict(t='act', l='menu.resume', ok=self.shutdown),
+                dict(t='act', l='menu.display', ok=self._go('display'), sub=True, page='display'),
+                dict(t='act', l='menu.sound', ok=self._go('sound'), sub=True, page='sound'),
+                dict(t='act', l='menu.controls', ok=self._go('controls'), sub=True, page='controls'),
+                dict(t='act', l='menu.save_states', ok=self._go('states'), sub=True, page='states'),
+                dict(t='act', l='menu.history', ok=lambda: (self.hist.enter(), self._go('history')()), sub=True, page='history', off=lambda: not getattr(self.J, 'history_possible', lambda: True)(),
+                     hint='menu.only_available_when_control_character'),
+                dict(t='act', l='menu.achievements', ok=self._go('achievements'), sub=True, page='achievements'),
+                dict(t='act', l='menu.difficulty', ok=self._go('difficulty'), sub=True, page='difficulty'),
+                dict(t='act', l='menu.cheats', ok=self._go('cheats'), sub=True, page='cheats'),
+                dict(t='act', l='menu.randomizer', ok=self._go('randomizer'), sub=True, page='randomizer'),
+                dict(t='act', l='menu.return_title_screen', ok=self._return_to_title, off=lambda: not getattr(self.J, 'back_to_title_possible', lambda: True)(),
+                     hint='menu.only_available_towns_world_map'),          # (the menu closes, the game opens its Yes / No box: the only way back to the game's title)
+                dict(t='act', l='menu.quit_game', ok=self._quit_game, page='quit',          # (no chevron, even though the line opens the Yes / No confirmation)
+                     hint='menu.closes_game_settings_history_saved')]          # same Yes / No confirmation page as the start menu (page 'quitter', "No" preselected); "Yes" -> Game.quit_game: on_close then exit
 
     def _choice(self, label, value_list, get, set_, off=False, default=NO_DEFAULT, restore_default=None, is_default=None):
         """Value entry: Yes / No = toggle (confirming or clicking toggles it; left = No, right = Yes); any other choice, even with two values = drop-down list
@@ -409,10 +410,11 @@ class Pause:
         return i
 
     def _value_name(self, label, v):
-        if label == 'settings.interface_edit': return self.target_name(v)
+        if label == 'interface.interface_edit': return self.target_name(v)
+        if label == 'language.title' and v != 'system': return LG.NAMES.get(v, v)          # (the languages added while the game runs too)
         n = self.names.get(label, {}).get(v)
         if n is not None: return n
-        if isinstance(v, bool): return N_('settings.yes') if v else N_('settings.no')
+        if isinstance(v, bool): return N_('common.yes') if v else N_('common.no')
         return '%d x %d' % v if isinstance(v, tuple) else str(v)
 
     def _curs(self, label, get, apply, minimum, maximum, step, step_f, fmt, mult=1.0, default=None):
@@ -425,20 +427,20 @@ class Pause:
         return d
 
     names = {
-        'settings.language': {'system': N_('settings.system'), 'en': N_('settings.english'), 'fr': N_('settings.french')},
-        'settings.shader': {0: N_('settings.none'), 1: 'EPX x8', 4: 'Pixel perfect'},
-        'settings.antialiasing': {0: N_('settings.none'), 2: 'x2', 4: 'x4', 8: 'x8'},
-        'settings.supersampling': {1.0: N_('settings.none'), 1.5: N_('settings.x1_5'), 2.0: 'x2'},
-        'settings.action': {'create': N_('settings.create_save_state'), 'load': N_('settings.load_save_state'), 'delete': N_('settings.delete_a_save_state')},
+        'language.title': {'system': N_('language.system')},          # (each language: its own name, LG.NAMES, drawn as it is: _value_name)
+        'display.shader': {0: N_('common.none'), 1: 'EPX x8', 4: 'Pixel perfect'},
+        'display.antialiasing': {0: N_('common.none'), 2: 'x2', 4: 'x4', 8: 'x8'},
+        'display.supersampling': {1.0: N_('common.none'), 1.5: N_('display.x1_5'), 2.0: 'x2'},
+        'controls.action': {'create': N_('save_states.create_save_state'), 'load': N_('save_states.load_save_state'), 'delete': N_('save_states.delete_a_save_state')},
     }
-    names['settings.text_speed'] = {0.5: N_('settings.very_slow'), 1.0: N_('settings.slow'), 2.0: N_('settings.fairly_slow'), 4.0: N_('settings.normal'), 8.0: N_('settings.fast'), 16.0: N_('settings.very_fast'), 4000.0: N_('settings.instant')}      # (French names, translated as they are drawn: `_value_name` returns data)
-    names['settings.filter'] = {'none': N_('settings.none'), 'sepia': N_('settings.sepia'), 'gray': N_('settings.black_white'), 'vivid': N_('settings.vivid_colors'), 'soft': N_('settings.soft_colors'), 'warm': N_('settings.warm'), 'cool': N_('settings.cool')}
-    names['settings.hero_gender'] = {0: N_('settings.male'), 1: N_('settings.female')}                         # (the words of the game's own choice: Masculin / Féminin)
-    names['settings.items_setting'] = {0: N_('settings.items_unchanged'), 1: N_('settings.items_shuffled'), 2: N_('settings.items_random')}          # (randomizer/items.py: UNCHANGED, SHUFFLED, RANDOM)
-    names['settings.loot_setting'] = {0: N_('settings.loot_unchanged'), 1: N_('settings.loot_random')}                                            # (randomizer/items.py: LOOT_UNCHANGED, LOOT_RANDOM)
-    names['settings.encounters_setting'] = {0: N_('settings.encounters_unchanged'), 1: N_('settings.encounters_shuffled'), 2: N_('settings.encounters_random')}     # (randomizer/encounters.py: UNCHANGED, SHUFFLED, RANDOM)
-    names['settings.bosses_setting'] = {0: N_('settings.bosses_unchanged'), 1: N_('settings.bosses_shuffled'), 2: N_('settings.bosses_random')}      # (randomizer/encounters.py: UNCHANGED_BOSSES, SHUFFLED_BOSSES, RANDOM_BOSSES)
-    names['settings.battle_speed'] = RG.BATTLE_SPEED_NAMES                                                    # "Manual", "Normal", "Fast", "Very fast" (never x1, x2, x3)
+    names['display.text_speed'] = {0.5: N_('display.very_slow'), 1.0: N_('display.slow'), 2.0: N_('display.fairly_slow'), 4.0: N_('common.normal'), 8.0: N_('common.fast'), 16.0: N_('common.very_fast'), 4000.0: N_('display.instant')}      # (French names, translated as they are drawn: `_value_name` returns data)
+    names['display.filter'] = {'none': N_('common.none'), 'sepia': N_('display.sepia'), 'gray': N_('display.black_white'), 'vivid': N_('display.vivid_colors'), 'soft': N_('display.soft_colors'), 'warm': N_('display.warm'), 'cool': N_('display.cool')}
+    names['new_game.hero_gender'] = {0: N_('new_game.male'), 1: N_('new_game.female')}                         # (the words of the game's own choice: Masculin / Féminin)
+    names['randomizer.items_setting'] = {0: N_('randomizer.items_unchanged'), 1: N_('randomizer.items_shuffled'), 2: N_('randomizer.items_random')}          # (randomizer/items.py: UNCHANGED, SHUFFLED, RANDOM)
+    names['randomizer.loot_setting'] = {0: N_('randomizer.loot_unchanged'), 1: N_('randomizer.loot_random')}                                            # (randomizer/items.py: LOOT_UNCHANGED, LOOT_RANDOM)
+    names['randomizer.encounters_setting'] = {0: N_('randomizer.encounters_unchanged'), 1: N_('randomizer.encounters_shuffled'), 2: N_('randomizer.encounters_random')}     # (randomizer/encounters.py: UNCHANGED, SHUFFLED, RANDOM)
+    names['randomizer.bosses_setting'] = {0: N_('randomizer.bosses_unchanged'), 1: N_('randomizer.bosses_shuffled'), 2: N_('randomizer.bosses_random')}      # (randomizer/encounters.py: UNCHANGED_BOSSES, SHUFFLED_BOSSES, RANDOM_BOSSES)
+    names['controls.battle_speed'] = RG.BATTLE_SPEED_NAMES                                                    # "Manual", "Normal", "Fast", "Very fast" (never x1, x2, x3)
 
     def _entries_display(self):
         J, R = self.J, self.J.reg
@@ -449,30 +451,30 @@ class Pause:
             return s
         def set_language(v):
             LG.select_language(v)
-            if J.language_pending(): self._info(N_('settings.reload_language_at_menu_close') if J.on_title() else N_('settings.reload_language_at_title'))          # (the APKs are read when the game starts; it starts again on the title screen)
-        lang = self._choice('settings.language', list(LG.CHOICES), lambda: R['language'], set_('language', set_language), off=self.new_game, default=RG.DEFAULT['language'])          # (above "Fullscreen"; applies immediately; grayed in a new game's panel: the reload it needs would drop the game being started)
-        lang['hint'] = 'settings.language_tool_settings_history_saves   settings.system_french_if_windows_french   settings.game_language_apk_files_data'
-        win = self._choice('settings.fullscreen', [False, True], lambda: J.is_fullscreen, J.set_full_screen)          # (toggle: the old setting; F11 and Alt + Enter do the same thing; no "default value" button: windowed (No) is only the setting's default, settings.DEFAULT)
-        win['hint'] = 'settings.fullscreen_borderless_window_resolution_screen   settings.f11_alt_enter_switches_between'
-        msaa = self._choice('settings.antialiasing', list(MSAA_CHOICES), lambda: R['msaa'], set_('msaa'), default=RG.DEFAULT['msaa'])
-        if J.post.max_msaa is not None and R['msaa'] > J.post.max_msaa: msaa['hint'] = tr('settings.limited_x_graphics_card') % J.post.max_msaa          # (former red note: now only a tooltip)
+            if J.language_pending(): self._info(N_('language.reload_language_at_menu_close') if J.on_title() else N_('language.reload_language_at_title'))          # (the APKs are read when the game starts; it starts again on the title screen)
+        lang = self._choice('language.title', list(LG.CHOICES), lambda: R['language'], set_('language', set_language), off=self.new_game, default=RG.DEFAULT['language'])          # (above "Fullscreen"; applies immediately; grayed in a new game's panel: the reload it needs would drop the game being started)
+        lang['hint'] = 'language.tool_language_hint   language.system_language_hint   language.game_language_hint'
+        win = self._choice('display.fullscreen', [False, True], lambda: J.is_fullscreen, J.set_full_screen)          # (toggle: the old setting; F11 and Alt + Enter do the same thing; no "default value" button: windowed (No) is only the setting's default, settings.DEFAULT)
+        win['hint'] = 'display.fullscreen_borderless_window_resolution_screen   display.f11_alt_enter_switches_between'
+        msaa = self._choice('display.antialiasing', list(MSAA_CHOICES), lambda: R['msaa'], set_('msaa'), default=RG.DEFAULT['msaa'])
+        if J.post.max_msaa is not None and R['msaa'] > J.post.max_msaa: msaa['hint'] = tr('display.limited_x_graphics_card') % J.post.max_msaa          # (former red note: now only a tooltip)
         pct = lambda v: '%d %%' % round(v * 100)
         def slider(label, key, minimum=0.0, maximum=1.0, step=0.01, step_f=0.05): return self._curs(label, lambda: R[key], lambda v: R.__setitem__(key, v), minimum, maximum, step, step_f, pct, 100.0, default=RG.DEFAULT[key])
-        contrast = slider('settings.contrast', 'contrast'); contrast['hint'] = 'settings.contrast_game_picture_not_windows   settings.0_as_original_game   settings.100_twice_contrast'
-        color_filter = self._choice('settings.filter', list(RG.COLOR_FILTERS), lambda: R['color_filter'], set_('color_filter'), default=RG.DEFAULT['color_filter'])
-        color_filter['hint'] = 'settings.colors_game_picture_not_windows   settings.none_as_original_game'
+        contrast = slider('display.contrast', 'contrast'); contrast['hint'] = 'display.contrast_game_picture_not_windows   display.0_as_original_game   display.100_twice_contrast'
+        color_filter = self._choice('display.filter', list(RG.COLOR_FILTERS), lambda: R['color_filter'], set_('color_filter'), default=RG.DEFAULT['color_filter'])
+        color_filter['hint'] = 'display.colors_game_picture_not_windows   display.none_as_original_game'
         # (this order; no "Resolution" line; "Battle speed" is on the Controls page; "Filter" just above "Shader"; no "Motion blur" line)
         return [lang, win,
-                self._curs('settings.brightness', lambda: R['brightness'], lambda v: R.__setitem__('brightness', v), 0.5, 1.5, 0.05, 0.1, pct, 100.0, default=RG.DEFAULT['brightness']),
+                self._curs('display.brightness', lambda: R['brightness'], lambda v: R.__setitem__('brightness', v), 0.5, 1.5, 0.05, 0.1, pct, 100.0, default=RG.DEFAULT['brightness']),
                 contrast, color_filter,
-                self._choice('settings.shader', list(RG.MODES_SPRITES), lambda: J.mode, set_('sprite_mode', J.set_mode), default=RG.DEFAULT['sprite_mode']),
-                slider('settings.vignette_effect', 'vignette'),
-                slider('settings.edge_blur', 'edge_blur'),          # (just under the vignette, same places)
-                self._curs('settings.sharpness', lambda: R['sharpness'], lambda v: R.__setitem__('sharpness', v), 0.0, 1.0, 0.05, 0.1, pct, 100.0, default=RG.DEFAULT['sharpness']),
+                self._choice('display.shader', list(RG.MODES_SPRITES), lambda: J.mode, set_('sprite_mode', J.set_mode), default=RG.DEFAULT['sprite_mode']),
+                slider('display.vignette_effect', 'vignette'),
+                slider('display.edge_blur', 'edge_blur'),          # (just under the vignette, same places)
+                self._curs('display.sharpness', lambda: R['sharpness'], lambda v: R.__setitem__('sharpness', v), 0.0, 1.0, 0.05, 0.1, pct, 100.0, default=RG.DEFAULT['sharpness']),
                 msaa,
-                self._choice('settings.supersampling', [1.0, 1.5, 2.0], lambda: R['render_scale'], set_('render_scale'), default=RG.DEFAULT['render_scale']),
+                self._choice('display.supersampling', [1.0, 1.5, 2.0], lambda: R['render_scale'], set_('render_scale'), default=RG.DEFAULT['render_scale']),
                 self._text_speed(),          # (here since then; "Battle speed" is in Commandes, under its key)
-                dict(t='act', l='settings.interface', ok=self._go('interface'), sub=True)]          # (on-screen interface editor: buttons, dialogues, game windows; at the very end of the list)
+                dict(t='act', l='menu.interface', ok=self._go('interface'), sub=True)]          # (on-screen interface editor: buttons, dialogues, game windows; at the very end of the list)
 
     # ---- interface editor: screen buttons, dialogue window and game windows (size, position, display)
     def targets(self):
@@ -482,7 +484,7 @@ class Pause:
             l = [i for i in ids if (i in OWN_INTERFACES and (i != RG.VEHICLE_TARGET or GM.profile().key == 'dq6')) or i in names]; seen.update(ids)          # (the vehicle button: DQ VI only)
             if l: out += [HEADER + title_screen] + l
         remainder = sorted((n for n in names if n not in seen and n not in RG.REMOVED_WINDOWS), key=lambda n: n.lower())
-        return out + ([HEADER + N_('settings.other')] + remainder if remainder else [])
+        return out + ([HEADER + N_('controls.other')] + remainder if remainder else [])
 
     def target_name(self, c):
         return c[len(HEADER):] if self._header(c) else WINDOW_NAMES.get(c, c)
@@ -520,32 +522,32 @@ class Pause:
     def _entries_interface(self):
         """"Interface" page: first the interface to modify (list by groups), then its display (specific to each interface), then its settings."""
         R = self.J.reg; c = self.target
-        e = [self._choice('settings.interface_edit', self.targets(), lambda: self.target, self._set_target),
-             self._choice('settings.show_interface_screen', [True, False], lambda: self._visible(self.target), lambda v: self._set_visible(self.target, v), default=True)]
+        e = [self._choice('interface.interface_edit', self.targets(), lambda: self.target, self._set_target),
+             self._choice('interface.show_interface_screen', [True, False], lambda: self._visible(self.target), lambda v: self._set_visible(self.target, v), default=True)]
         if c == RG.SCREEN_TARGET:
-            e.append(self._curs('settings.button_size', lambda: R['buttons_size'], lambda v: R.__setitem__('buttons_size', v), 0.5, 2.0, 0.05, 0.1, lambda v: '%d %%' % round(v * 100), 100.0, default=RG.DEFAULT['buttons_size']))
-            e.append(self._choice('settings.show_d_pad', [True, False], lambda: R['dpad'], lambda v: R.__setitem__('dpad', v), default=RG.DEFAULT['dpad']))
-            e.append(self._curs('settings.d_pad_size', lambda: R['dpad_size'], lambda v: R.__setitem__('dpad_size', v), 0.5, 2.0, 0.05, 0.1, lambda v: '%d %%' % round(v * 100), 100.0, default=RG.DEFAULT['dpad_size']))
-            e.append(self._choice('settings.show_camera_rotation_bar', [True, False], lambda: R['rotation_bar'], lambda v: R.__setitem__('rotation_bar', v), default=RG.DEFAULT['rotation_bar']))
+            e.append(self._curs('interface.button_size', lambda: R['buttons_size'], lambda v: R.__setitem__('buttons_size', v), 0.5, 2.0, 0.05, 0.1, lambda v: '%d %%' % round(v * 100), 100.0, default=RG.DEFAULT['buttons_size']))
+            e.append(self._choice('interface.show_d_pad', [True, False], lambda: R['dpad'], lambda v: R.__setitem__('dpad', v), default=RG.DEFAULT['dpad']))
+            e.append(self._curs('interface.d_pad_size', lambda: R['dpad_size'], lambda v: R.__setitem__('dpad_size', v), 0.5, 2.0, 0.05, 0.1, lambda v: '%d %%' % round(v * 100), 100.0, default=RG.DEFAULT['dpad_size']))
+            e.append(self._choice('interface.show_camera_rotation_bar', [True, False], lambda: R['rotation_bar'], lambda v: R.__setitem__('rotation_bar', v), default=RG.DEFAULT['rotation_bar']))
         elif c == RG.VEHICLE_TARGET:                                                 # DQ VI's vehicle button: its size; its position is set by dragging it
-            e.append(self._curs('settings.button_size_one', lambda: R['vehicle_button_size'], lambda v: R.__setitem__('vehicle_button_size', v), 0.5, 2.0, 0.05, 0.1, lambda v: '%d %%' % round(v * 100), 100.0, default=RG.DEFAULT['vehicle_button_size']))
+            e.append(self._curs('interface.button_size_one', lambda: R['vehicle_button_size'], lambda v: R.__setitem__('vehicle_button_size', v), 0.5, 2.0, 0.05, 0.1, lambda v: '%d %%' % round(v * 100), 100.0, default=RG.DEFAULT['vehicle_button_size']))
         elif c == RG.SPEED_TARGET:                                                   # battle speed button: its size; its position is set by dragging it (or "Put back under the battle box")
-            e.append(self._curs('settings.button_size_one', lambda: R['speed_button_size'], lambda v: R.__setitem__('speed_button_size', v), 0.5, 2.0, 0.05, 0.1, lambda v: '%d %%' % round(v * 100), 100.0, default=RG.DEFAULT['speed_button_size']))
-            if HM.speed_anchor(): e.append(dict(t='act', l='settings.put_back_under_battle_box', ok=lambda: R.__setitem__('speed_button_pos', []), hint='settings.button_goes_back_attached_bottom'))
-            else: e.append(dict(t='act', l='settings.put_back_left_edge', ok=lambda: R.__setitem__('speed_button_pos', []), hint='settings.button_goes_back_left_edge'))
+            e.append(self._curs('interface.button_size_one', lambda: R['speed_button_size'], lambda v: R.__setitem__('speed_button_size', v), 0.5, 2.0, 0.05, 0.1, lambda v: '%d %%' % round(v * 100), 100.0, default=RG.DEFAULT['speed_button_size']))
+            if HM.speed_anchor(): e.append(dict(t='act', l='interface.put_back_under_battle_box', ok=lambda: R.__setitem__('speed_button_pos', []), hint='interface.button_goes_back_attached_bottom'))
+            else: e.append(dict(t='act', l='interface.put_back_left_edge', ok=lambda: R.__setitem__('speed_button_pos', []), hint='interface.button_goes_back_left_edge'))
         else:
-            e += [self._curs('settings.size', lambda: self._ov()[0], lambda v: self._set_ov(0, v), 0.5, 2.0, 0.05, 0.1, lambda v: '%d %%' % round(v * 100), 100.0, default=RG.default_window(self.target)[0]),
-                  self._curs('settings.horizontal_position', lambda: self._ov()[1], lambda v: self._set_ov(1, v), -0.5, 0.5, 0.01, 0.05, lambda v: '%+d %%' % round(v * 100), 100.0, default=RG.default_window(self.target)[1]),
-                  self._curs('settings.vertical_position', lambda: self._ov()[2], lambda v: self._set_ov(2, v), -0.5, 0.5, 0.01, 0.05, lambda v: '%+d %%' % round(v * 100), 100.0, default=RG.default_window(self.target)[2])]
-        e += [self._choice('settings.snap_grid', [True, False], lambda: R['buttons_snap'], lambda v: R.__setitem__('buttons_snap', v), default=RG.DEFAULT['buttons_snap']),            # (for all interfaces)
-              self._choice('settings.show_grid', [True, False], lambda: R['editor_grid'], lambda v: R.__setitem__('editor_grid', v), default=RG.DEFAULT['editor_grid'])]
-        this_ = dict(t='act', l='settings.restore_interface', ok=self._reset_this)
-        this_['hint'] = ('settings.restores_buttons_d_pad_as   settings.game_windows_battle_speed_button' if c == RG.SCREEN_TARGET
-                         else 'settings.restores_battle_speed_button_as   settings.other_interfaces_do_not_change' if c == RG.SPEED_TARGET
-                         else 'settings.restores_vehicle_button_as   settings.other_interfaces_do_not_change' if c == RG.VEHICLE_TARGET
-                         else 'settings.restores_window_as_game_display   settings.other_interfaces_do_not_change')
-        all_entry = dict(t='act', l='settings.restore_all_interfaces', ok=self._reset_all, hint='settings.restores_all_interfaces_as_game')
-        e += [this_, all_entry, dict(t='act', l='settings.finish', ok=self.back)]
+            e += [self._curs('interface.size', lambda: self._ov()[0], lambda v: self._set_ov(0, v), 0.5, 2.0, 0.05, 0.1, lambda v: '%d %%' % round(v * 100), 100.0, default=RG.default_window(self.target)[0]),
+                  self._curs('interface.horizontal_position', lambda: self._ov()[1], lambda v: self._set_ov(1, v), -0.5, 0.5, 0.01, 0.05, lambda v: '%+d %%' % round(v * 100), 100.0, default=RG.default_window(self.target)[1]),
+                  self._curs('interface.vertical_position', lambda: self._ov()[2], lambda v: self._set_ov(2, v), -0.5, 0.5, 0.01, 0.05, lambda v: '%+d %%' % round(v * 100), 100.0, default=RG.default_window(self.target)[2])]
+        e += [self._choice('interface.snap_grid', [True, False], lambda: R['buttons_snap'], lambda v: R.__setitem__('buttons_snap', v), default=RG.DEFAULT['buttons_snap']),            # (for all interfaces)
+              self._choice('interface.show_grid', [True, False], lambda: R['editor_grid'], lambda v: R.__setitem__('editor_grid', v), default=RG.DEFAULT['editor_grid'])]
+        this_ = dict(t='act', l='interface.restore_interface', ok=self._reset_this)
+        this_['hint'] = ('interface.restores_buttons_d_pad_as   interface.game_windows_battle_speed_button' if c == RG.SCREEN_TARGET
+                         else 'interface.restores_battle_speed_button_as   interface.other_interfaces_do_not_change' if c == RG.SPEED_TARGET
+                         else 'interface.restores_vehicle_button_as   interface.other_interfaces_do_not_change' if c == RG.VEHICLE_TARGET
+                         else 'interface.restores_window_as_game_display   interface.other_interfaces_do_not_change')
+        all_entry = dict(t='act', l='interface.restore_all_interfaces', ok=self._reset_all, hint='interface.restores_all_interfaces_as_game')
+        e += [this_, all_entry, dict(t='act', l='interface.finish', ok=self.back)]
         return e
 
     def _reset_this(self):
@@ -582,34 +584,34 @@ class Pause:
         J, R = self.J, self.J.reg
         def lookup_key(c): return (lambda: R[c]), self._set_sound(c)
         gen = (lambda: J.sound.active, lambda v: (J.set_sound(v), R.__setitem__('sound', v)))
-        return [self._sound_line('settings.general', 'master_volume', 'general', gen, 'settings.all_game_s_sound_multiplies   settings.game_keeps_running_behind_menu'),
-                self._sound_line('settings.music', 'music_volume', 'music', lookup_key('music_enabled'), 'settings.background_music_maps_towns_battles   settings.when_muted_keeps_playing_silently   settings.volume_changes_current_music_right'),
-                self._sound_line('settings.jingles_fanfares', 'jingle_volume', 'jingles', lookup_key('jingles_enabled'), 'settings.short_tunes_played_only_once   settings.volume_can_heard_next_fanfare'),
-                self._sound_line('settings.sound_effects', 'sfx_volume', 'effects', lookup_key('sfx_enabled'), 'settings.game_sound_effects_battles_spells   settings.not_including_interface_sounds_line   settings.test_sound_effect_plays_when'),
-                self._sound_line('settings.interface', 'interface_volume', 'interface', lookup_key('interface_enabled'), 'settings.beep_message_pages_menu_button   settings.button_sound_plays_when_change')]
+        return [self._sound_line('sound.general', 'master_volume', 'general', gen, 'sound.all_game_s_sound_multiplies   sound.game_keeps_running_behind_menu'),
+                self._sound_line('sound.music', 'music_volume', 'music', lookup_key('music_enabled'), 'sound.background_music_maps_towns_battles   sound.when_muted_keeps_playing_silently   sound.volume_changes_current_music_right'),
+                self._sound_line('sound.jingles_fanfares', 'jingle_volume', 'jingles', lookup_key('jingles_enabled'), 'sound.short_tunes_played_only_once   sound.volume_can_heard_next_fanfare'),
+                self._sound_line('sound.sound_effects', 'sfx_volume', 'effects', lookup_key('sfx_enabled'), 'sound.game_sound_effects_battles_spells   sound.not_including_interface_sounds_line   sound.test_sound_effect_plays_when'),
+                self._sound_line('menu.interface', 'interface_volume', 'interface', lookup_key('interface_enabled'), 'sound.beep_message_pages_menu_button   sound.button_sound_plays_when_change')]
 
     def _text_speed(self):
         """"Text speed" (dialogue writing), on the Display page, just above the Interface button."""
         J, R = self.J, self.J.reg
-        vt = self._choice('settings.text_speed', list(RG.TEXT_SPEEDS), lambda: R['text_speed'], lambda v: (R.__setitem__('text_speed', v), J.apply_text()), default=RG.DEFAULT['text_speed'])
-        vt['hint'] = 'settings.speed_which_dialogues_written_letters   settings.normal_same_as_original_game'
+        vt = self._choice('display.text_speed', list(RG.TEXT_SPEEDS), lambda: R['text_speed'], lambda v: (R.__setitem__('text_speed', v), J.apply_text()), default=RG.DEFAULT['text_speed'])
+        vt['hint'] = 'display.speed_which_dialogues_written_letters   display.normal_same_as_original_game'
         return vt
 
     def _battle_speed(self):
         """"Battle speed" (Manuel, Normal, Rapide, Tres rapide: engine clock during battles and scrolling of battle messages), on the Controls page just under the key that changes it (on the Display page before)."""
         J, R = self.J, self.J.reg
-        cb = self._choice('settings.battle_speed', list(RG.BATTLE_SPEEDS), lambda: R['battle_speed'], J.set_battle_speed, default=RG.DEFAULT['battle_speed'])
-        cb['hint'] = 'settings.battles_only_animations_follow_one   settings.manual_normal_speed_advance_each   settings.music_sound_effects_keep_their   settings.can_also_set_middle_battle'
+        cb = self._choice('controls.battle_speed', list(RG.BATTLE_SPEEDS), lambda: R['battle_speed'], J.set_battle_speed, default=RG.DEFAULT['battle_speed'])
+        cb['hint'] = 'controls.battles_only_animations_follow_one   controls.manual_normal_speed_advance_each   controls.music_sound_effects_keep_their   controls.can_also_set_middle_battle'
         return cb
 
     def _entries_difficulty(self):
         """Page "Difficulty" (formerly a tab of "Extras", formerly "Modifiers", "Changes", "Game"), right below "Controls" in the root menu, then "Randomizer" and "Cheats": HP and MP restored,
         the difficulty level and its 6 notched lines. Everything is as in the original game by default."""
         J, R = self.J, self.J.reg
-        sn = self._choice('settings.hp_mp_restored_level_up', [True, False], lambda: R['level_up_heal'], lambda v: (R.__setitem__('level_up_heal', v), J.apply_game()), default=RG.DEFAULT['level_up_heal'])
-        sn['hint'] = 'settings.when_character_gains_level_they   settings.no_as_original_game_leveling'
-        sb = self._choice('settings.hp_mp_restored_battle_end', [True, False], lambda: R['battle_end_heal'], lambda v: (R.__setitem__('battle_end_heal', v), J.apply_game()), default=RG.DEFAULT['battle_end_heal'])
-        sb['hint'] = 'settings.after_each_battle_members_standing   settings.no_as_original_game_battle'
+        sn = self._choice('difficulty.hp_mp_restored_level_up', [True, False], lambda: R['level_up_heal'], lambda v: (R.__setitem__('level_up_heal', v), J.apply_game()), default=RG.DEFAULT['level_up_heal'])
+        sn['hint'] = 'difficulty.when_character_gains_level_they   difficulty.no_as_original_game_leveling'
+        sb = self._choice('difficulty.hp_mp_restored_battle_end', [True, False], lambda: R['battle_end_heal'], lambda v: (R.__setitem__('battle_end_heal', v), J.apply_game()), default=RG.DEFAULT['battle_end_heal'])
+        sb['hint'] = 'difficulty.after_each_battle_members_standing   difficulty.no_as_original_game_battle'
         lo, hi = RG.RATES[0], RG.RATES[-1]; leveled = lambda: R['difficulty'] != RG.DIFFICULTY_CUSTOM          # (a difficulty level sets the notched lines and grays them; Custom: by hand)
         def set_difficulty(v):
             was = R['difficulty']; R['difficulty'] = v = int(round(v))
@@ -618,19 +620,19 @@ class Pause:
             else: rates = {}
             for k, r in rates.items(): R[k] = r
             J.apply_game()
-        sd = self._curs('settings.difficulty_level', lambda: R['difficulty'], set_difficulty, 0, RG.DIFFICULTY_CUSTOM, 1, 1, lambda v: RG.DIFFICULTY_NAMES.get(int(v), N_('settings.dragon')), default=RG.DEFAULT['difficulty'])
-        sd['hint'] = 'settings.difficulty_sets_notched_options   settings.custom_each_option_by_hand   settings.dragon_as_original_game'
+        sd = self._curs('difficulty.difficulty_level', lambda: R['difficulty'], set_difficulty, 0, RG.DIFFICULTY_CUSTOM, 1, 1, lambda v: RG.DIFFICULTY_NAMES.get(int(v), N_('difficulty.dragon')), default=RG.DEFAULT['difficulty'])
+        sd['hint'] = 'difficulty.difficulty_sets_notched_options   difficulty.custom_each_option_by_hand   difficulty.dragon_as_original_game'
         sd['notches'] = [n / RG.DIFFICULTY_CUSTOM for n in RG.DIFFICULTIES]; sd['notch_names'] = [RG.DIFFICULTY_NAMES[n] for n in RG.DIFFICULTIES]
         def rate(label, key, hint):                     # 5 notches: Much less (x0.5), Less (x0.75), Normal (x1), More (x1.25), Much more (x1.5); only their names are shown
-            c = self._curs(label, lambda: R[key], lambda v: (R.__setitem__(key, v), J.apply_game()), lo, hi, 0.25, 0.25, lambda v: RG.RATE_NAMES.get(v, N_('settings.normal')), default=RG.DEFAULT[key])
-            c['hint'] = hint + '   settings.normal_as_original_game_rewards' + ('   settings.set_by_difficulty_choose_custom' if leveled() else ''); c['off'] = leveled
+            c = self._curs(label, lambda: R[key], lambda v: (R.__setitem__(key, v), J.apply_game()), lo, hi, 0.25, 0.25, lambda v: RG.RATE_NAMES.get(v, N_('common.normal')), default=RG.DEFAULT[key])
+            c['hint'] = hint + '   difficulty.normal_as_original_game_rewards' + ('   difficulty.set_by_difficulty_choose_custom' if leveled() else ''); c['off'] = leveled
             c['notches'] = [(v - lo) / (hi - lo) for v in RG.RATES]; c['notch_names'] = [RG.RATE_NAMES[v] for v in RG.RATES]; c['indent'] = 1; return c          # (under "Difficulty": shifted)
-        sx = rate('settings.experience_gained', 'exp_rate', 'settings.experience_won_battle_multiplied')
-        sg = rate('settings.gold_gained', 'gold_rate', 'settings.gold_won_battle_multiplied')
-        sc = rate('settings.casino_tokens_won', 'casino_rate', 'settings.casino_tokens_won_multiplied')
-        sp = rate('settings.damage_taken_party', 'party_damage_rate', 'settings.damage_hits_spells_party_multiplied')
-        se = rate('settings.damage_taken_enemies', 'enemy_damage_rate', 'settings.damage_hits_spells_enemies_multiplied')
-        sf = rate('settings.encounter_rate', 'encounter_rate', 'settings.random_battles_more_less_often')          # (set even without random encounters: it is kept for when they come back)
+        sx = rate('difficulty.experience_gained', 'exp_rate', 'difficulty.experience_won_battle_multiplied')
+        sg = rate('difficulty.gold_gained', 'gold_rate', 'difficulty.gold_won_battle_multiplied')
+        sc = rate('difficulty.casino_tokens_won', 'casino_rate', 'difficulty.casino_tokens_won_multiplied')
+        sp = rate('difficulty.damage_taken_party', 'party_damage_rate', 'difficulty.damage_hits_spells_party_multiplied')
+        se = rate('difficulty.damage_taken_enemies', 'enemy_damage_rate', 'difficulty.damage_hits_spells_enemies_multiplied')
+        sf = rate('difficulty.encounter_rate', 'encounter_rate', 'difficulty.random_battles_more_less_often')          # (set even without random encounters: it is kept for when they come back)
         return [sn, sb, sd, sx, sg, sc, sp, se, sf]
 
     def _entries_randomizer(self):
@@ -642,24 +644,24 @@ class Pause:
             def set_on(v):
                 self.randomizer_on = bool(v)
                 if v and self.draft_seed is None: self.draft_seed = SD.new_code()
-            mode = self._choice('settings.randomizer_mode', [True, False], lambda: self.randomizer_on, set_on, default=False); mode['hint'] = 'settings.yes_randomizer_game_seed   settings.no_original_game_randomizer'
+            mode = self._choice('randomizer.randomizer_mode', [True, False], lambda: self.randomizer_on, set_on, default=False); mode['hint'] = 'randomizer.yes_randomizer_game_seed   randomizer.no_original_game_randomizer'
             if not self.randomizer_on: return [mode]
-            lines = [mode, dict(t='act', l='settings.seed', v=lambda: self.draft_seed, ok=self._start_text_entry, hint='settings.seed_sets_whole_page   settings.type_paste_seed   settings.round_button_new_seed',
-                                text_entry=dict(chars=set(SD.ALPHABET + 'OIL-'), max=20, set=self._type_seed, prompt='settings.type_paste_seed'),
+            lines = [mode, dict(t='act', l='randomizer.seed', v=lambda: self.draft_seed, ok=self._start_text_entry, hint='randomizer.seed_sets_whole_page   randomizer.type_paste_seed   randomizer.round_button_new_seed',
+                                text_entry=dict(chars=set(SD.ALPHABET + 'OIL-'), max=20, set=self._type_seed, prompt='randomizer.type_paste_seed'),
                                 default=self._new_seed, is_default=lambda: False)]          # (the round button on the right of the seed, or Home: a new seed, the settings kept)
             return lines + self._randomizer_settings(lambda: self.draft_seed, self._set_draft_option)
         gr = getattr(self.J, 'game_rules', None); code = gr.seed() if gr is not None else None
-        if not code: return [dict(t='sep', l=N_('settings.game_without_randomizer'), gray=True)]
-        return [dict(t='act', l='settings.seed', v=lambda: code, ok=lambda: self._copy_seed(code), hint='settings.enter_copies_seed')] + self._randomizer_settings(lambda: code, None)
+        if not code: return [dict(t='sep', l=N_('randomizer.game_without_randomizer'), gray=True)]
+        return [dict(t='act', l='randomizer.seed', v=lambda: code, ok=lambda: self._copy_seed(code), hint='randomizer.enter_copies_seed')] + self._randomizer_settings(lambda: code, None)
 
-    RANDOMIZER_SETTINGS = (('safety', 'settings.safety', 'settings.safety_yes   settings.safety_no'),
-                           ('items', 'settings.items_setting', 'settings.items_where   settings.items_shuffled_hint   settings.items_random_hint'),
-                           ('loot', 'settings.loot_setting', 'settings.loot_where   settings.loot_random_hint'),
-                           ('encounters', 'settings.encounters_setting', 'settings.encounters_where   settings.encounters_shuffled_hint   settings.encounters_random_hint'),
-                           ('single_enemy', 'settings.single_enemy_setting', 'settings.single_enemy_yes   settings.single_enemy_no'),
-                           ('boss_encounters', 'settings.boss_encounters_setting', 'settings.boss_encounters_yes   settings.boss_encounters_no'),
-                           ('bosses', 'settings.bosses_setting', 'settings.bosses_where   settings.bosses_shuffled_hint   settings.bosses_random_hint'),
-                           ('two_bosses', 'settings.two_bosses_setting', 'settings.two_bosses_yes   settings.two_bosses_no'))
+    RANDOMIZER_SETTINGS = (('safety', 'randomizer.safety', 'randomizer.safety_yes   randomizer.safety_no'),
+                           ('items', 'randomizer.items_setting', 'randomizer.items_where   randomizer.items_shuffled_hint   randomizer.items_random_hint'),
+                           ('loot', 'randomizer.loot_setting', 'randomizer.loot_where   randomizer.loot_random_hint'),
+                           ('encounters', 'randomizer.encounters_setting', 'randomizer.encounters_where   randomizer.encounters_shuffled_hint   randomizer.encounters_random_hint'),
+                           ('single_enemy', 'randomizer.single_enemy_setting', 'randomizer.single_enemy_yes   randomizer.single_enemy_no'),
+                           ('boss_encounters', 'randomizer.boss_encounters_setting', 'randomizer.boss_encounters_yes   randomizer.boss_encounters_no'),
+                           ('bosses', 'randomizer.bosses_setting', 'randomizer.bosses_where   randomizer.bosses_shuffled_hint   randomizer.bosses_random_hint'),
+                           ('two_bosses', 'randomizer.two_bosses_setting', 'randomizer.two_bosses_yes   randomizer.two_bosses_no'))
     YES_NO_SETTINGS = ('safety',)                                           # (value 0 = Yes)
     NO_YES_SETTINGS = ('single_enemy', 'boss_encounters', 'two_bosses')     # (value 0 = No)
     NEEDS = {'single_enemy': ('encounters', 2)}                             # a setting that only acts with another one's value (grayed otherwise): one enemy, with random encounters "Random"
@@ -706,7 +708,7 @@ class Pause:
     def _focus_start(self):
         """Enter after typing the name on the keyboard: the gender page if it is not chosen yet, otherwise back to the panel's list, on "Start the adventure"."""
         if self.hero_gender is None and not ENGINE.ENGINE_V2: self._open_root_page('gender'); return
-        self.stack = ['root']; self.selected['root'] = next((i for i, x in enumerate(self._entries_root()) if x.get('l') == 'settings.start_adventure'), 0)
+        self.stack = ['root']; self.selected['root'] = next((i for i, x in enumerate(self._entries_root()) if x.get('l') == 'new_game.start_adventure'), 0)
 
     def _cancel_new_game(self):
         """The panel's back button (or Esc at its root): back to the start menu, like Back on the game's name entry (no rules kept)."""
@@ -721,32 +723,32 @@ class Pause:
 
     def _type_seed(self, text):
         p = SD.parse(text)
-        if p is None: self._info(N_('settings.invalid_seed'), True); return
+        if p is None: self._info(N_('randomizer.invalid_seed'), True); return
         self.draft_seed = p['code']
 
     def _copy_seed(self, code):
         f = getattr(self.J, 'set_clipboard_text', None)
         if f is None: return
-        try: f(code); self._info(N_('settings.seed_copied'))
+        try: f(code); self._info(N_('randomizer.seed_copied'))
         except Exception: pass
 
     def _entries_cheats(self):
         """Page "Cheats" (in the root, under "Randomizer"): "Random encounters" (No: none while walking; "Encounter rate", on the "Difficulty" page, stays settable)."""
         J, R = self.J, self.J.reg
-        sr = self._choice('settings.random_encounters', [True, False], lambda: R['random_encounters'], lambda v: (R.__setitem__('random_encounters', v), J.apply_game()), default=RG.DEFAULT['random_encounters'])
-        sr['hint'] = 'settings.no_random_battle_walking   settings.yes_as_original_game_encounters'
+        sr = self._choice('difficulty.random_encounters', [True, False], lambda: R['random_encounters'], lambda v: (R.__setitem__('random_encounters', v), J.apply_game()), default=RG.DEFAULT['random_encounters'])
+        sr['hint'] = 'difficulty.no_random_battle_walking   difficulty.yes_as_original_game_encounters'
         return [sr]
 
     def _entries_achievements(self):
         """"Achievements" page (in the root, under "Cheats"): none yet."""
-        return [dict(t='sep', l=N_('settings.no_achievement_yet'), gray=True)]
+        return [dict(t='sep', l=N_('menu.no_achievement_yet'), gray=True)]
 
     def _key_row(self, action):
         """Line of an action: three cells (main key, secondary key, gamepad input); Delete clears the chosen cell, the round button (or Home) restores the original keys and input."""
         R = self.J.reg
         def default():
             lost = R.reset_to_default(action); lost.append(R.reset_pad(action))
-            for a in dict.fromkeys(a for a in lost if a): self._info(N_('settings.default_key_removed_from'), False, dict(RG.ACTIONS)[a])
+            for a in dict.fromkeys(a for a in lost if a): self._info(N_('controls.default_key_removed_from'), False, dict(RG.ACTIONS)[a])
             R.store()
         return dict(t='key', l=dict(RG.ACTIONS)[action], act=action, v=[RG.key_name(n) for n in R['keys'][action]] + [R['gamepad'].get(action)], keys=list(R['keys'][action]), default=default,
                     is_default=lambda: R.is_default_binding(action) and R.is_default_pad(action))          # (v[2]: the gamepad input name or names, drawn according to the connected controller; keys: the key names, for their pictures)
@@ -758,38 +760,38 @@ class Pause:
             return self._curs(lib, lambda: R[lookup_key], lambda v: R.__setitem__(lookup_key, v), minimum, maximum, 0.1, 0.5, lambda v: 'x%.2f' % v, 1.0, default=RG.DEFAULT[lookup_key])
         def inverse(lib, lookup_key, helptext):
             d = self._choice(lib, [False, True], lambda: R[lookup_key], lambda v: R.__setitem__(lookup_key, v), default=RG.DEFAULT[lookup_key]); d['hint'] = helptext; return d
-        edit = T('modifier'); edit['hint'] = 'settings.digit_loads_save_state   settings.shift_undoes_last_save_state'
-        accel = T('accel'); accel['hint'] = 'settings.held_down_speeds_up_walking   settings.no_effect_battle   ' + self.KEY_HELPTEXT
-        info = T('info'); info['hint'] = 'settings.shows_hides_top_right_screen   ' + self.KEY_HELPTEXT
-        speed_accel = speed_accel_cursor('settings.accelerator_multiplier', 'accel_speed', 1.0, 4.0); speed_accel['hint'] = 'settings.multiplies_walking_speed_while_accelerator   settings.nightfall_x_times_faster_as   settings.random_encounters_x_times_more   settings.battles_do_not_use_they'
-        key_battle = T('battle_speed'); key_battle['hint'] = 'settings.goes_from_manual_normal_fast   settings.also_works_middle_battle_setting   ' + self.KEY_HELPTEXT
-        return [dict(t='sep', l='settings.movement'),
+        edit = T('modifier'); edit['hint'] = 'controls.digit_loads_save_state   controls.shift_undoes_last_save_state'
+        accel = T('accel'); accel['hint'] = 'controls.held_down_speeds_up_walking   controls.no_effect_battle   ' + self.KEY_HELPTEXT
+        info = T('info'); info['hint'] = 'controls.shows_hides_top_right_screen   ' + self.KEY_HELPTEXT
+        speed_accel = speed_accel_cursor('controls.accelerator_multiplier', 'accel_speed', 1.0, 4.0); speed_accel['hint'] = 'controls.multiplies_walking_speed_while_accelerator   controls.nightfall_x_times_faster_as   controls.random_encounters_x_times_more   controls.battles_do_not_use_they'
+        key_battle = T('battle_speed'); key_battle['hint'] = 'controls.goes_from_manual_normal_fast   controls.also_works_middle_battle_setting   ' + self.KEY_HELPTEXT
+        return [dict(t='sep', l='controls.movement'),
                 T('up'), T('down'), T('left'), T('right'),
-                dict(t='sep', l='settings.camera'),
-                *[dict(T(a), hint='settings.rotates_camera_around_hero_towns   settings.both_arrow_keys_together_recenters   settings.mouse_hold_middle_click_move   settings.middle_click_recenters_camera   settings.menus_previous_next_character_tab   ' + self.KEY_HELPTEXT) for a in ('cam_left', 'cam_right')],
+                dict(t='sep', l='controls.camera'),
+                *[dict(T(a), hint='controls.rotates_camera_around_hero_towns   controls.both_arrow_keys_together_recenters   controls.mouse_hold_middle_click_move   controls.middle_click_recenters_camera   controls.menus_previous_next_character_tab   ' + self.KEY_HELPTEXT) for a in ('cam_left', 'cam_right')],
                 *[dict(t='sep', l=g, v=e) for g, e in MOUSE_GESTURES],          # (read-only: information lines, neither chosen nor clickable)
-                inverse('settings.invert_left_right', 'camera_invert_lr', 'settings.camera_moved_mouse_hold_middle   settings.no_dragging_right_rotates_like   settings.keyboard_arrow_keys_do_not'),          # (under the mouse lines: it reverses the mouse drag)
-                dict(t='sep', l='settings.speeds'),
+                inverse('controls.invert_left_right', 'camera_invert_lr', 'controls.camera_moved_mouse_hold_middle   controls.no_dragging_right_rotates_like   controls.keyboard_arrow_keys_do_not'),          # (under the mouse lines: it reverses the mouse drag)
+                dict(t='sep', l='controls.speeds'),
                 accel, speed_accel, key_battle, self._battle_speed(),          # ("Battle speed" under its key)
-                dict(t='sep', l='settings.game_actions'),
+                dict(t='sep', l='controls.game_actions'),
                 T('A'), T('menu'), T('B'), T('map'), T('chat'), *([T('extra')] if GM.profile().key == 'dq6' else []),          # (vehicle command: DQ VI only, see core/pad_modes.py)
-                dict(t='sep', l='settings.other'),
+                dict(t='sep', l='controls.other'),
                 edit, info,
-                dict(t='act', l='settings.restore_default_keys', ok=lambda: (R.default_keys(), R.store()))]
+                dict(t='act', l='controls.restore_default_keys', ok=lambda: (R.default_keys(), R.store()))]
 
 
     @staticmethod
     def _state_date(date):
         """':05' -> '31/10/2026 19:21:05' in French, ':05' in English (name of a savestate: its saving date and time; day/month/year reads backwards for an English-speaking
         reader, "03/11" would be March 11 there: the year-month-day order leaves no doubt)."""
-        try: return time.strftime('%d/%m/%Y  %H:%M:%S' if LG.current_language() == 'fr' else '%Y-%m-%d  %H:%M:%S', time.strptime(date, '%Y-%m-%d %H:%M:%S'))
+        try: return time.strftime(tr('save_states.date_format'), time.strptime(date, '%Y-%m-%d %H:%M:%S'))          # (each language's own date format)
         except Exception: return ''
 
     @staticmethod
     def _readable_location(inf):
         """Location of the state only if it means something to a player (the technical name of a map, like "mak1f1", is not shown)."""
         location = inf.get('location', ''); location = LEGACY_LOCATIONS.get(location, location)
-        return location if location in ('settings.world_map', 'settings.battle') else ''
+        return location if location in ('save_states.world_map', 'save_states.battle') else ''
 
     def _entries_savestates(self):
         """Savestates: one line per slot. Confirming or clicking a slot that holds a state opens, beside it, the list of what to do with it (load it, create a new one over it, delete it: through
@@ -797,15 +799,15 @@ class Pause:
         e = []
         for n in range(1, SAVESTATE_COUNT + 1):
             inf = self.J.state_info(n)
-            if inf: lib = self._state_date(inf[0].get('date')) or 'settings.no_date'; val = self._readable_location(inf[0])
-            else: lib = 'settings.empty'; val = ''
+            if inf: lib = self._state_date(inf[0].get('date')) or 'save_states.no_date'; val = self._readable_location(inf[0])
+            else: lib = 'save_states.empty'; val = ''
             do = lambda a, n=n: {'create': self._save, 'load': self._load, 'delete': self._request_deletion}[a](n)
-            e.append(dict(t='slot', l=lib, v=val, n=n, off=False, vals=['load', 'create', 'delete'] if inf else ['create'], list_label='settings.action', get=lambda: None, set=do,
+            e.append(dict(t='slot', l=lib, v=val, n=n, off=False, vals=['load', 'create', 'delete'] if inf else ['create'], list_label='controls.action', get=lambda: None, set=do,
                           ok=(lambda n=n, full=bool(inf): self._open_list() if full else self._save(n))))
         return e
 
     def _entries_quit(self):
-        return [dict(t='sep', l='settings.sure'), dict(t='act', l='settings.yes', ok=self.J.quit_game), dict(t='act', l='settings.no', ok=self.back)]
+        return [dict(t='sep', l='common.sure'), dict(t='act', l='common.yes', ok=self.J.quit_game), dict(t='act', l='common.no', ok=self.back)]
 
     def _quit_game(self):
         """"Quit the game": where the game's box answers (towns, world map), the menu closes and the box asks the game's own question (Game.ask_quit, message b0834000.mpt#96: French or English
@@ -833,9 +835,9 @@ class Pause:
     def _save(self, n):
         try:
             self.J.save_state(n, self.J._png_thumbnail(self.mini_tex))
-            self.minis.pop(n, None); self._info(N_('settings.save_state_stored_slot'), False, n)
+            self.minis.pop(n, None); self._info(N_('save_states.save_state_stored_slot'), False, n)
         except Exception as ex:
-            self._info(N_('settings.could_not_save_state_r'), True, ex)
+            self._info(N_('save_states.could_not_save_state_r'), True, ex)
 
     def _load(self, n):
         try:
@@ -843,20 +845,21 @@ class Pause:
         except SS.OtherLanguage as ex:
             self._ask_language(n, ex.language)
         except SS.OtherEngine:
-            self._info(N_('settings.state_was_saved_other_apk'), True)
+            self._info(N_('save_states.state_was_saved_other_apk'), True)
         except Exception as ex:
-            self._info(N_('settings.could_not_load_state_r'), True, ex)
+            self._info(N_('save_states.could_not_load_state_r'), True, ex)
 
     def _ask_language(self, n, language):
-        """The state was saved with the game's other language: a Yes / No window offers to switch the game to that language and load it (the game restarts in that language, the "Language" setting follows; No: nothing changes)."""
-        model = N_('settings.switch_game_french_load_state') if language == 'fr' else N_('settings.switch_game_english_load_state')
-        detail = N_('settings.state_was_saved_french_version') if language == 'fr' else N_('settings.state_was_saved_english_version')
-        self.popup = dict(title=model, model=model, values=(), detail=tr(detail), yes=lambda: (self.shutdown(), self.J.reload_game(language, n)), choice=1)
+        """The state was saved with another game version (`language`: the language of its APK folder): a Yes / No window offers to switch the game to that language and load it (the game restarts
+        in that language, the "Language" setting follows; No: nothing changes)."""
+        model = N_('language.switch_game_language_load_state'); name = LG.language_name(language)
+        self.popup = dict(title=tr(model) % name, model=model, values=(name,), detail=tr('language.state_was_saved_language_version') % name,
+                          yes=lambda: (self.shutdown(), self.J.reload_game(language, n)), choice=1)
 
     def _request_deletion(self, n):
         """Delete state n: a modal window asks for confirmation ("No" preselected)."""
         inf = self.J.state_info(n); date = self._state_date(inf[0].get('date')).strip() if inf else ''
-        model = N_('settings.delete_save_state_n')
+        model = N_('save_states.delete_save_state_n')
         self.popup = dict(title=tr(model) % n, model=model, values=(n,), detail=date, yes=lambda: self._delete(n), choice=1)          # (`model` + `value_list`: the title is translated before the number is put in, see _draw_popup)
 
     def _popup_key(self, symbol, action):
@@ -885,9 +888,9 @@ class Pause:
             if t is not None:
                 try: t.delete()
                 except Exception: pass
-            self._info(N_('settings.save_state_deleted'), False, n)
+            self._info(N_('save_states.save_state_deleted'), False, n)
         except Exception as ex:
-            self._info(N_('settings.could_not_delete_state_r'), True, ex)
+            self._info(N_('save_states.could_not_delete_state_r'), True, ex)
 
     # ---- keyboard keys
     def key_press(self, symbol, modifiers=0):
@@ -1064,7 +1067,7 @@ class Pause:
     def _device_row(self, x, y, w, h, k, fs, modal_now=False):
         """"Controls": the row above the column headers, fixed (the lines scroll under it), with two halves "Keyboard" and "Gamepad": the chosen one is lit (gold outline and text), the cells
         below show its keys or its buttons. A click on a half or a camera key (previous / next section) switches. Click zones: `zones_device`."""
-        zones = self._tab_buttons(x, y, w, h, k, fs, (N_('settings.keyboard'), N_('settings.gamepad')), int(bool(self.controls_pad)), modal_now)
+        zones = self._tab_buttons(x, y, w, h, k, fs, (N_('controls.keyboard'), N_('controls.gamepad')), int(bool(self.controls_pad)), modal_now)
         self.zones_device += [z + (pad,) for z, pad in zip(zones, (False, True))]
 
     def _tab_buttons(self, x, y, w, h, k, fs, labels, chosen, modal_now=False):
@@ -1122,12 +1125,12 @@ class Pause:
         if pad:                                                # gamepad cell: waits for a gamepad input (Start is Esc: it cancels)
             if not PI.is_pad(symbol): return
             previous = R.bind_pad(action, PI.NAME[symbol], col); self.capture = None; R.store()
-            if previous and previous != action: self._info(N_('settings.removed_from'), False, PI.text_label(PI.NAME[symbol], self._family()), dict(RG.ACTIONS)[previous].split(' :')[0])
+            if previous and previous != action: self._info(N_('controls.removed_from'), False, PI.text_label(PI.NAME[symbol], self._family()), dict(RG.ACTIONS)[previous].split(' :')[0])
             return
         if PI.is_pad(symbol): return          # the key cells take keyboard keys only
-        if RG.name_of(symbol) in RG.RESERVED: self._info(N_('settings.key_reserved'), True, RG.key_name(RG.name_of(symbol))); return
+        if RG.name_of(symbol) in RG.RESERVED: self._info(N_('controls.key_reserved'), True, RG.key_name(RG.name_of(symbol))); return
         previous = R.bind(action, col, symbol); self.capture = None; R.store()
-        if previous and previous != action: self._info(N_('settings.removed_from'), False, RG.key_name(RG.name_of(symbol)), dict(RG.ACTIONS)[previous].split(' :')[0])
+        if previous and previous != action: self._info(N_('controls.removed_from'), False, RG.key_name(RG.name_of(symbol)), dict(RG.ACTIONS)[previous].split(' :')[0])
 
     # ---- mouse
     def _zone(self, x, y):
@@ -1645,7 +1648,7 @@ class Pause:
         """The gender page of a new game, in the right frame: Masculin and Féminin side by side, the hero under each; the chosen one walks toward the camera (his walking poses, at the
         speed of a walk in a town), the other stands still, grayed (the sprite only: its label stays white). Nothing chosen yet: both stand still, grayed, the keyboard cursor on Masculin."""
         self._border(xr, top - hb, wr, hb, kk); self.page_rect = (xr, top - hb, xr + wr, top)
-        tl = self._label(N_('settings.hero_gender'), 24 * kk); tl.x = xr + (wr - tl.content_width) / 2; tl.y = top - 52 * kk; tl.draw()
+        tl = self._label(N_('new_game.hero_gender'), 24 * kk); tl.x = xr + (wr - tl.content_width) / 2; tl.y = top - 52 * kk; tl.draw()
         low = top - hb + HELP_H * kk; high = top - 78 * kk                    # (between the title and the help zone)
         bw, bh, gap = min(220 * kk, wr * 0.36), 52 * kk, 28 * kk
         n = max(1, int(min((high - low - bh - gap) * 0.7 / 32, wr * 0.22 / 24))) * SPRITE_SIZE          # (multiple of the sprite's pixels, drawn without smoothing)
@@ -1656,7 +1659,7 @@ class Pause:
             z = (cx - bw / 2, y_plate - gap - sh, cx + bw / 2, y_plate + bh); zones.append((g, z))
             self._plate(cx - bw / 2, y_plate, bw, bh, kk, self._hovered(z))
             if (chosen or (self.hero_gender is None and g == 0)) and not self.mouse_mode: self._cursor(cx - bw / 2 - 30 * kk, y_plate + bh / 2, 28 * kk)
-            self._restore_blend(); lb = self._label(self.names['settings.hero_gender'][g], 20 * kk, GOLD if chosen else WHITE); lb.x = cx - lb.content_width / 2; lb.y = y_plate + bh / 2 - lb.content_height * 0.35; lb.draw()
+            self._restore_blend(); lb = self._label(self.names['new_game.hero_gender'][g], 20 * kk, GOLD if chosen else WHITE); lb.x = cx - lb.content_width / 2; lb.y = y_plate + bh / 2 - lb.content_height * 0.35; lb.draw()
             t = self._hero_frame(g, pose if chosen else 1, not chosen)
             if t is not None: self._restore_blend(); t.blit(cx - sw / 2, y_plate - gap - sh, width=sw, height=sh)
         self.gender_zones = zones
@@ -1729,9 +1732,9 @@ class Pause:
         if n and not measure and (wdir != 'quit' or e[i_selected]['t'] != 'sep'): i_selected = self.selected[wdir] = self._active_line(e, i_selected)          # (the selection skips subheadings and inactive lines, including when the screen opens or when the chosen line has just become inactive)
         n_f = 1 if e and e[0].get('set_fraction') is True else 0                                 # line fixed at the top (no page has one anymore): it does not scroll; (`fixe` of a slider is a function, not True: a page can start with a slider)
         fs, fst, fsp = 18 * k, 24 * k, 13 * k; pad = 30 * k
-        titles = {'root': N_('settings.settings'), 'display': N_('settings.display'), 'sound': N_('settings.sound'), 'controls': N_('settings.controls'), 'interface': N_('settings.interface'), 'states': N_('settings.save_states'), 'quit': N_('settings.quit')}
-        titles.update(difficulty=N_('settings.difficulty'), randomizer=N_('settings.randomizer'), cheats=N_('settings.cheats'), achievements=N_('settings.achievements'))
-        if self.new_game: titles['root'] = N_('settings.game_rules')                # (the rules of a new game)
+        titles = {'root': N_('menu.settings'), 'display': N_('menu.display'), 'sound': N_('menu.sound'), 'controls': N_('menu.controls'), 'interface': N_('menu.interface'), 'states': N_('menu.save_states'), 'quit': N_('menu.quit')}
+        titles.update(difficulty=N_('menu.difficulty'), randomizer=N_('menu.randomizer'), cheats=N_('menu.cheats'), achievements=N_('menu.achievements'))
+        if self.new_game: titles['root'] = N_('menu.game_rules')                # (the rules of a new game)
         with_mini = wdir == 'states'
         msg = self._message_text() if interactive else ''
         # heights: the back button is under the window; if the lines do not fit, they scroll (scrollbar on the right, in the margin)
@@ -1808,7 +1811,7 @@ class Pause:
         self.zones_device = []
         if wdir == 'controls':
             for c, cx in enumerate((cx1, cx2)):
-                eh = self._label(tr('settings.button' if self.controls_pad else 'settings.key') % (c + 1), fsp, GRAY); eh.x = cx + (CELL_WIDTH * k - eh.content_width) / 2; eh.y = y1 - h_title + 6 * k; eh.draw()
+                eh = self._label(tr('controls.button' if self.controls_pad else 'controls.key') % (c + 1), fsp, GRAY); eh.x = cx + (CELL_WIDTH * k - eh.content_width) / 2; eh.y = y1 - h_title + 6 * k; eh.draw()
             wrow = 2 * CELL_WIDTH * k + CELL_SPACING * k          # (centered just under the page's title)
             self._device_row(x0 + (pw - wrow) / 2, y1 - 62 * k - (DEVICE_ROW - 12) * k, wrow, (DEVICE_ROW - 12) * k, k, fs, modal_now=self.popup is not None or self.open_dropdown is not None or self.capture is not None)
         pos = []
@@ -1934,11 +1937,11 @@ class Pause:
                     spr = pyglet.sprite.Sprite(t, x=mx + 20 * k, y=my1 - 40 * k - h_i); spr.scale_x = w_i / t.width; spr.scale_y = h_i / t.height; spr.draw()
                     entries = []
                     if inf:
-                        entries = [self._state_date(inf[0].get('date')) or 'settings.no_date', self._readable_location(inf[0])]
+                        entries = [self._state_date(inf[0].get('date')) or 'save_states.no_date', self._readable_location(inf[0])]
                     for j, line in enumerate(entries):
                         el = self._label(line, fsp * 1.1, WHITE if j == 0 else GRAY); el.x = mx + (mw - el.content_width) / 2; el.y = my1 - 40 * k - h_i - 34 * k - j * 30 * k; el.draw()
                 else:
-                    el = self._label('settings.empty_slot' if not inf else 'settings.no_thumbnail', fs, GRAY); el.x = mx + (mw - el.content_width) / 2; el.y = my1 - mh / 2; el.draw()
+                    el = self._label('save_states.empty_slot' if not inf else 'save_states.no_thumbnail', fs, GRAY); el.x = mx + (mw - el.content_width) / 2; el.y = my1 - mh / 2; el.draw()
         if fixed: self._help_zone(x0, y0, frame[2] - x0, k, self._described(e, i_selected))
         if not interactive: return frame
         if self.open_dropdown is not None and self.open_dropdown[0] in lines and self.open_dropdown[0] < n and e[self.open_dropdown[0]]['t'] in ('choice', 'slot'):          # (a slot: the list of what to do with it)
@@ -1951,8 +1954,8 @@ class Pause:
     # ---- tooltips (help on mouse hover) and modal window
     # (the help texts are French texts; `_helptext_lines` translates each sentence separated by three spaces, see the catalog texts_en\pause.py:
     # an assembled help text ("..." + KEY_HELPTEXT) is therefore translated sentence by sentence)
-    KEY_HELPTEXT = 'settings.enter_change_key   settings.switch_slot   settings.delete_clear   settings.home_default_value_button_original   settings.camera_keys_keyboard_gamepad'
-    SAVESTATES_HELPTEXT = N_('settings.enter_click_slot_choose')          # (a slot: what confirming or clicking it does)
+    KEY_HELPTEXT = 'controls.enter_change_key   controls.switch_slot   controls.delete_clear   controls.home_default_value_button_original   controls.camera_keys_keyboard_gamepad'
+    SAVESTATES_HELPTEXT = N_('save_states.enter_click_slot_choose')          # (a slot: what confirming or clicking it does)
 
     def _line_helptext(self, entry):
         """Help text of a menu line ('   ' separates the tooltip lines); '' if there is none."""
@@ -1960,14 +1963,14 @@ class Pause:
         if t != 'sep' and self._inactive(entry): return entry.get('hint') or ''                   # inactive line: no keyboard or mouse hint, only its own help (it says why)
         if t == 'key': return entry.get('hint') or self.KEY_HELPTEXT
         prefix = entry['hint'] + '   ' if entry.get('hint') and t != 'act' else ''          # text specific to the line, before the general hint
-        if t == 'slider' and 'active' in entry: return prefix + 'settings.drag_volume   settings.enter_speaker_button_mute_unmute   settings.click_value_type   settings.delete_default_value_button_reset'
-        if t == 'slider' and entry.get('notches'): return prefix + 'settings.drag_change_value   settings.delete_default_value_button_default'          # (notches: the value is a name, not typed)
-        if t == 'slider': return prefix + 'settings.drag_change_value   settings.click_value_type   settings.delete_default_value_button_default'
+        if t == 'slider' and 'active' in entry: return prefix + 'sound.drag_volume   sound.enter_speaker_button_mute_unmute   common.click_value_type   sound.delete_default_value_button_reset'
+        if t == 'slider' and entry.get('notches'): return prefix + 'common.drag_change_value   common.delete_default_value_button_default'          # (notches: the value is a name, not typed)
+        if t == 'slider': return prefix + 'common.drag_change_value   common.click_value_type   common.delete_default_value_button_default'
         if t == 'choice':
-            return prefix + ('settings.enter_click_turn_off   settings.left_arrow_no   settings.right_arrow_yes' if entry.get('sw') else 'settings.enter_click_open_list   settings.previous_next_value') + ('   settings.delete_round_button_default_value' if 'default' in entry else '')
+            return prefix + ('common.enter_click_turn_off   common.left_arrow_no   common.right_arrow_yes' if entry.get('sw') else 'common.enter_click_open_list   common.previous_next_value') + ('   common.delete_round_button_default_value' if 'default' in entry else '')
         if t == 'act' and entry.get('hint'): return entry['hint']
         if t == 'slot': return self.SAVESTATES_HELPTEXT
-        if self.screen_page == 'interface': return 'settings.drag_selected_item_place   settings.esc_right_click_finish   settings.tab_collapse_panel'
+        if self.screen_page == 'interface': return 'interface.drag_selected_item_place   interface.esc_right_click_finish   interface.tab_collapse_panel'
         return ''
 
     def _helptext_lines(self, text, maxw, fz):
@@ -1975,12 +1978,7 @@ class Pause:
         import re
         out = []
         for l in re.split(r'\s{3,}', text.strip()):
-            l = tr(l); cur = ''
-            for word in l.split(' '):
-                attempt = (cur + ' ' + word).strip()
-                if cur and self._label(attempt, fz).content_width > maxw: out.append(cur); cur = word
-                else: cur = attempt
-            if cur: out.append(cur)
+            out += LG.wrap(tr(l), maxw, lambda t: self._label(t, fz).content_width)          # (Japanese and Chinese: between characters too)
         return out
 
     def _described(self, e, i):
@@ -1998,12 +1996,7 @@ class Pause:
         pyglet.shapes.Line(x + m, y0 + hz, x + w - m, y0 + hz, thickness=max(1.0, k), color=(110, 110, 110)).draw()
         text = (entry.get('hint') or self._line_helptext(entry)) if entry else ''          # (the line's own description; the keys and the mouse only for a line without one: a key, a state slot)
         if not text: return
-        lines = []; cur = ''
-        for word in '  ·  '.join(tr(t) for t in re.split(r'\s{3,}', text.strip()) if t).split(' '):
-            attempt = (cur + ' ' + word).strip()
-            if cur and self._label(attempt, fz, translate=False).content_width > w - 2 * m: lines.append(cur); cur = word
-            else: cur = attempt
-        if cur: lines.append(cur)
+        lines = LG.wrap('  ·  '.join(tr(t) for t in re.split(r'\s{3,}', text.strip()) if t), w - 2 * m, lambda t: self._label(t, fz, translate=False).content_width)
         if len(lines) > 3: lines = lines[:3]; lines[-1] += ' …'
         y = y0 + hz - 14 * k - fz
         for l in lines: lab = self._label(l, fz, HELPTEXT, translate=False); lab.x = x + m; lab.y = y; lab.draw(); y -= lh
@@ -2013,10 +2006,10 @@ class Pause:
         if self.popup is not None: self.tt = None; return
         fz = fsp * 1.05; text = ''; anchor = None
         i_selected = min(self.selected.get(self.screen_page, 0), max(0, n - 1))
-        if self.capture is not None: text = tr('settings.press_gamepad_button' if self.capture[2] else 'settings.press_key') % tr(dict(RG.ACTIONS)[self.capture[0]]) + '   settings.right_click_cancel   settings.delete_clear'; anchor = i_selected
+        if self.capture is not None: text = tr('controls.press_gamepad_button' if self.capture[2] else 'controls.press_key') % tr(dict(RG.ACTIONS)[self.capture[0]]) + '   common.right_click_cancel   controls.delete_clear'; anchor = i_selected
         elif self.entry is not None:
             spec = self._text_entry(); anchor = self.entry[0]
-            text = (spec['prompt'] if spec else 'settings.type_value') + '   settings.enter_confirm   settings.right_click_cancel'
+            text = (spec['prompt'] if spec else 'common.type_value') + '   common.enter_confirm   common.right_click_cancel'
         elif self.open_dropdown is not None: self.tt = None; return
         else: self.tt = None
         if not text: return
@@ -2051,7 +2044,7 @@ class Pause:
             places = [(x + (w - bw) / 2, y + 22 * k + (len(choices) - 1 - i) * (bh + gap)) for i in range(len(choices))]
         else:
             bw = 150 * k; w = max(2 * bw + 60 * k, label.content_width + 80 * k, (ed.content_width + 80 * k) if ed else 0); h = 200 * k
-            x, y = (W - w) / 2, (H - h) / 2; choices = ['settings.yes', 'settings.no']
+            x, y = (W - w) / 2, (H - h) / 2; choices = ['common.yes', 'common.no']
             places = [(x + w / 2 + (-bw - 14 * k if i == 0 else 14 * k), y + 28 * k) for i in range(2)]
         self._border(x, y, w, h, k)
         label.x = x + (w - label.content_width) / 2; label.y = y + h - 62 * k; label.draw()

@@ -359,9 +359,14 @@ class Game(FullScreenMixin, CameraMixin, FieldMixin, BattleMixin, TitleMixin, St
     reload_request = None                                                  # set by reload_game: the loop stops, `main` starts a new Game with the language of the setting (and loads the state `reload_request['state']`)
 
     def language_target(self):
-        """Language of the game version that the "Language" setting asks for: the one of its APK folder if that folder has its files, otherwise the other language's (Folders.choose_apk); the language already loaded when the APK files were forced (--apk: tests)."""
+        """Language of the game version that the "Language" setting asks for (game_version_of the language displayed)."""
+        return self.game_version_of(LG.current_language())
+
+    def game_version_of(self, language):
+        """Language of the game version that `language` runs: its own if its APK folder has the files, otherwise the one it falls back on, English then French (Folders.choose_apk); the
+        language already loaded when the APK files were forced (--apk: tests)."""
         if getattr(self.args, 'apk_forced', False): return self.game_language
-        return CH.FOLDERS.choose_apk(LG.current_language())[1]
+        return CH.FOLDERS.choose_apk(language)[1]
 
     def language_pending(self):
         """The setting asks for another game language than the loaded one: the game restarts on the title screen."""
@@ -374,7 +379,7 @@ class Game(FullScreenMixin, CameraMixin, FieldMixin, BattleMixin, TitleMixin, St
 
     def reload_game(self, language=None, state=None):
         """Closes the window like Quitter does (settings, history, sound: nothing else is waiting to be written, the game's own saves are written when they happen) and asks `main` to start the game again: the engine reloaded with the APK files of the
-        language of the setting, the title screen in that language, no entry logos. `language` ('fr' or 'en'): sets the "Language" setting first (loading a state of the other language); `state`: number of the savestate to load once the game is back."""
+        language of the setting, the title screen in that language, no entry logos. `language` (a language code): sets the "Language" setting first (loading a state of another game version); `state`: number of the savestate to load once the game is back."""
         if language is not None: self.reg['language'] = language; LG.select_language(language)
         full = self.is_fullscreen; where = None
         try: where = None if full else tuple(self.get_location())
@@ -389,11 +394,11 @@ class Game(FullScreenMixin, CameraMixin, FieldMixin, BattleMixin, TitleMixin, St
         self.reload_game(); return True
 
     def _load_after_reload(self):
-        """First loop of a game started again to load a state of the other language (the confirmation was given before the reload)."""
+        """First loop of a game started again to load a state of another game version (the confirmation was given before the reload)."""
         n, self.args.reload_state = self.args.reload_state, None
         self._after_reload = True                                  # (the engine has no game yet: the state is the game last played's, SnapshotsMixin.state_path)
-        try: self.load_state(n); self.toast(tr('window.state_loaded') % n)
-        except Exception as ex: self._note_state_failure(tr('window.loading_state') % n, 'Loading savestate %d' % n, ex)
+        try: self.load_state(n); self.toast(tr('save_states.state_loaded') % n)
+        except Exception as ex: self._note_state_failure(tr('save_states.loading_state') % n, 'Loading savestate %d' % n, ex)
         finally: self._after_reload = False
 
     def back_to_title_possible(self):
@@ -837,8 +842,8 @@ class Game(FullScreenMixin, CameraMixin, FieldMixin, BattleMixin, TitleMixin, St
         if self.quick_save is not None and not self.pause.opened:       # digit shortcut: the savestate and the thumbnail are taken from the frame that has just been drawn
             n, self.quick_save = self.quick_save, None
             try:
-                t = self._clone_thumbnail(); png = self._png_thumbnail(t); t.delete(); self.save_state(n, png); self.toast(tr('window.state_saved') % n)
-            except Exception as ex: self._note_state_failure(tr('window.saving_state') % n, 'Saving savestate %d' % n, ex)
+                t = self._clone_thumbnail(); png = self._png_thumbnail(t); t.delete(); self.save_state(n, png); self.toast(tr('save_states.state_saved') % n)
+            except Exception as ex: self._note_state_failure(tr('save_states.saving_state') % n, 'Saving savestate %d' % n, ex)
         if not self.pause.opened: self.hud.draw_all(self.hud.visible_ones() if getattr(self, '_replay', None) is None else [n for n in self.hud.visible_ones() if n == HM.BATTLE])
         if getattr(self, '_replay', None) is not None: self.draw_replay_overlay()
         elif self.arena_back_shown(): self.draw_arena_back()          # monster arena: the back button replaces the "Quit" window
@@ -1093,7 +1098,7 @@ class Game(FullScreenMixin, CameraMixin, FieldMixin, BattleMixin, TitleMixin, St
         """Information lines (F1): location and window, display settings, sound, performance. Nothing can be changed here: the settings are in the Esc menu."""
         e = self.engine.state; field = e.part == ENGINE.PART_FIELD and e.field is not None; is_battle = e.part == ENGINE.PART_BATTLE
         yes, no = tr(N_('window.yes')), tr(N_('window.no'))
-        location = tr(N_('settings.world_map')) if field else (tr(N_('window.battle')) % e.game_map if is_battle else tr(N_('window.map')) % (e.game_map or '?'))
+        location = tr(N_('save_states.world_map')) if field else (tr(N_('window.battle')) % e.game_map if is_battle else tr(N_('window.map')) % (e.game_map or '?'))
         mode_name = tr(HD.MODES[self.mode][0]) if self.mode < MODE_PP else 'Pixel perfect'
         scenery = tr(N_('window.smoothed_original_rendering')) if self.mode in (0, MODE_PP) else mode_name
         self.tag_label.text = tr(N_('window.window_x_engine_frame_part')) % (location, self.width, self.height, tr(N_('window.fullscreen')) if self.is_fullscreen else '', self.engine.frames, e.part)

@@ -89,14 +89,14 @@ class InterfaceKeys(unittest.TestCase):
 
 class FileKeys(unittest.TestCase):
     def test_header(self):
-        self.assertEqual(LS.renamed_info({'lieu': 'settings.battle', 'carte': 'ev01', 'partie': 12, 'images': 99, 'date': 'd', 'version': 1}),
-                         {'location': 'settings.battle', 'map': 'ev01', 'part': 12, 'frames': 99, 'date': 'd', 'version': 1})
+        self.assertEqual(LS.renamed_info({'lieu': 'save_states.battle', 'carte': 'ev01', 'partie': 12, 'images': 99, 'date': 'd', 'version': 1}),
+                         {'location': 'save_states.battle', 'map': 'ev01', 'part': 12, 'frames': 99, 'date': 'd', 'version': 1})
 
     def test_header_read_from_an_old_file(self):
         f = os.path.join(tempfile.mkdtemp(prefix='legacy_'), 'e.dqs')
-        SS.write(f, {'version': SS.VERSION}, {'lieu': 'settings.world_map', 'carte': 'mak1f1', 'partie': 14, 'images': 7})
+        SS.write(f, {'version': SS.VERSION}, {'lieu': 'save_states.world_map', 'carte': 'mak1f1', 'partie': 14, 'images': 7})
         info, _ = SS.info(f)
-        self.assertEqual((info['location'], info['map'], info['part'], info['frames']), ('settings.world_map', 'mak1f1', 14, 7))
+        self.assertEqual((info['location'], info['map'], info['part'], info['frames']), ('save_states.world_map', 'mak1f1', 14, 7))
 
     def test_outer_and_python_dictionaries(self):
         self.assertEqual(LS.renamed_file({'fichiers': {1: 2}, 'heap': b''}), {'files': {1: 2}, 'heap': b''})

@@ -95,6 +95,7 @@ class CameraMixin:
         """Wheel: scrolls the Esc menu or the license; on the field it no longer does anything (no more zoom)."""
         if not self._ready: return
         if self.pause.opened: self.pause.wheel(sy); return
+        if getattr(self, 'port_screen', None) is not None and hasattr(self.port_screen, 'wheel'): self.port_screen.wheel(sy); return          # (the language screen's cards and flags)
         if self.license_panel is not None: self.license_panel.scroll_by(-sy * 60.0)
 
     def _wheel_press(self, x, y):

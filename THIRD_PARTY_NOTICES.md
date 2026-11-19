@@ -9,6 +9,7 @@ This repository contains **no content from the game**. The game engines (`libdq4
 | Component | Where | License |
 |---|---|---|
 | Kenney "Input Prompts" 1.1 (key and gamepad button pictures, www.kenney.nl); four key pictures (Shift, Alt, Alt Gr, Ctrl) assembled from Kenney's own blank key and letters by `tools/make_key_pictures.py`; the left stick's four directions made from the right stick's pictures with the "L" of Kenney's left stick press picture by `tools/make_stick_pictures.py` | `dq456_pc/assets/input_prompts/` | CC0 1.0 (public domain dedication), see `dq456_pc/assets/input_prompts/LICENSE.txt` |
+| Flags of the countries (PNG renders of the Wikipedia flags from the npm package [svg-country-flags](https://github.com/hjnilsson/country-flags) 1.2.10, reduced to 120 x 80 pixels) and their English names (`flags.txt`) | `dq456_pc/assets/flags/` | Public domain (the package's license: "PD"; flags are not under copyright protection, other restrictions on their use may apply) |
 
 ## Python modules installed by the launcher (not included)
 

@@ -175,7 +175,7 @@ class DisplayPage(unittest.TestCase):
         f = win([A(), B()]); f.mode = 4; f.zoom = 1.0; f.post = types.SimpleNamespace(max_msaa=None); f.resolutions = lambda: [(1280, 720), (1920, 1080)]; f.current_resolution = lambda: (1280, 720)
         f.set_resolution = lambda v: None; f.set_mode = lambda v: None; f.set_distance = lambda v: None
         order = [x['l'] for x in self.PA.Pause(f)._entries_display()]
-        self.assertEqual(order[:3], ['settings.language', 'settings.fullscreen', 'settings.brightness']); self.assertNotIn('settings.resolution', order); self.assertFalse([l for l in order if 'monitor' in l], order)
+        self.assertEqual(order[:3], ['language.title', 'display.fullscreen', 'display.brightness']); self.assertNotIn('settings.resolution', order); self.assertFalse([l for l in order if 'monitor' in l], order)
         for name_str in ('valeurs_ecran', 'valeur_ecran', 'nom_ecran', 'ecran_modifiable', 'regler_ecran_plein'): self.assertFalse(hasattr(WND.Game, name_str), name_str)          # (and nothing left in the window to choose it)
 
 

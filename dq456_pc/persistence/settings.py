@@ -45,16 +45,16 @@ def layout_keys(letter_of=windows_letter):
 DEFAULT_KEYS.update({a: [n, None] for a, n in layout_keys().items()})
 OLD_MENU = ['RETURN', None]         # default of the "Menu" action before v5 (keys_version): Enter alone; a file that still contains it also receives Tab (see Settings.__init__)
 # action labels ("Controls" menu: the page groups the lines by sections, see pause.py; L / R: pages of the game's menus, fixed keys absent from the menu)
-ACTIONS = [('up', N_('settings.up')), ('down', N_('settings.down')), ('left', N_('settings.left')), ('right', N_('settings.right')),
-           ('cam_left', N_('settings.camera_left')), ('cam_right', N_('settings.camera_right')),
-           ('accel', N_('settings.accelerator_key')), ('battle_speed', N_('settings.change_battle_speed')), ('modifier', N_('settings.special_key')),
-           ('A', N_('settings.action')), ('menu', N_('settings.menu')), ('B', N_('settings.cancel_back')), ('map', N_('settings.map')), ('chat', N_('settings.party_chat')), ('extra', N_('settings.vehicle_command')),
-           ('info', N_('settings.screen_info')), ('L', N_('settings.previous_page')), ('R', N_('settings.next_page'))]          # (labels in French, translated at display time by the Pause menu: `tr(label_text)`)
+ACTIONS = [('up', N_('controls.up')), ('down', N_('controls.down')), ('left', N_('controls.left')), ('right', N_('controls.right')),
+           ('cam_left', N_('controls.camera_left')), ('cam_right', N_('controls.camera_right')),
+           ('accel', N_('controls.accelerator_key')), ('battle_speed', N_('controls.change_battle_speed')), ('modifier', N_('controls.special_key')),
+           ('A', N_('controls.action')), ('menu', N_('controls.menu')), ('B', N_('controls.cancel_back')), ('map', N_('controls.map')), ('chat', N_('controls.party_chat')), ('extra', N_('controls.vehicle_command')),
+           ('info', N_('controls.screen_info')), ('L', N_('controls.previous_page')), ('R', N_('controls.next_page'))]          # (labels in French, translated at display time by the Pause menu: `tr(label_text)`)
 RESERVED = ('ESCAPE', 'F11')          # Esc opens the menu, F11 toggles window / full screen (like Alt + Enter): not reassignable
-NAMES = {'LEFT': '←', 'RIGHT': '→', 'UP': '↑', 'DOWN': '↓', 'LSHIFT': N_('settings.left_shift'), 'RSHIFT': N_('settings.right_shift'), 'LCTRL': N_('settings.left_ctrl'), 'RCTRL': N_('settings.right_ctrl'),
-        'LALT': N_('settings.left_alt'), 'RALT': 'Alt Gr', 'SPACE': N_('settings.space'), 'RETURN': N_('settings.enter'), 'ENTER': N_('settings.numpad_enter'), 'BACKSPACE': N_('settings.backspace'), 'TAB': 'Tab',
-        'DELETE': N_('settings.delete'), 'INSERT': N_('settings.insert'), 'HOME': N_('settings.home'), 'END': N_('settings.end'), 'PAGEUP': N_('settings.page_up'), 'PAGEDOWN': N_('settings.page_down'), 'CAPSLOCK': N_('settings.caps_lock'),
-        'NUM_ADD': N_('settings.numpad_plus'), 'NUM_SUBTRACT': N_('settings.numpad_minus'), 'COMMA': ',', 'PERIOD': '.', 'SEMICOLON': ';', 'COLON': ':', 'EXCLAMATION': '!', 'MINUS': '-', 'PLUS': '+', 'EQUAL': '=', 'SLASH': '/', 'BACKSLASH': '\\'}
+NAMES = {'LEFT': '←', 'RIGHT': '→', 'UP': '↑', 'DOWN': '↓', 'LSHIFT': N_('keys.left_shift'), 'RSHIFT': N_('keys.right_shift'), 'LCTRL': N_('keys.left_ctrl'), 'RCTRL': N_('keys.right_ctrl'),
+        'LALT': N_('keys.left_alt'), 'RALT': 'Alt Gr', 'SPACE': N_('keys.space'), 'RETURN': N_('keys.enter'), 'ENTER': N_('keys.numpad_enter'), 'BACKSPACE': N_('keys.backspace'), 'TAB': 'Tab',
+        'DELETE': N_('keys.delete'), 'INSERT': N_('keys.insert'), 'HOME': N_('keys.home'), 'END': N_('keys.end'), 'PAGEUP': N_('keys.page_up'), 'PAGEDOWN': N_('keys.page_down'), 'CAPSLOCK': N_('keys.caps_lock'),
+        'NUM_ADD': N_('keys.numpad_plus'), 'NUM_SUBTRACT': N_('keys.numpad_minus'), 'COMMA': ',', 'PERIOD': '.', 'SEMICOLON': ';', 'COLON': ':', 'EXCLAMATION': '!', 'MINUS': '-', 'PLUS': '+', 'EQUAL': '=', 'SLASH': '/', 'BACKSLASH': '\\'}
 # (`key_name` always returns the FRENCH name (data, like the action labels); the menu translates it when drawing it, `tr(key_name(...))`, including
 # "Numpad 0" to "Numpad 9" of the other numeric keypad keys)
 
@@ -70,7 +70,7 @@ SMALL_SCREEN_SCALE = 1.5
 SMALL_SCREENS = ('CityMap', 'WorldLargeMap', 'ShopMap', 'MapButton')
 
 DEFAULT = {
-    'language': 'system',            # tool language: 'systeme' (French if Windows is in French, otherwise English), 'en' or 'fr'; the game's texts do not change
+    'language': 'system',            # language of the port's texts and of the game version (APK folder): 'system' (the computer's language) or a language code ('fr-fr'...; language.py)
     'sprite_mode': 0,            # "Shader": 0 originals ("None", the default; 4 before: an untouched 4 is migrated, keys_version 7), 1 EPX x8, 4 pixel perfect (see hd.py); 2 (smoothed regions) and 3 (bicubic), removed because they only blurred, are read as 1
     'window_mode': 0,            # window: 0 windowed, 1 full screen (borderless window at the desktop resolution, the monitor's display mode does not change); F11 / Alt + Enter switch from one to the other (formerly the boolean "full_screen"; the old exclusive full screen, mode 2, became 1)
     'msaa': 4,                    # MSAA antialiasing (0, 2, 4, 8): the scene is drawn off-screen (postfx.py), the change is immediate; limited by the graphics card
@@ -224,10 +224,10 @@ SOUND_TEXT_BOOLEANS = ('music_enabled', 'jingles_enabled', 'sfx_enabled', 'inter
 TEXT_SPEEDS = (0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 4000.0)     # text speed notches (letters per frame); 4 = the game, 4000 = all at once
 BATTLE_SPEEDS = (0.0, 1.0, 2.0, 3.0)                       # notches of "Battle speed": Manual (normal speed + messages advanced by hand), Normal (= the game), Fast, Very fast
 RATES = (0.5, 0.75, 1.0, 1.25, 1.5)
-RATE_NAMES = {0.5: N_('settings.rate_much_less'), 0.75: N_('settings.rate_less'), 1.0: N_('settings.normal'), 1.25: N_('settings.rate_more'), 1.5: N_('settings.rate_much_more')}      # the 5 notches of "Experience gained", "Gold gained", "Damage taken by..." (names only: never the factor)
+RATE_NAMES = {0.5: N_('difficulty.rate_much_less'), 0.75: N_('difficulty.rate_less'), 1.0: N_('common.normal'), 1.25: N_('difficulty.rate_more'), 1.5: N_('difficulty.rate_much_more')}      # the 5 notches of "Experience gained", "Gold gained", "Damage taken by..." (names only: never the factor)
 RATE_KEYS = ('exp_rate', 'gold_rate', 'casino_rate', 'party_damage_rate', 'enemy_damage_rate', 'encounter_rate')
 DIFFICULTIES = (0, 1, 2, 3, 4, 5); DIFFICULTY_CUSTOM = 5
-DIFFICULTY_NAMES = {0: N_('settings.dragon_egg'), 1: N_('settings.dragonling'), 2: N_('settings.dragon'), 3: N_('settings.dragon_chief'), 4: N_('settings.dragon_god'), 5: N_('settings.custom')}
+DIFFICULTY_NAMES = {0: N_('difficulty.dragon_egg'), 1: N_('difficulty.dragonling'), 2: N_('difficulty.dragon'), 3: N_('difficulty.dragon_chief'), 4: N_('difficulty.dragon_god'), 5: N_('difficulty.custom')}
 EASIER_WHEN_HIGHER = ('exp_rate', 'gold_rate', 'casino_rate', 'enemy_damage_rate')
 
 
@@ -237,7 +237,7 @@ def difficulty_rates(level):
     return {k: RATES[4 - level] if k in EASIER_WHEN_HIGHER else RATES[level] for k in RATE_KEYS}
 
 
-BATTLE_SPEED_NAMES = {0.0: N_('settings.manual'), 1.0: N_('settings.normal'), 2.0: N_('settings.fast'), 3.0: N_('settings.very_fast')}      # labels shown to the player ("Texte" page, battle screen button, key message): never "x1", "x2", "x3"
+BATTLE_SPEED_NAMES = {0.0: N_('common.manual'), 1.0: N_('common.normal'), 2.0: N_('common.fast'), 3.0: N_('common.very_fast')}      # labels shown to the player ("Texte" page, battle screen button, key message): never "x1", "x2", "x3"
 # Battle message scrolling: OptionStatus.battleSpeed (g_Option + 5, original value 2: OptionStatus::initialize); BattleAutoFeed::setMessageSpeed:
 # 0 / 1 / 2 / 3 = wait of 12 / 22 / 32 / 42 frames (0.4 / 0.73 / 1.07 / 1.4 s) before the next message, 4 = no automatic advance (key press).
 # "Battle speed" imposes 4 in Manuel and 0 (the shortest, 12 frames) otherwise (with 2, the original value, 32 frames, the damage number only appeared
@@ -278,7 +278,7 @@ def key_name(name_str):
     """Readable name of a key (pyglet name) for the menu."""
     if not name_str: return '—'
     if name_str in PI.LABELS: return PI.LABELS[name_str]
-    return NAMES.get(name_str, name_str.replace('NUM_', LG.tr('settings.numpad_prefix')) if name_str.startswith('NUM_') else (name_str[1:] if name_str.startswith('_') and name_str[1:].isdigit() else name_str))
+    return NAMES.get(name_str, name_str.replace('NUM_', LG.tr('keys.numpad_prefix')) if name_str.startswith('NUM_') else (name_str[1:] if name_str.startswith('_') and name_str[1:].isdigit() else name_str))
 
 
 def key_symbol(name_str):
@@ -375,7 +375,7 @@ class Settings:
                 if isinstance(self.v['buttons_pos'], dict): self.v['buttons_pos'] = {n: x for n, x in self.v['buttons_pos'].items() if n not in ('combat', 'extra')}      # (the speed button's position is no longer here)
                 self.v['sprite_mode'] = valid_sprites_mode(self.v['sprite_mode'])
                 self.v['window_mode'] = valid_window_mode(self.v['window_mode'])          # (2 = old exclusive full screen -> 1)
-                if self.v['language'] not in LG.CHOICES: self.v['language'] = DEFAULT['language']
+                self.v['language'] = LG.normalized(self.v['language'])          # (an earlier version's code: 'fr' -> 'fr-fr'; unknown: the default)
                 if self.v['msaa'] not in MSAA_VALUES: self.v['msaa'] = DEFAULT['msaa']
                 if self.v['color_filter'] not in COLOR_FILTERS: self.v['color_filter'] = DEFAULT['color_filter']
                 self.v['motion_blur'] = 0.0          # (no line any more; a value set while it existed would stay out of reach)

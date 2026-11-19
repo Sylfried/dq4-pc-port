@@ -13,7 +13,7 @@ ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, ROOT)
 from dq456_pc import language as _LANGUAGE; _LANGUAGE.select_language('fr')          # (these tests expect the French texts, whatever the computer's language)
 
-ALLOWED = ('window.state_saved', 'window.state_loaded', 'window.state_empty', 'window.state_french_version_game_load', 'window.state_english_version_game_load', 'window.load_undone', 'window.failed_r', 'window.save_failed_game_continues_details', 'menus.saves_imported', 'menus.language_will_change_when_leave')     # (start of the text of each call; the language screen's notice)
+ALLOWED = ('save_states.state_saved', 'save_states.state_loaded', 'save_states.state_empty', 'save_states.state_other_version_game_load', 'save_states.load_undone', 'window.failed_r', 'window.save_failed_game_continues_details', 'saves.saves_imported', 'language.language_will_change_when_leave')     # (start of the text of each call; the language screen's notice)
 
 
 def toast_calls():
@@ -71,7 +71,7 @@ class Behavior(unittest.TestCase):
         j = self.fake(); j.undo_state = None
         self.assertFalse(self.I.SnapshotsMixin.cancel_loading(j)); self.assertEqual(j.msgs, [])           # (nothing to undo: no notice)
         j = self.fake(); j.undo_state = {'a': 1}; j._complete_savestate = lambda: {'b': 2}; j._apply_savestate = lambda d: None
-        self.assertTrue(self.I.SnapshotsMixin.cancel_loading(j)); self.assertEqual(j.msgs, ['window.load_undone'])
+        self.assertTrue(self.I.SnapshotsMixin.cancel_loading(j)); self.assertEqual(j.msgs, ['save_states.load_undone'])
 
     def test_savestate_failure_console_log_and_message(self):
         d = tempfile.mkdtemp(); self.addCleanup(shutil.rmtree, d, True)
@@ -84,7 +84,7 @@ class Behavior(unittest.TestCase):
     def test_import_of_saves(self):
         from dq456_pc.window import title_screen as T
         j = self.fake(); j.port_screen = types.SimpleNamespace(needs_reload=True); j._after_import = lambda: T.TitleMixin._after_import(j)
-        T.TitleMixin._close_port_screen(j); self.assertIsNone(j.port_screen); self.assertEqual(j.msgs, ['menus.saves_imported'])
+        T.TitleMixin._close_port_screen(j); self.assertIsNone(j.port_screen); self.assertEqual(j.msgs, ['saves.saves_imported'])
         j = self.fake(); j.port_screen = types.SimpleNamespace(needs_reload=False); j._after_import = lambda: T.TitleMixin._after_import(j)
         T.TitleMixin._close_port_screen(j); self.assertEqual(j.msgs, [])                              # nothing imported: no message
 
