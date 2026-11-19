@@ -15,6 +15,18 @@ This project plays the **Android versions of Dragon Quest IV, V and VI** on a Wi
 - **Speeds**: walking accelerator (held key), text speed and battle speed; by default, the game's own speeds.
 - **Game rules**, saved with each game and off by default (the original game): difficulty (experience, gold, casino tokens, damage, encounter rate), HP and MP restored on level up or after a battle, no random encounters, and a randomizer with a seed (items, monster drops, random encounters, bosses).
 
+### Planned
+
+Not available yet; game-changing additions will be options, off by default.
+
+- **More languages**: APK folders for German, Spanish, Italian, Japanese, Korean and Chinese, a language added by choosing its flag, each language named in its own language, and the port's own texts translated through a spreadsheet it exports and reads back (one column per language).
+- **Interface**: new default layouts for the larger screen, a taskbar icon per game, and an optional framed battle view over a blurred background.
+- **Tactics**: the hero's own tactics, and in DQ IV the formation and tactics buttons in battle from the first chapters.
+- **Extra modes**: monster rush (harder and harder battles, zone after zone) and boss rush (at the casino, each boss in its original scenery), with rewards such as casino tokens and equipment.
+- **Challenges**: no shopping, no armour, party lost when its main character falls, permanent death, no church services, no bank; in DQ V no monster recruitment or permanent death of monsters; in DQ VI vocations limited per character.
+- **Cheats**, per character and for the party: healing, HP / MP that do not go down, critical hits, immunity to status effects, experience and levels, gold, tokens, mini medals and items, no equipment restriction, no gold lost after a defeat, a chosen enemy at the next encounter, day / night cycle stopped; in DQ V recruitment at 100%, in DQ VI vocations mastered. Random encounters can already be turned off.
+- **Achievements**: pop-up notifications and a grid view, completion goals (every item, monster, loot, travel destination, mini medal reward, level 99, casino feats, everything found), goals of each game (DQ IV's migrant town, DQ V's monsters and mini-games, DQ VI's vocations, contests and mini-games), and goals for difficulties, randomizers and challenges, disabled once a cheat is used.
+
 ## How it works
 
 Each Android game is a C++ engine (`libdq4core.so`, `libdq5core.so`, `libdq6core.so`, ARM64) whose display and input go through a Unity layer. The port keeps the original engine and replaces the Unity layer with Python (pyglet / OpenGL):
