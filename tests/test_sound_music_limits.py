@@ -7,7 +7,7 @@ import os, sys, time, unittest
 import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-sys.modules['pyglet'] = None                                             # no pyglet: Sound takes it for "sound unavailable", we give it fake players
+sys.modules['pyglet'] = None                                             # no pyglet: Sound takes it for "sound unavailable", the test gives it fake players
 from dq456_pc import sound as SOUND
 
 

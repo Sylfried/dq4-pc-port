@@ -9,7 +9,7 @@ Reproduces the game's rules, one update per frame (30 Hz):
     by about 0.001 per frame (the chunk narrows) and the chunk drifts 0.002 to the left;
   * a chunk's opacity decreases by 8/255 per frame of movement;
   * when A exceeds half the height, the capture's brightness drops by 2/56 per frame; the effect stops when A exceeds 56.
-The original game cuts the portrait screen into 32 x 56 square chunks (56 = 32 / 0.5625). On a 16/9 screen we keep square chunks (32 x 18) and each row
+The original game cuts the portrait screen into 32 x 56 square chunks (56 = 32 / 0.5625). On a 16/9 screen the chunks stay square (32 x 18) and each row
 takes the place of 56 / 18 original rows, so the timing (57 frames) is the same."""
 import numpy as np
 

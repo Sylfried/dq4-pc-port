@@ -293,7 +293,7 @@ class Game(FullScreenMixin, CameraMixin, FieldMixin, BattleMixin, TitleMixin, St
         return ''.join('  %s\n' % x for x in lines)
 
     def _fatal(self, where):
-        """The game cannot continue: we save what we can, write the full trace to the log, then close cleanly.
+        """The game cannot continue: what can be saved is saved, the full trace goes to the log, then the window closes cleanly.
 
         Before, an error coming up from the engine (heap exhausted, hook error, timeout) made the **window vanish without saving anything**:
         `on_close` was not run, so settings, history and sound were lost, and the log `window_errors.log` stayed empty
@@ -875,7 +875,7 @@ class Game(FullScreenMixin, CameraMixin, FieldMixin, BattleMixin, TitleMixin, St
         if ef_c is not None and self.capture_ready:
             sim = self._capture_advance(ef_c)
             if (sim.render_active and not getattr(sim, 'live_capture', False)) or e.black_screen is not None: self._drawing_kind = 'screen effect'; self._draw_capture_effect(sim); return          # (for the first two frames the game is still displayed normally; on arrival of a travel it is the departure's black)
-        if e.effect is None and e.load_wait is not None:                # end of the effect, battle scene not yet arrived: black (otherwise we would see the previous scene)
+        if e.effect is None and e.load_wait is not None:                # end of the effect, battle scene not yet arrived: black (otherwise the previous scene would show)
             self._drawing_kind = 'black (waiting for the battle)'; gl.glClearColor(0.0, 0.0, 0.0, 1.0); self.clear(); return
         field = e.part == ENGINE.PART_FIELD and e.field is not None        # world map (tiles) or town (3D scenery)
         cam3d = None                                                        # town: (right, up, forward) of the camera, for the character panels

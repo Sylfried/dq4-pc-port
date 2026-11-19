@@ -42,7 +42,7 @@ def factor(speed, in_battle):
 
 def advance_time(acc, dt, f, do_step, clock, step=ENGINE_STEP, budget=STEP_BUDGET):
     """One displayed frame: the engine clock advances by `dt * f` seconds; `do_step()` performs one engine step as many times as the clock requires (at most 3 x ceil(f)), limiting the computation time to `budget`
-    seconds when f > 1 (accelerated walking, battle). `do_step()` returns False when the engine has just started waiting for the player: we stop there, without catching up on the rest.
+    seconds when f > 1 (accelerated walking, battle). `do_step()` returns False when the engine has just started waiting for the player: the loop stops there, without catching up on the rest.
     -> (remaining acc in engine seconds, number of steps done, budget exceeded). The remaining clock is forgotten if the catch-up is at its maximum, if the budget is exceeded or if the engine is waiting for the player."""
     acc += min(dt * f, CATCHUP * step * max(1.0, f))
     n = 0; nmax = CATCHUP * max(1, math.ceil(f)); cut = False; waiting = False; t0 = clock()

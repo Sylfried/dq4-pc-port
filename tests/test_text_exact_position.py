@@ -1,4 +1,4 @@
-"""EXACT position of menu texts ("bring everything back to the exact position of the original game"). Unity's TextMesh with the SE-GARRIR font is placed exactly as in the APK: anchor, line spacing, tabs,
+"""EXACT position of menu texts, as in the original game. Unity's TextMesh with the SE-GARRIR font is placed exactly as in the APK: anchor, line spacing, tabs,
 alignment; no more vertical re-centering (formerly `text_recentering`: variable `DQ_ORIGINAL_TEXT` removed with it), no more re-cutting or compression (descriptions, spell cost line, poker), no more shift of the start menu title.
 Pure logic, no window or engine (`tests/_text_render.py`: the real `Render._text` with a fake GL):
 

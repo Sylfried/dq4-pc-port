@@ -161,7 +161,7 @@ class Following(unittest.TestCase):
         e.uid = 0x1111; self.follow(g, e); self.assertEqual((self.R['difficulty'], self.R['exp_rate']), (5, 1.5))
 
     def test_display_sound_and_keys_are_the_same_for_every_game(self):
-        old = dict(GR.snapshot(self.R, None), settings={'music_volume': 0.25, 'sprite_mode': 1, 'keys': dict(self.R['keys'], menu=['M', None])})          # (a file written before 16/11)
+        old = dict(GR.snapshot(self.R, None), settings={'music_volume': 0.25, 'sprite_mode': 1, 'keys': dict(self.R['keys'], menu=['M', None])})          # (an older file)
         GR.save(self.t, 0x1111, old); GR.save(self.t, 0x2222, {'difficulty': {'difficulty': 0}})
         self.R['music_volume'] = 0.75; g = GR.GameRules(self.t, self.R); e = FakeEngine(0x1111); self.follow(g, e)
         self.assertEqual((self.R['music_volume'], self.R['sprite_mode'], self.R['keys']['menu']), (0.75, RG.DEFAULT['sprite_mode'], RG.DEFAULT['keys']['menu']))          # (the application's: untouched)

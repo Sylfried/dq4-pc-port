@@ -47,7 +47,7 @@ def entry(): LG.select_language('en')
 
 
 class Language(unittest.TestCase):
-    """Each test picks its language; we switch back to French at the end (the other tests expect French)."""
+    """Each test picks its language; French is set back at the end (the other tests expect French)."""
     def setUp(self): LG.select_language('fr')
     def tearDown(self): LG.select_language('fr')
 
@@ -428,7 +428,7 @@ class Other(Language):
             self.assertEqual(J.drawn, [title_screen, 'Privacy Policy'], language)                                    # "Privacy Policy": the game's text
         # the port's header text is already in English, the original list follows: none of this depends on the language
         for language in ('fr', 'en'):
-            LG.select_language(language); self.assertEqual(AP.License(None).text.replace('\n', ' ').count('This is an unofficial'), 1)
+            LG.select_language(language); self.assertEqual(AP.License(None).text.replace('\n', ' ').count('This project is unofficial'), 1)
         self.assertFalse(french(AP.PROJECT_LICENSE))
         txt = AP.License(None).text
         self.assertIn('Dragon Quest IV PC port', txt); self.assertIn('engine (libdq4core.so)', txt); self.assertNotIn('{', txt)          # (the running game's name and engine: games.py)

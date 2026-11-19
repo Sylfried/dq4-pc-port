@@ -338,7 +338,7 @@ class History:
 
     # ---- favorites file
     def load(self):
-        """Reads the favorites file. An unreadable file is set aside (.corrupt) and we start again from zero; an invalid favorite is ignored without losing the others."""
+        """Reads the favorites file. An unreadable file is set aside (.corrupt) and the favorites start again from zero; an invalid favorite is ignored without losing the others."""
         self.favorites = []; self.next_id = 1
         if not self.path or not os.path.exists(self.path): return
         try:

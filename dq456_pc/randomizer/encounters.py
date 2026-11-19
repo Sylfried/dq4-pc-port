@@ -13,11 +13,11 @@ How the game draws a random encounter (read in libdq4core.so):
   the game itself fits them on the screen.
 
 Settings (seed code): 'encounters' 0 unchanged, 1 shuffled (each monster replaced everywhere by the same other one), 2 random (each battle draws its monsters and their number: 1 to 8
-monsters, each number as likely, in 1 to 4 groups, decided on 16/11); 'single_enemy' (with random only): one monster at a time; 'boss_encounters': a random encounter is now and then a boss. Any monster can appear anywhere (sea or land: the terrain is not followed, decided on 16/11).
+monsters, each number as likely, in 1 to 4 groups); 'single_enemy' (with random only): one monster at a time; 'boss_encounters': a random encounter is now and then a boss. Any monster can appear anywhere (sea or land: the terrain is not followed).
 A shuffle is a fixed function of the seed; a random battle or a boss encounter is a fixed function of the seed and of the game's own random state at that moment (the same savestate
 gives the same battle). The game's random draws are never used.
 
-Bosses (with or without Safety: "Unchanged" keeps them, decided on 16/11): a boss fight is a row of EncountData that a script starts (cmd_encount and its variants: Encount::forceBrew / forceEventBrew, the row in Encount + 8)
+Bosses (with or without Safety: "Unchanged" keeps them): a boss fight is a row of EncountData that a script starts (cmd_encount and its variants: Encount::forceBrew / forceEventBrew, the row in Encount + 8)
 whose special party (slot M: excelParam + 0xb8, 32 bytes, four groups of (monster, least, most) from + 2) holds a monster met nowhere else (BOSS_ROWS). Its boss part (those monsters)
 and its companions (the monsters also met in random encounters) are kept apart. 'bosses' 0 unchanged, 1 shuffled (each boss fight gets another fight's boss part), 2 random (each draws
 one, repeats allowed); 'two_bosses': a second boss part joins each boss fight. The fights the story needs as they are stay unchanged: the chapter 2 tournament (159 to 163), the chapter 4

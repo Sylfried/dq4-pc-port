@@ -215,7 +215,7 @@ class DragonQuestVandVI(unittest.TestCase):
 
 
 class RealFilesV2(unittest.TestCase):
-    """(real data, DQ_APK_DQ5 / DQ_APK_DQ6) every container and item gift of their files: the counts read on 17/11."""
+    """(real data, DQ_APK_DQ5 / DQ_APK_DQ6) every container and item gift of their files: the counts read from the game data."""
     def test_counts(self):
         import zipfile
         for key, slots, gifts in (('dq5', 582, 70), ('dq6', 404, 81)):

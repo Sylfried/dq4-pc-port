@@ -3,10 +3,10 @@
 
 The original lays out the title for a portrait screen (9:16). Its sky (object "kumo", model 000_kumo2) is a carpet of IDENTICAL cloud tiles: 4 rows (stacked in the height, offset by half a tile
 from one another) of 3 tiles of 11.5 units; the object slides by 0.0192 unit per frame then comes back (period 11.5): the portrait area sees less than one tile in width. In 16/9, 21/9 or wider,
-the same tile appeared 3 to 6 times in a row, as is ("you can see too much that the pattern is repetitive").
+the same tile appeared 3 to 6 times in a row, as is: the repetition was plain to see.
 
-DEFAULT RENDERING: "go back to the base version for the background: the height meant for a 16:9 portrait screen in the middle of the 16:9 landscape screen, and extend the left and
-right edges by extending the animation smoothly (done well, not a mere copy-paste)". The title camera already keeps the phone's whole height: the portrait area shows the original sky exactly. On each
+DEFAULT RENDERING: the original background at the height of the phone's portrait screen, in the middle of the 16:9 landscape screen, and the left and right
+edges extended by continuing the animation smoothly (not a mere copy). The title camera already keeps the phone's whole height: the portrait area shows the original sky exactly. On each
 side, bands continue it EXACTLY (`WideSky(deform=False)`: the original's own u and v, scrolling followed), and a variant of the cloud tile (`variant_tile`: strips of the tile shifted sideways, soft wavy
 joins, contrast kept, top and bottom rows untouched) is laid over them with an alpha rising from 0 at the edge of the area to 1 at VARIANT_RAMP tiles (`WideSky.side_layers`): no seam at the edge, and
 the sides (one variant on the left, another on the right) no longer repeat what the middle shows; the whole scrolls together. `DQ_SKY_FLAT=1`: the flat rendering below.

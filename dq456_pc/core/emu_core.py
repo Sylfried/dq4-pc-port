@@ -584,7 +584,7 @@ class Core:
         try:
             name = self.stub_names[(address - self.STUB_BASE) // 4]
             self.import_calls[name] = self.import_calls.get(name, 0) + 1
-            n = self._arity.get(name)      # we only read the registers the handler needs (very frequent call)
+            n = self._arity.get(name)      # only the registers the handler needs are read (very frequent call)
             if n is None:
                 g = getattr(self, 'h_' + name, None)
                 try: n = (g.__func__.__code__.co_argcount - 1) if g is not None else 0

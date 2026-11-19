@@ -1,6 +1,6 @@
 """Objective tests (without a window) of the text speed and of the scrolling of battle messages.
 
-The original engine runs under Unicorn; we count ENGINE FRAMES (30 per second), not time:
+The original engine runs under Unicorn; the test counts ENGINE FRAMES (30 per second), not time:
   - text: frames between the opening of a dialogue message (ui_MsgLoop active) and the end of writing its first page (state 3 or 5: waiting for a key);
   - scrolling: frames during which a battle message waits before moving on to the next one by itself (ui_MsgLoop state 5 without a command menu), according to OptionStatus.battleSpeed.
 

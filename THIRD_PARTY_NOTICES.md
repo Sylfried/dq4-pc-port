@@ -2,7 +2,7 @@
 
 ## Game content
 
-This repository contains **no content from the game**. The game engines (`libdq4core.so`, `libdq5core.so`, `libdq6core.so`), the Unity data, the music, the graphics and the texts are read at runtime from APK files that each player supplies from their own copy of the game; caches computed from them stay in the player's `data` folder, which is excluded from the repository. *Dragon Quest* and all related content are the property of their respective owners (Square Enix Holdings Co., Ltd. and its licensors). This is an unofficial fan project, not affiliated with or endorsed by Square Enix.
+This repository contains **no content from the game**. The game engines (`libdq4core.so`, `libdq5core.so`, `libdq6core.so`), the Unity data, the music, the graphics and the texts are read at runtime from APK files that each player supplies from their own copy of the game; caches computed from them stay in the player's `data` folder, which is excluded from the repository. *Dragon Quest* and all related content are the property of their respective owners (Square Enix Holdings Co., Ltd. and its licensors). This project is unofficial and not affiliated with or endorsed by Square Enix.
 
 ## Assets included in this repository
 

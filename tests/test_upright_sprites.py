@@ -1,4 +1,4 @@
-"""Town sprites always upright on screen ("when my character goes up or down, the NPC sprites lean", without a window or the engine: `Game._town_camera` and `Game._town_panel` are called on a fake object):
+"""Town sprites always upright on screen (the NPC sprites seemed to lean when the hero went up or down; without a window or the engine: `Game._town_camera` and `Game._town_panel` are called on a fake object):
 
 1. the 4 corners of an NPC's panel, projected by the viewer's REAL matrix, give a rectangle with vertical left / right edges (bottom -> top deviation < 0.01 px) and a constant width / height
    ratio, at any screen position (top, bottom, left, right, corners, center) and in all camera states: fov, s_yOffset, height
@@ -8,12 +8,12 @@
    at the bottom of the screen for the original panel);
 3. safeguard: the ORIGINAL panel (correction off) does lean by more than 8 degrees near the edges, so test 1 checks something;
 4. tilt trial: with `inc` > 0 the panel is sheared toward the world vertical, feet fixed, size, depth and bottom position unchanged; its edge leans by atan(inc x tan(angle of a
-   world vertical at the foot)); inc = 1: parallel to the walls; 0 BY DEFAULT ("put the NPC display back like the mobile version ... they stretch near the edge": a shear of 0.5 deformed the
+   world vertical at the foot)); inc = 1: parallel to the walls; 0 BY DEFAULT (NPC display as on mobile: a shear of 0.5 deformed the
    sprites; `Game._sprite_tilt`, variable DQ_SPRITE_TILT to try it): the edge correction alone (without shear) gives exactly vertical edges and the constant ratio (it is no longer the default: DQ_EDGE_CORRECTION=100);
 5. finding (cause of the impression, see `Game._town_panel`): the WORLD VERTICALS (walls, doors) lean on screen depending on their position (vanishing point below the image, camera at 47 degrees), much more in 16/9 than
    on the original portrait, and this angle changes by several degrees when the hero goes up or down (the NPC changes height on screen) while the sprite itself stays at 0: the sprite seems to lean RELATIVE TO the neighboring walls.
 
-6. ("go back to the raw NPC position, exactly as in the game ... with the new camera system they must not align if the camera is raised or lowered"): by default the panel is the game's (edge correction
+6. (raw NPC position, exactly as in the game, which does not turn to face a raised or lowered camera): by default the panel is the game's (edge correction
    zero) and its coordinate frame (`Game._sprite_reference`) is that of the GAME's camera: Up / Down does not change it (identical corners in the world), Left / Right turn it face-on with the game's tilt;
 
   python3 tests/test_upright_sprites.py        (Linux without a screen: pyglet in "headless" mode)
@@ -91,7 +91,7 @@ class TestStraightSprites(unittest.TestCase):
         self.assertGreater(r_min, 0.730); self.assertLess(r_max, 0.745)                                              # constant proportion to +- 1% (0.72 x the height at the image center: 0.738 measured)
 
     def test_default_state_is_raw_panel(self):
-        """("go back to the raw NPC position, exactly as in the game"): by default the edge correction is zero, and so is the shear: the panel is the game's, with no on-screen reconstruction.
+        """Raw NPC position, exactly as in the game: by default the edge correction is zero, and so is the shear: the panel is the game's, with no on-screen reconstruction.
         The old full correction (vertical edges, constant ratio) remains available through DQ_EDGE_CORRECTION / --edge-correction."""
         old = os.environ.pop('DQ_SPRITE_TILT', None); old_b = os.environ.pop('DQ_EDGE_CORRECTION', None)
         try:

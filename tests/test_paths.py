@@ -111,7 +111,7 @@ class Migration(unittest.TestCase):
         with open(self.d.resume_file, encoding='utf-8') as f: stages = __import__('json').load(f)['stages']
         self.assertEqual(sorted(stages), sorted(set(CH.STAGES) - {CH.ENGLISH_STAGE})); self.assertEqual(CH.migrate(self.d, log=lambda *a: None), [])         # (nothing to rename: the stage is not noted)
 
-    def test_saves_go_into_the_game_folder(self):                       # (16/11) one folder per game: what data\\saves held goes into data\\saves\\dq4, the other games' folders stay
+    def test_saves_go_into_the_game_folder(self):                       # one folder per game: what data\\saves held goes into data\\saves\\dq4, the other games' folders stay
         sv = os.path.join(self.t, 'data', 'saves')
         write(os.path.join(sv, 'data1.dat'), b'D1'); write(os.path.join(sv, 'savestates', '0000abcd', 'state_01.dqs'), b'E1'); write(os.path.join(sv, 'rules', '0000abcd.json'), b'{}')
         write(os.path.join(sv, 'dq4', 'data2.dat'), b'D2'); write(os.path.join(sv, 'dq4', 'data1.dat'), b'NEWER'); os.makedirs(os.path.join(sv, 'dq5', 'rules')); os.makedirs(os.path.join(sv, 'dq6'))
@@ -329,7 +329,7 @@ class OldSavestates(unittest.TestCase):
     def test_a_pickle_from_before_the_tidy_up_can_be_reread(self):
         from dq456_pc.core import engine as ENGINE
         e = ENGINE.State(); e.game_map = 1234
-        # we build a pickle as the old version wrote it: the class's module was called `engine`
+        # a pickle as the old version wrote it: the class's module was called `engine`
         old_dirs = (ENGINE.State.__module__, ENGINE.Interface.__module__); sys.modules['moteur'] = ENGINE
         try:
             ENGINE.State.__module__ = 'moteur'; ENGINE.Interface.__module__ = 'moteur'
@@ -385,7 +385,7 @@ class GameLanguage(unittest.TestCase):                 # the APKs in the chosen 
         self.assertTrue(os.path.isfile(os.path.join(self.d.apk_root, 'base.apk')))                                           # (l'original reste a sa place : on ne remplace jamais)
         self.assertEqual(CH.split_apk_by_language(self.d), [])                                                              # (2nd startup: nothing left to move, silence)
 
-    def test_language_folders_go_into_the_game_folder(self):            # (16/11) one folder per game: data\\apk\\fr and \\en go into data\\apk\\dq4, the other games' folders stay
+    def test_language_folders_go_into_the_game_folder(self):            # one folder per game: data\\apk\\fr and \\en go into data\\apk\\dq4, the other games' folders stay
         write(os.path.join(self.d.apk_root, 'fr', 'base.apk'), b'F'); write(os.path.join(self.d.apk_root, 'en', 'base.apk'), b'E'); write(os.path.join(self.d.apk_root, 'en', 'split_config.arm64_v8a.apk'), b'E2')
         write(os.path.join(self.d.apk_en, 'base.apk'), b'DEJA'); write(os.path.join(self.d.apk_root, 'dq5', 'fr', 'base.apk'), b'D5')
         done = CH.split_apk_by_language(self.d)

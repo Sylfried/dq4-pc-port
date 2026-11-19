@@ -1,22 +1,23 @@
 # Dragon Quest IV, V and VI — unofficial PC port
 
-An unofficial, fan-made way to play the **Android versions of Dragon Quest IV, V and VI** on a Windows PC: the original game in a resizable **16:9** window, with mouse, keyboard or gamepad, its own music and sound effects, savestates and a few optional comfort features.
+This project plays the **Android versions of Dragon Quest IV, V and VI** on a Windows PC. It runs the original game engine unmodified and replaces the Android display and input layer: the game is shown in a resizable **16:9** window and played with mouse, keyboard or gamepad, with savestates, a history of dialogues and battles, and optional settings.
 
 > **This repository contains no game file.** It is code only. To play, you need **your own copy** of the Android game (its APK files), which the port reads on your computer. Nothing from the game is downloaded, copied or distributed by this project.
 
 ## Features
 
-- **16:9 at any window size**, windowed or full screen; the game's original windows and menus, laid out as in the game; sprite upscaling (EPX x8 or pixel perfect), antialiasing, sharpness, contrast, colour filter, vignette and edge blur.
+- **16:9 at any window size**, windowed or full screen, with the game's original windows and menus laid out as in the game. Display options: sprite filter (EPX x8 or pixel perfect), antialiasing, supersampling, sharpness, brightness, contrast, colour filter, vignette and edge blur.
 - **Mouse, keyboard and gamepad** (Xbox, PlayStation and Switch layouts): the mouse replaces touch input, keys follow your keyboard layout (AZERTY or QWERTY) and can be rebound; optional on-screen buttons and D-pad as on mobile, placed with a built-in interface editor.
 - **English or French**, for the game (each language reads its own APK files) and for the port's own menus.
-- **The original music and sound effects**, with a volume per category.
+- **Sound**: the game's music and sound effects, read from the APK and played by the port, with a general volume and one per category (music, jingles and fanfares, sound effects, interface sounds).
 - **Saves**: the game's own adventure logs (import and export of the files from your phone) and **savestates** at any moment.
 - **History** of dialogues and battles, with favourites; a past battle can be **replayed** by the engine.
-- **Optional comfort**: walking accelerator, text and battle speeds, camera rotation; game-changing options (such as HP / MP restored on level up or after a battle) are off by default.
+- **Speeds**: walking accelerator (held key), text speed and battle speed; by default, the game's own speeds.
+- **Game rules**, saved with each game and off by default (the original game): difficulty (experience, gold, casino tokens, damage, encounter rate), HP and MP restored on level up or after a battle, no random encounters, and a randomizer with a seed (items, monster drops, random encounters, bosses).
 
 ## How it works
 
-Each Android game is a C++ engine (`libdq4core.so`, `libdq5core.so`, `libdq6core.so`, ARM64) whose display and input go through a Unity layer. This port keeps the original engine and replaces the Unity layer with Python (pyglet / OpenGL):
+Each Android game is a C++ engine (`libdq4core.so`, `libdq5core.so`, `libdq6core.so`, ARM64) whose display and input go through a Unity layer. The port keeps the original engine and replaces the Unity layer with Python (pyglet / OpenGL):
 
 - the engine runs unmodified in the [Unicorn](https://www.unicorn-engine.org/) CPU emulator; its file is read from your APK and never changed on disk;
 - the port decodes what the engine sends to Unity (sprites, maps, windows, sounds) and draws it; maps, sprites and models are read from the APK's Unity data with [UnityPy](https://github.com/K0lb3/UnityPy);
@@ -29,7 +30,7 @@ More details: [`docs/architecture.md`](docs/architecture.md).
 - Windows 10 or 11, and **Python 3.12, 3.13 or 3.14** from [python.org](https://www.python.org/downloads/) (tick "Add python.exe to PATH"). The launcher creates its own environment and installs the modules listed in `requirements.txt`.
 - **The game's APK files**, taken from your own Android installation of *Dragon Quest IV*, *V* or *VI*: `base.apk`, `split_config.arm64_v8a.apk` and `split_UnityDataAssetPack.apk` (for example with `adb shell pm path <package>` then `adb pull`).
   - English: the game's own APKs.
-  - French: the same three APKs patched with a French fan translation (a separate project, not included here).
+  - French: the same three APKs patched with a French translation (a separate project, not included here).
 - Optionally, your saves from the phone (`data1.dat` … `data5.dat`, `data9.dat`).
 
 ## Installation
@@ -99,6 +100,6 @@ Texts: the code only holds keys (`settings.battle_speed`); `dq456_pc/language.py
 
 ## Legal
 
-- **Unofficial fan project**, not affiliated with, endorsed or sponsored by Square Enix. *Dragon Quest* is a registered trademark of Square Enix Holdings Co., Ltd. All game content (code, graphics, music, text) belongs to its owners and is **not** part of this repository.
+- This project is **unofficial** and not affiliated with, endorsed or sponsored by Square Enix. *Dragon Quest* is a registered trademark of Square Enix Holdings Co., Ltd. All game content (code, graphics, music, text) belongs to its owners and is **not** part of this repository.
 - The port's code is released under the **GNU General Public License, version 2 or (at your option) any later version**: see [`LICENSE`](LICENSE).
 - Third-party components and their licenses: [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).

@@ -207,7 +207,7 @@ class TestBands(unittest.TestCase):
         self.assertIsNone(self.sky.bands(camera_title(0.5625), 0.5625, 0.0)); self.assertIsNone(self.sky.bands(camera_title(0.4), 0.4, 0.0))
 
     def test_intact_zone(self):
-        """No point of the portrait area (|screen x| <= half, within the field) is covered by a band: we project the triangles and test a grid of the area."""
+        """No point of the portrait area (|screen x| <= half, within the field) is covered by a band: the triangles are projected and a grid of the area is tested."""
         for asp in (16 / 9, 21 / 9, 32 / 9):
             M = camera_title(asp); half = CT.half_zone_ndc(asp)
             P, U, C = self.sky.bands(M, asp, 0.0)

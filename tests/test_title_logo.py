@@ -4,7 +4,7 @@ Part 1 (without the engine): the pure functions of `pre_game` (`upscale_logo`, `
 in a window that is too narrow (the logo never overflows) and never drops below 1.
 
 Part 2 (real rendering, Mesa without a screen): the viewer is launched with the original engine at 16:9, 4:3 and 21:9, at frame 770 (logo, subtitle, "Touchez l'ecran" at the maximum of its blinking),
-and once with DQ_LOGO_SCALE=1 (the APK's logo, at 16:9) for comparison. We measure on the captures:
+and once with DQ_LOGO_SCALE=1 (the APK's logo, at 16:9) for comparison. Measured on the captures:
   1. the width of the "DRAGON QUEST" lettering (red-violet pixels) is 1.5 times that of the APK (to within 3%), at all formats (in window heights);
   2. the logo stays within the window (no lettering pixel on the 1% edge);
   3. the bottom of the "IV" stays above the top of "Touchez l'ecran" (area computed like `Game._ui_reference`: 228 units below the center, height 41.48, scale H / 800 x UI_ZOOM) by at least 2% of the height;

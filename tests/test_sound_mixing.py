@@ -6,7 +6,7 @@ import os, sys, unittest
 import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-sys.modules['pyglet'] = None                                             # (no pyglet: neither window nor audio driver; Sound takes it for "sound unavailable" and we give it fake players)
+sys.modules['pyglet'] = None                                             # (no pyglet: neither window nor audio driver; Sound takes it for "sound unavailable" and the test gives it fake players)
 from dq456_pc import sound as SOUND
 
 
@@ -55,7 +55,7 @@ class Categories(unittest.TestCase):
         self.assertEqual(SOUND.category_bgm(False, False, 5.0), 'jingles')               # short without loop
         self.assertEqual(SOUND.category_bgm(True, False, 5.0), 'jingles')                # request with resume of the previous music
         self.assertEqual(SOUND.category_bgm(False, False, 111.0), 'music')             # long without loop
-        self.assertEqual(SOUND.category_bgm(True, True, 5.0), 'music')                 # looping: we never go back to the previous music
+        self.assertEqual(SOUND.category_bgm(True, True, 5.0), 'music')                 # looping: never back to the previous music
 
     def test_game_option(self):
         self.assertEqual([round(SOUND.game_option_volume(i), 2) for i in range(5)], [0.2, 0.4, 0.6, 0.8, 1.0])

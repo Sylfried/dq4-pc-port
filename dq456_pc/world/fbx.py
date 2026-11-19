@@ -92,7 +92,7 @@ class FbxModel:
         for lookup_key in set().union(*[v.keys() for v in vals]):
             i, kind = lookup_key
             terms = [(w, np.asarray(v.get(lookup_key, rest_pose[kind][i]), float)) for (_, _, w), v in zip(poses, vals)]
-            if kind == 'rot' and len(terms) > 1:                  # q and -q are the same rotation: we blend on the same side of the sphere (shortest path), otherwise the average cancels out or makes a half turn
+            if kind == 'rot' and len(terms) > 1:                  # q and -q are the same rotation: the blend stays on the same side of the sphere (shortest path), otherwise the average cancels out or makes a half turn
                 ref = terms[0][1]; terms = [(w, x if float(np.dot(x, ref)) >= 0 else -x) for w, x in terms]
             targets[kind][i] = sum(w * x for w, x in terms) / wtot
         return p, q, s

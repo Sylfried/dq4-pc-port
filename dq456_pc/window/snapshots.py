@@ -25,7 +25,7 @@ class SnapshotsMixin:
 
     # ---- savestates
     def follow_journals(self, prune=True):
-        """What belongs to a game follows its adventure logs (decided on 16/11): a game that no adventure log holds any more (data1 to data5: its log deleted, written over by
+        """What belongs to a game follows its adventure logs: a game that no adventure log holds any more (data1 to data5: its log deleted, written over by
         another game's save, or never saved before the port was closed) loses its savestates (savestates/<ID>/), its rules (rules/<ID>.json) and its history (latest elements,
         favorites, battle replays). The game being played, and the last one played in this session (a language change restarts the engine on the title screen), keep theirs.
         Called when the port starts and each time the engine writes a log; `prune` False (after an import): nothing is deleted. A log that cannot be read: nothing is deleted.

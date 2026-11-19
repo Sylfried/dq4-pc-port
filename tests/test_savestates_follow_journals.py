@@ -1,4 +1,4 @@
-"""What belongs to a game follows its adventure logs (decided on 16/11): a game that no adventure log holds any more (its log deleted, written over by another game's save, or never
+"""What belongs to a game follows its adventure logs: a game that no adventure log holds any more (its log deleted, written over by another game's save, or never
 saved) loses its savestates (savestates/<ID>/), its rules (rules/<ID>.json) and its history (latest elements, favorites, battle replays). The game being played and the last one
 played in the session keep theirs; a log that cannot be read: nothing is deleted.
 

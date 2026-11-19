@@ -252,7 +252,7 @@ class Visit:
         for name_str in sorted(n for n in dir(K) if n.isupper() and not n.startswith(('MOD_', 'MOTION'))): p._label(RG.key_name(name_str), 12.0)
         self.note(J, p)
 
-    # ---- what we get out of it
+    # ---- what comes out of it
     def texts(self, *moments):
         return [t for m, t in self.seen if m in moments]
 

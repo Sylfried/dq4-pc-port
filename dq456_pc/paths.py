@@ -237,7 +237,7 @@ def _clone(src, dst, log, num):
 
 
 def split_apk_by_language(d):
-    """the APKs of this game in `data\\apk\\dq4\\fr` and `data\\apk\\dq4\\en` (one folder per game, 16/11): the `fr` and `en` folders of `data\\apk` (until 16/11) go into `dq4`, and the
+    """the APKs of this game in `data\\apk\\dq4\\fr` and `data\\apk\\dq4\\en` (one folder per game): the `fr` and `en` folders of `data\\apk` (older layout) go into `dq4`, and the
     APKs that earlier versions put directly in `data\\apk` into `dq4\\fr`; simple moves (nothing copied, nothing overwritten: a file already in its new place keeps the old one where it is).
     The folders of the other games (`dq5`, `dq6`...) are left as they are. -> list of sentences describing what was done."""
     done = []
@@ -348,7 +348,7 @@ def _tidy_old_folders(d, log):
 
 
 def saves_into_game_folder(d):
-    """`data\\saves` holds one folder per game (16/11): what earlier versions kept directly in it (adventure logs, savestates, rules, backups, old folders) goes into `saves\\dq4`,
+    """`data\\saves` holds one folder per game: what earlier versions kept directly in it (adventure logs, savestates, rules, backups, old folders) goes into `saves\\dq4`,
     a simple move (same folder: no copy), nothing overwritten (a name already taken in `dq4` stays where it is). The folders of the games (`dq4`, `dq5`, `dq6`...) are left as they are.
     -> sentences describing what was done."""
     if not os.path.isdir(d.saves_root): return []

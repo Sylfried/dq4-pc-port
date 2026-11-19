@@ -112,7 +112,7 @@ class Coverage(unittest.TestCase):
         self.assertEqual(faulty, [])
 
     def test_tr_n_and_lg_are_imported_where_used(self):
-        """A `tr(...)` added in a module that does not import it crashes only when the message appears (often a rare error: switch failure, sound cut off...): here we see it, by reading the code."""
+        """A `tr(...)` added in a module that does not import it crashes only when the message appears (often a rare error: switch failure, sound cut off...): this test finds it by reading the code."""
         unlinked = []
         for p in SCOPE:
             a = tree(p); lies = set()

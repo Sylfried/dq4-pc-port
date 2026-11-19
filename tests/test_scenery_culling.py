@@ -1,4 +1,4 @@
-"""Hidden faces of the scenery ("indoors the walls must become transparent ... the outer faces have no textures, if we rotate the camera we must be able to see through the walls"):
+"""Hidden faces of the scenery (indoors, the outer faces of the walls have no texture: with a rotated camera the walls must be seen through):
 
 The shaders of the game's map scenery (Custom/fld_normal, fld_atest, fld_trans, fld_transz and their sepia variants) are "Cull Back" (ShaderLab culling = 2, read from the data package); only the world map (Custom/Field)
 has no culling. `Game._scenery_culling` therefore turns on back-face culling (front face = clockwise on screen, Unity being left-handed) for each scenery group, except the title sky (its own vertices);

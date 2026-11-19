@@ -254,7 +254,7 @@ SHEET_ALPHA = {}                           # sheet (0 = MenuTexture, 1 = Button.
 def visible_edges(vtx, uv, tris, alpha, threshold=127):
     """(x0, x1, z0, z1) of the VISIBLE drawing of a frame mesh cell, in the mesh cell's local coordinate system (interface units), or None.
     A frame is a grid of tiles whose border tiles have a transparent margin in the sheet, of a size that differs from one frame to another (the dialogue frame: 6 units on the right, 4.5 at the top; the one for Yes / No: almost
-    nothing): placing two frames edge to edge on the edges of their mesh cells offsets them by these margins. For each tile (mesh cell, triangles `tris`), we look in `alpha` for the columns and rows whose opacity exceeds `threshold`
+    nothing): placing two frames edge to edge on the edges of their mesh cells offsets them by these margins. For each tile (mesh cell, triangles `tris`), `alpha` gives the columns and rows whose opacity exceeds `threshold`
     (the texture column grows with x, the row decreases as z goes up: v = -row / sheet height)."""
     h, l = alpha.shape; x0 = z0 = 1e9; x1 = z1 = -1e9; views = set()
     for i in range(0, len(tris) - 2, 3):
@@ -884,7 +884,7 @@ class Window:
         if pl is None: return
         tx = [n for n in self.N.values() if n['par'] == pl['id'] and n['text'] is not None]
         tag_label = ' '.join((n['text'].get('text') or '').strip() for n in tx).strip()
-        if self.auto_grayed and tag_label == label_text: tag_label = ''                  # our own replacement label is not the engine's (counts only as long as code 0 is missing)
+        if self.auto_grayed and tag_label == label_text: tag_label = ''                  # the port's replacement label is not the engine's (counts only as long as code 0 is missing)
         if auto_plate_available(self.vals_code.get(0), tag_label):
             if self.auto_grayed: self.auto_grayed = False; self.param_int(button, 0, STATE_NORMAL)         # the auto save has appeared: normal plate (the engine gives the label)
             pl['act'] = True; pl.pop('_vide', None); return

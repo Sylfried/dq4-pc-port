@@ -33,7 +33,7 @@ class CaptureEffectsMixin:
         return RiremitoEffect()
 
     def _capture_grab(self, ef):
-        """The game scene has just been drawn (without interface): we copy it into the capture texture, create the effect and the blur targets (black at the start)."""
+        """The game scene has just been drawn (without interface): it is copied into the capture texture, then the effect and the blur targets (black at the start) are created."""
         self._clone_screen(battle=False)
         w, h = self.get_framebuffer_size(); w2, h2 = max(1, w // 2), max(1, h // 2)
         if self.capture_rt is None or self.capture_size != (w2, h2):

@@ -165,7 +165,7 @@ class TestRealEngine(unittest.TestCase):
         m = ENGINE.Engine(os.environ['DQ_APK'], os.environ['DQ_SAVES'], wdir)
         SV.load_any(m)
         for _ in range(10): m.step(0, 0)
-        SV.force_chapter(m, 1)                                               # the lying soldier of taf1 exists only in chapter 1: we impose it instead of hoping the save is there
+        SV.force_chapter(m, 1)                                               # the lying soldier of taf1 exists only in chapter 1: it is imposed instead of hoping the save is there
         m.start_town('taf1'); seen = []
         for _ in range(80):
             for t, a, f in m.step(0, 0):

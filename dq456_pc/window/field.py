@@ -207,7 +207,7 @@ class FieldMixin:
         """(Re)builds the tile grid when the engine sends another one; the atlas is the Unity `field` texture."""
         if e.field and 'mesh' in e.field: return self._update_field_mesh(e.field)
         ch = e.field; eng = e.world
-        if eng is not None and self._field_view is not None:      # whole map read from the engine: we draw the whole visible area (the engine only sends 25 columns of it)
+        if eng is not None and self._field_view is not None:      # whole map read from the engine: the whole visible area is drawn (the engine only sends 25 columns of it)
             cx, cz, dl, dh = self._field_view
             x0 = 4 * int(math.floor((cx - dl - 1) / 4)); x1 = x0 + 4 * int(math.ceil((2 * dl + 7) / 4))                  # bounds on multiples of 4 and constant width: the mesh keeps the same size
             y0 = 4 * int(math.floor((cz - dh - 1) / 4)); y1 = y0 + 4 * int(math.ceil((2 * dh + 7) / 4))                  # while walking, and its vertices are replaced in place (no reallocation: no stutter)
@@ -459,7 +459,7 @@ class FieldMixin:
         r = self.scenery_hd[lookup_key] = {}
         for k, a in arrs.items():
             r[k] = t = self._tex(a, True, 99); self._filter_texture(t, self.smoothing)
-        while len(self.scenery_hd) > 8:                                  # we only keep the latest enlarged sceneries (graphics card memory)
+        while len(self.scenery_hd) > 8:                                  # only the latest enlarged sceneries are kept (graphics card memory)
             for t in self.scenery_hd.pop(next(iter(self.scenery_hd))).values(): t.delete()
         return r
 
@@ -650,10 +650,10 @@ class FieldMixin:
             poses = lc['a'].poses(tf); V = m.vertices(FX.object_matrix(mod['pos'], mod['rot'], sc), poses)
             mats = m.materials(poses, mod['col'] if mod.get('col_set') else None)          # each material's color and texture placement: the material's own, the engine's color, then what the clip animates
             self.prog['cutoff'] = 0.0; self.prog['crisp'] = 1.0 if self.smoothing else 0.0
-            cull = os.environ.get('DQ_FBX_CULL', '1')                   # Custom/ImdChara: Cull Back (read in the shader); DQ_FBX_CULL=0: no culling, 2: reverse direction (the former one, wrong: we saw the inside of the dragon) for comparison
+            cull = os.environ.get('DQ_FBX_CULL', '1')                   # Custom/ImdChara: Cull Back (read in the shader); DQ_FBX_CULL=0: no culling, 2: reverse direction (the former one, wrong: the inside of the dragon showed) for comparison
             if cull != '0' and not effects:                                      # Custom/Effect0 : Cull Off
                 gl.glEnable(gl.GL_CULL_FACE); gl.glCullFace(gl.GL_BACK)
-                gl.glFrontFace(gl.GL_CCW if cull == '2' else gl.GL_CW)         # Unity: front face = clockwise triangle on screen (left hand), the opposite of OpenGL's default; without this we only drew the back faces (the inside of the dragon: face seen from the inside, body seen from behind)
+                gl.glFrontFace(gl.GL_CCW if cull == '2' else gl.GL_CW)         # Unity: front face = clockwise triangle on screen (left hand), the opposite of OpenGL's default; without this only the back faces were drawn (the inside of the dragon: face seen from the inside, body seen from behind)
             for gi, g in enumerate(r['groups']):                                 # one pass per material slot (group order = submesh order)
                 col, st = mats[min(gi, len(mats) - 1)]
                 if col[3] <= 0.0: continue                                     # (a slot faded out by the clip: nothing to draw)
@@ -740,8 +740,8 @@ class FieldMixin:
     def _anchor_icon(self, e, P, cam3d):
         """Position of an icon bubble (packet 20) for the viewer's camera. The engine places it above the target (1.294 above its feet, measured on three villagers) in WORLD coordinates, whereas
         the characters are panels facing the camera: if the player's camera is tilted or rotated, the height of the bubble relative to the head changes (1.294 x cos of the on-screen tilt, against a fixed panel
-        height) and it seems too high or too low. When a character is under the bubble (same x, z), we therefore keep the offset as the GAME's camera sees it (right / up / forward components) and
-        express it in the frame of the viewer's camera: the bubble stays at the same place relative to the head (identical to P when the two cameras are the same). With no character below (barrel, jar...): P, anchored in the world."""
+        height) and it seems too high or too low. When a character is under the bubble (same x, z), the offset is therefore kept as the GAME's camera sees it (right / up / forward components) and
+        expressed in the frame of the viewer's camera: the bubble stays at the same place relative to the head (identical to P when the two cameras are the same). With no character below (barrel, jar...): P, anchored in the world."""
         S = None; best = 0.35
         for sp in e.sprites.values():
             pos = sp.get('pos')
@@ -761,7 +761,7 @@ class FieldMixin:
             if p >= 12 and f.get('type') in (22, 23, 24, 25, 26):
                 t = 22 if f['type'] == 23 else f['type']
                 if f.get('visible'): r[t] = p
-                elif f.get('act'): hidden_windows[t] = p                       # window created but not shown (the 2nd view of the map, before we switch to it)
+                elif f.get('act'): hidden_windows[t] = p                       # window created but not shown (the 2nd view of the map, before the switch to it)
         if r:
             for t, p in hidden_windows.items(): r.setdefault(t, p)
         return r                                                      # (map windows left created after closing do not count: without a visible window, the map is closed)

@@ -52,7 +52,7 @@ LOGO_WIDTH_MARGIN = 0.96              # the enlarged logo never exceeds 96% of t
 
 
 # DQ VI's logo (model 8901 too, but in the orthographic layer: 249 units wide at (0, 8)) is smaller in its APK than DQ IV's, and DQ IV's is enlarged here: at 16:9 "DRAGON QUEST" took 28.3 % of the
-# window's width against 46.9 %. DELIBERATE DEVIATION, asked for: enlarged around its own position so that its "DRAGON QUEST" is as wide as DQ IV's (600 / 362 px at 1280 x 720; the two projections follow
+# window's width against 46.9 %. DELIBERATE DEVIATION: enlarged around its own position so that its "DRAGON QUEST" is as wide as DQ IV's (600 / 362 px at 1280 x 720; the two projections follow
 # the window's shape the same way, so the two stay equal), within the same margin of the window's width. DQ V's logo (its tall "V" and ring: about DQ IV's height already) stays the APK's.
 ORTHO_LOGO_SCALE = {'dq6': 1.66}
 
@@ -219,7 +219,7 @@ LICENSE_TITLE = N_('menus.license')                    # (drawn by Pause._label,
 PROJECT_LICENSE = (
     "<color=orange>{name} PC port (unofficial)</color>\n"
     "--------------------------------------------------\n"
-    "This is an unofficial, non-commercial fan project. It is not affiliated with, endorsed by or sponsored by SQUARE ENIX CO., LTD., ArtePiazza or any other rights holder. DRAGON QUEST is a trademark of SQUARE ENIX CO., LTD.\n"
+    "This project is unofficial and non-commercial. It is not affiliated with, endorsed by or sponsored by SQUARE ENIX CO., LTD., ArtePiazza or any other rights holder. DRAGON QUEST is a trademark of SQUARE ENIX CO., LTD.\n"
     "\n"
     "This program contains no game content. It runs the original game engine ({library}) and reads the game data from the Android version of {name} that you own (the APK files and the save files on your own computer). Nothing from the game is copied, modified or distributed by this program, and your original files are never changed.\n"
     "\n"

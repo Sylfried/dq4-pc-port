@@ -2349,7 +2349,7 @@ class Engine:
     def _read_world(self):
         """Entire world map (FieldData: grid of 256 x 256 block numbers, block table of 6 bytes, water animation offsets: see engine_layout.WORLD_V1 / WORLD_V2).
         Same rule as FieldData::drawBlock (verified: 1300 tiles out of 1300).
-        The engine sends only 25 columns around the hero; here we can draw around him as much as we want.
+        The engine sends only 25 columns around the hero; here the port can draw as far around him as needed.
         Safeguards (the grid is cached for 30 frames, and `fielddata` is the pointer of the last drawBlock): the cache is dropped at each map load, and the result is checked against the
         tiles the engine itself sent (packet 28) in the same step: a grid that does not match (old or half-filled data) is read again, and if it still does not match the window gets `world = None`
         and draws the engine's own tiles, instead of a map of water."""
@@ -2565,7 +2565,7 @@ class Engine:
     def _finish_fbx_anims(self):
         """NativeManager.Update: for each 3D model animation in m_anim_list, FbxObject.IsEndAnimation (= not Animation.isPlaying); finished -> message (1, 0x1000 | slot) for the engine, which lowers
         ModelObject::motionFlag (setMotionEnd); without it ModelObject::isEnd stays false and the engine never hides or frees the model (spell effects: the image stayed on screen). A model freed in the meantime
-        keeps its entry (m_model[slot] null: the entry is skipped). The clips come from the window (fbx_clips); model not yet read: we wait."""
+        keeps its entry (m_model[slot] null: the entry is skipped). The clips come from the window (fbx_clips); model not yet read: it waits."""
         if not self.fbx_playing: return
         ends = []; keep = []; players = {}
         for slot in self.fbx_playing:

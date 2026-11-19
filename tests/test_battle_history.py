@@ -676,7 +676,7 @@ class RealEngine(unittest.TestCase):
     def test_item_won_at_end_of_battle(self):
         """An item given by the game at the end of a battle ("Le londuleux laisse tomber un coffre au trésor ! ... Il contient un arc de chasseur !"; the loot is written into the monster group as the game does when the monster dies, BattleExecItem gives it): its name is the one in the game's message."""
         c = self.c; mp = c.export('_ZN6status9g_MonsterE'); state = {'done': False}
-        def cb(i):                                                                                     # (the game writes the monster's loot when it dies: we set ours right after, before the victory)
+        def cb(i):                                                                                     # (the game writes the monster's loot when it dies: the test sets its own right after, before the victory)
             if not state['done'] and any('vaincu' in m for m in self.msgs):
                 state['done'] = True; c.call(c.export('_ZN6status12MonsterParty11setDropItemEi'), mp, 12, label='drop'); c.call(c.export('_ZN6status12MonsterParty18setDropItemMonsterEi'), mp, 3, label='drop monstre')
         self.launch([(3, 1)]); self.play(after=cb, maximum=9000)

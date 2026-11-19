@@ -175,7 +175,7 @@ def fake_buttons(width_px=1280, height_px=720, pos=None, anchor=None):
 
 
 class LeftEdge(unittest.TestCase):
-    """("for the battle acceleration button put it back on the left edge for now"): by default the battle speed button is at its grid cell, on the left edge of the screen, never attached to the
+    """By default the battle speed button is at its grid cell, on the left edge of the screen, never attached to the
     bottom box (DQ_SPEED_ANCHOR=1 restores the attachment)."""
     ANCHOR = {'x': 430.0, 'y': 30.0, 'w': 85.0, 'h': 40.0}
 

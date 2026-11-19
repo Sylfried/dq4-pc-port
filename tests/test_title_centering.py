@@ -1,7 +1,7 @@
 """Test of the title screen centering on the real RENDERING: the logo and the scenery stay centered.
 
 The viewer is launched (original engine, Mesa rendering without a screen; before the fix, the map's 16/9 bounds slid the title camera by 4.5 units when the "Center the camera"
-option (centering on the player) was set to "No", an option since removed) at three formats (16:9 of 1430 x 815, 4:3, 21:9), and we measure on the capture of frame 700 (dragon above the logo, before "Touchez l'ecran"):
+option (centering on the player) was set to "No", an option since removed) at three formats (16:9 of 1430 x 815, 4:3, 21:9), measured on the capture of frame 700 (dragon above the logo, before "Touchez l'ecran"):
   1. the centroid of the logo (red-violet lettering pixels) is in the middle of the window, to within a few pixels: horizontal offset / window height < 0.03 (before the fix: 0.29);
   2. this offset is the same (to within 0.004) at all formats: the logo placement is the game's for the central portrait frame, whatever the window format;
   3. no asymmetric black band: the 8 columns of each edge contain no black pixel (the sky fills the whole window);

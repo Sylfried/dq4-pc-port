@@ -58,7 +58,7 @@ class BattleMixin:
 
     def _anchor_effects(self, e):
         """Town mesh effects (packets 21 / 22): the engine places the effect on the ray of ITS camera, between the camera and the character (Morph spell, frog splash: exactly halfway,
-        measured on packet 22). It has no character in the packet: we find it again, it is the one on this ray. For each effect we keep what is needed to place it back on the same character as seen by the viewer's camera
+        measured on packet 22). It has no character in the packet: the character is the one on this ray. For each effect, what is kept is what is needed to place it back on the same character as seen by the viewer's camera
         (zoom, centering, rotation, tilt): depth ratio and angular offset (in tangents) as seen from the game's camera. With no character on the ray: position as is.
         The ray starts from the camera position the engine holds (g_camera_pos): the one Unity sent back after the last camera packet (Engine._camera_message: the game's camera as drawn),
         or, during the step that moves the camera, the engine's own."""
@@ -241,7 +241,7 @@ class BattleMixin:
 
     def _battle_background(self, c):
         """The engine sends no background color in battle, and the scenery leaves a gap between the edge of the floor and the sky:
-        we take the average color (texture x vertex color) of the floor at the periphery of the arena, sky excluded."""
+        the gap takes the average color (texture x vertex color) of the floor at the periphery of the arena, sky excluded."""
         try:
             pts = []
             for iobj, nm in c.get('names', {}).items():
@@ -384,7 +384,7 @@ class BattleMixin:
         if getattr(self, '_replay', None) is not None: self.replay_skip_step(skip and self.replay_between_turns())          # (the monsters keep the real clock between two turns)
         self._step(mute)
         if skip and not self.replay_between_turns(): return False          # (a replay's next turn has begun: the rest of the frame goes on the battle's clock, not at REPLAY_SKIP)
-        return before or e.effect is None          # the entry cascade starts during this step: we stop there, the rest of the frame resumes on the game clock (see _speed_factor)
+        return before or e.effect is None          # the entry cascade starts during this step: the step stops there, the rest of the frame resumes on the game clock (see _speed_factor)
 
     def change_battle_speed(self):
         """Key "Change battle speed" or battle screen button: Manual -> Normal -> Fast -> Very fast -> Manual. The setting changes immediately (the text scrolling settings of Affichage reread it), is saved and also governs

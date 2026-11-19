@@ -64,7 +64,7 @@ class TestAutoPlate(unittest.TestCase):
 
     def test_engine_label_kept(self):
         wnd = window(); wnd.param_str(4, 1, 'Reprendre le dernier point'); wnd.code(0, 1); wnd.auto_plate()
-        self.assertEqual(text(wnd, 11), 'Reprendre le dernier point')                                  # we never replace the label sent by the engine
+        self.assertEqual(text(wnd, 11), 'Reprendre le dernier point')                                  # the label sent by the engine is never replaced
 
     def test_save_appears_afterwards(self):
         wnd = window(); wnd.code(0, 0); wnd.auto_plate(); self.assertEqual(wnd.N[10]['state'], UM.STATE_GRAYED)
@@ -76,9 +76,9 @@ class TestAutoPlate(unittest.TestCase):
         self.assertEqual(wnd.N[10]['state'], UM.STATE_GRAYED); self.assertNotIn(4, zones(wnd)); self.assertTrue(text(wnd, 11))
 
     def test_without_code_the_label_decides(self):
-        wnd = window(); wnd.auto_plate(); wnd.auto_plate()                                                # neither code nor label: grayed out (and our replacement label does not "validate" it at the next frame)
+        wnd = window(); wnd.auto_plate(); wnd.auto_plate()                                                # neither code nor label: grayed out (and the port's replacement label does not "validate" it at the next frame)
         self.assertEqual(wnd.N[10]['state'], UM.STATE_GRAYED); self.assertNotIn(4, zones(wnd))
-        wnd.param_str(4, 1, 'Reprise automatique'); wnd.auto_plate()                                       # engine label (different from ours) without code: available
+        wnd.param_str(4, 1, 'Reprise automatique'); wnd.auto_plate()                                       # engine label (different from the port's) without code: available
         self.assertEqual(wnd.N[10]['state'], UM.STATE_NORMAL); self.assertIn(4, zones(wnd))
 
     def test_other_plates_intact(self):

@@ -666,5 +666,5 @@ if __name__ == '__main__':
         Data(sys.argv[1], sys.argv[2], log=lambda *a: print(*a, flush=True)).prepare(stop)
     finally:
         # The "daemon" thread above is blocked in `sys.stdin.buffer.read()` and holds its lock: a normal interpreter shutdown ends in
-        # `Fatal Python error: _enter_buffered_busy` and code 134 (SIGABRT) as soon as the preparation finishes before the game. We exit without going through it.
+        # `Fatal Python error: _enter_buffered_busy` and code 134 (SIGABRT) as soon as the preparation finishes before the game. The process exits without going through it.
         sys.stdout.flush(); sys.stderr.flush(); os._exit(0)

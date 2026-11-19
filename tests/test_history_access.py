@@ -1,5 +1,5 @@
-"""Test (no engine or display) of access to the history ("the history should be accessible only when I have control of my character, so not during a battle nor during a moment when the game
-takes control"): `Game.player_control`, `Game.history_possible`, `Game._history_key`, the "History" line of the "Settings" menu and the closing of the page when the game takes control back.
+"""Test (no engine or display) of access to the history (the history is available only while the player controls the character: not during a battle nor while the game
+takes control): `Game.player_control`, `Game.history_possible`, `Game._history_key`, the "History" line of the "Settings" menu and the closing of the page when the game takes control back.
 
     python3 tests/test_history_access.py
 

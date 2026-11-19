@@ -262,7 +262,7 @@ class HistoryView:
     def follow_game(self):
         """The game runs behind the window and may write to the history (a dialogue, the end of a battle). Called every frame: when the view is all the way down (nothing is hidden further down), the list is replaced by the
         up-to-date list; the selected message stays the same (recognized by its object), except if it was the last one: the selection then follows the most recent. When reading further up, or when a drag or the bar is in progress, the list does not move
-        (the reading does not jump); it updates as soon as we return to the bottom. -> True if the list changed."""
+        (the reading does not jump); it updates as soon as the view returns to the bottom. -> True if the list changed."""
         h = getattr(self.J, 'history', None)
         if h is None or self.rewind is not None or self.scroll_offset() > 0.5 or self.drag is not None or self.dragging_bar is not None: return False
         el = h.entries(TABS[self.tab][1], self.favorites_only); anc = self.elements
@@ -288,7 +288,7 @@ class HistoryView:
         except Exception: pass
 
     def toggle_filter(self):
-        """Checks or unchecks "Favorites only" (applies to both tabs, saved in the settings). The selected element, if it is in the new list, stays selected (and the view recenters on it); otherwise we go to the most recent."""
+        """Checks or unchecks "Favorites only" (applies to both tabs, saved in the settings). The selected element, if it is in the new list, stays selected (and the view recenters on it); otherwise the most recent is selected."""
         cur = self.current_item(); lookup_key = cur.lookup_key() if cur is not None else None
         self.favorites_only = not self.favorites_only; self._write_filter(self.favorites_only); self.reload()
         if lookup_key is not None:
@@ -506,7 +506,7 @@ class HistoryView:
         if d is None: return
         if not d[2] and not EN.is_drag(0, y - d[0]): return                         # (Windows' drag threshold)
         d[2] = True
-        self.pos = min(self.span(), max(0.0, d[1] + (d[0] - y)))                    # the content follows the pointer, pixel by pixel (the pointer goes down: the list goes down, we move back toward the oldest)
+        self.pos = min(self.span(), max(0.0, d[1] + (d[0] - y)))                    # the content follows the pointer, pixel by pixel (the pointer goes down: the list goes down, the view moves back toward the oldest)
 
     # ---- drawing
     def _bm(self):

@@ -102,7 +102,7 @@ class RealEngine(unittest.TestCase):
 
         def at_the_church_door(eng):
             """The test walks to the church door of `mak1f1`, then leaves the village: it needs chapter 1 (which is imposed) and a party
-            placed close enough to the door. The position, however, comes from the save and is not imposed: we check by really walking, then
+            placed close enough to the door. The position, however, comes from the save and is not imposed: the test checks by really walking, then
             put the party back where it was (no more hard-coded save number)."""
             SV.settle(eng); SV.force_chapter(eng, 1); eng.start_town('mak1f1')
             for _ in range(90): eng.step(0, 0)

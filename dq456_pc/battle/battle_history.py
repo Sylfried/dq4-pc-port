@@ -11,7 +11,7 @@ of appearance; what remains, total - vaincus - fuis - disparus, is still there w
 Method (ESTABLISHED by reading the disassembled engine and then by measurement: see tests/test_battle_history.py):
 - DEATHS are noted by a hook on BattleActorManager2::execMonsterDeath(this, i), the function the game calls once per defeated monster (not for a monster that flees or vanishes) and which adds
   the monster's experience to g_Party + 0x2f8 and its gold to g_Party + 0x2fc. These are the two counters that BattleExecVictory01 / BattleExecVictory20 read to build the messages "N points d'experience" and "N pieces d'or"
-  (getBattleExp / getBattleGold, after the possible doubling by reflectBattleExp / reflectBattleGold): so we take the largest of their readings from one frame to the next, until they are reset to zero.
+  (getBattleExp / getBattleGold, after the possible doubling by reflectBattleExp / reflectBattleGold): so the largest of their readings is kept from one frame to the next, until they are reset to zero.
 - Monsters that FLEE and those that VANISH are noted by two hooks in the middle of BattleActorManager2::checkDeathMonster (the routine that, every frame, reviews the dead, fled or vanished monsters;
   it counts them inline in +0x7d24 / +0x7d28, BattleEndTask::initialize reads them, and it calls execMonsterDeath only for a dead one): just before the increment of the flee counter
   (+0x98, `ldr w8, [x23, #0xd24]`) and of the vanish counter (+0xc0, `ldr w8, [x23, #0xd28]`), w20 is the monster index (same index as for execMonsterDeath). Each monster goes through there only once
@@ -106,7 +106,7 @@ def plate_name(text):
 
 def group_names(groups, plates):
     """Associates plate names with monsters. groups: [(group number, monster number)] of the occupied slots; plates: [name, ...] in plate order (plate j = the j-th group,
-    with groups taken in order of their number). -> {monster number: name}; {} if the number of plates differs from the number of groups (we do not make things up)."""
+    with groups taken in order of their number). -> {monster number: name}; {} if the number of plates differs from the number of groups (nothing is made up)."""
     order = sorted({g for g, _m in groups})
     names = [plate_name(p) for p in plates]
     if not order or len(order) != len(names) or any(n is None for n in names): return {}
@@ -169,7 +169,7 @@ class Tracking:
         self.objects.append({'id': int(number), 'name': name_str})
 
     def counters(self, xp, gold):
-        """Reading of the battle's experience and gold counters: they only grow (doubling included) until they are reset to zero after the message; we keep the largest."""
+        """Reading of the battle's experience and gold counters: they only grow (doubling included) until they are reset to zero after the message; the largest is kept."""
         if xp > self.xp: self.xp = xp
         if gold > self.gold: self.gold = gold
 
@@ -255,7 +255,7 @@ class BattleSensor:
             except Exception: _PER_ENGINE[id(engine)] = (engine, c)
         return c
 
-    # ---- check: the engine is the one we studied
+    # ---- check: the engine is the one these offsets come from
     def _check(self):
         """The structures read are those of the studied engine: getBattleExp / getBattleGold do read g_Party + 0x2f8 / 0x2fc, MonsterStatus::isEnable does read +0x4f8 (monster number)."""
         try:
@@ -400,7 +400,7 @@ class BattleSensor:
         return name_str or None
 
     def _plates(self):
-        """{window: (dict of each plate, ...)} of the monster plates that Engine.ui holds in memory (window of type 31). We keep the objects themselves: the engine creates new ones on every refresh."""
+        """{window: (dict of each plate, ...)} of the monster plates that Engine.ui holds in memory (window of type 31). The objects themselves are kept: the engine creates new ones on every refresh."""
         out = {}
         try:
             for port, f in self.m.ui.f.items():

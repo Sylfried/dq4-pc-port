@@ -100,7 +100,7 @@ class Barrier(unittest.TestCase):
         g = Stub(); g._guarded_loop(0.033)
         done = list(g.done)
         try: g.on_close()
-        except TypeError: pass                                                # Stub does not inherit from the pyglet window: super().on_close() stops there, after the part we care about
+        except TypeError: pass                                                # Stub does not inherit from the pyglet window: super().on_close() stops there, after the part under test
         self.assertEqual(g.done, done)
 
     def test_drawing_error_is_caught_too(self):

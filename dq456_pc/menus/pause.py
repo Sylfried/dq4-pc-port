@@ -222,7 +222,7 @@ class Pause:
             e = 62.4 / 64.0 * w; ic.blit(x + (w - e) / 2, y + (h - e) / 2, width=e, height=e)
 
     # ---- opening / closing
-    FROZEN_PAGES = ()                                 # pages that stop the game behind them: NONE ("there must be no pause in any menu"; the history and the "Quit" question stopped the game until then). The game runs behind all pages, with no key or click (see Window.tick)
+    FROZEN_PAGES = ()                                 # pages that stop the game behind them: NONE (no menu pauses the game; the history and the "Quit" question used to stop it). The game runs behind all pages, with no key or click (see Window.tick)
 
     SHARP_PAGES = ('interface', 'display')          # pages where the game stays sharp behind the menu: the interface editor places elements on it, Affichage shows its settings on it
 
@@ -1136,7 +1136,7 @@ class Pause:
         return None, 0.0
 
     def _guard(self):
-        """Keyboard / mouse memory of the window (Game.mouse_guard), or our own when the menu is tried without a window."""
+        """Keyboard / mouse memory of the window (Game.mouse_guard), or a separate one when the menu is tried without a window."""
         g = getattr(self.J, 'mouse_guard', None)
         if g is None: g = self.__dict__.setdefault('_garde_locale', EN.MouseGuard())
         return g

@@ -698,7 +698,7 @@ class TestView(unittest.TestCase):
         """The content follows the pointer, pixel by pixel (no steps)."""
         v = make_view(); v.drag = [300, v.scroll_offset(), False]
         v.drag_to(5, 301); self.assertEqual(v.pos, 0.0)                                                         # below the tolerance: not a drag
-        v.drag_to(5, 300 - 160); self.assertEqual(v.pos, 160.0)                                                 # the pointer goes down by 160: the content goes down by 160 (we see older ones)
+        v.drag_to(5, 300 - 160); self.assertEqual(v.pos, 160.0)                                                 # the pointer goes down by 160: the content goes down by 160 (older ones come into view)
         v.drag_to(5, 300 - 161); self.assertEqual(v.pos, 161.0)                                                 # one more pixel: one more pixel (no steps)
         v.drag_to(5, 300 + 50); self.assertEqual(v.pos, 0.0)                                                    # the pointer goes back up beyond its starting point: stop at the bottom
         v.release(5, 0, 1); self.assertIsNone(v.drag)
@@ -867,7 +867,7 @@ class TestView(unittest.TestCase):
         v.scroll_by(10 ** 9); place(v); self.assertEqual(v.pos, v.span()); v.scroll_by(-10 ** 9); place(v); self.assertEqual((v.pos, v.selected), (0.0, 6))      # wheel and drag bounded to the filtered list (the chosen message does not change)
         keystroke(v, K.PAGEUP); self.assertEqual(v.selected, 3); self.assertTrue(self.fully_visible(v, 3))                  # (liste filtree a 7 : 6 - 3 = 3)
         before = v.current_item().text; v.key_press(K.F); place(v); self.assertEqual((len(v.elements), v.current_item().text), (30, before))                 # unchecked: the full list, the active item (a favorite) stays active
-        v.go_to(7); place(v); v.key_press(K.F); place(v); self.assertEqual((v.selected, v.current_item().text), (6, 'm26'))      # the chosen item is not a favorite: we land on the most recent of the filtered list
+        v.go_to(7); place(v); v.key_press(K.F); place(v); self.assertEqual((v.selected, v.current_item().text), (6, 'm26'))      # the chosen item is not a favorite: the selection lands on the most recent of the filtered list
 
     def test_favorites_from_previous_sessions(self):
         """A favorite whose element has dropped out of the latest 100: only the "Favorites only" checkbox shows it, with its star."""

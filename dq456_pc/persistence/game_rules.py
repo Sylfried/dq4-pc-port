@@ -2,11 +2,11 @@
 
 The ID is the game's unique ID (status::g_Game + 8, kept in the adventure log). The original draws it among 256 values; the port gives each new game a 32-bit one, never below 256
 (engine.UNIQUE_ID_STORE): a game whose ID is below 256 was started before the port's rules (its file is made the first time it is played, with the settings the port started with, no seed).
-Contents: {"format": 1, "id", "created", "difficulty": {level, rates, heals}, "cheats": {...}, "randomizer": {"seed": code or null}} (files written before 16/11 also have "settings":
+Contents: {"format": 1, "id", "created", "difficulty": {level, rates, heals}, "cheats": {...}, "randomizer": {"seed": code or null}} (older files also have "settings":
 the display, sound and controls of that game, no longer read).
 Each game keeps its rules (GAME_KEYS: difficulty, cheats; and its seed): a new game starts with their defaults (the "new game" panel), playing a game puts its own values in the
 settings, and what is changed during it is written back to its file. Every other setting (APP_KEYS: display, sound, controls, interface, language, window) is the application's, the
-same for every game and every save (decided on 16/11): the "new game" panel shows them too. A game whose file lacks some rules (older file, game started before the port's rules)
+same for every game and every save: the "new game" panel shows them too. A game whose file lacks some rules (older file, game started before the port's rules)
 gets those the port started with."""
 import json
 import os

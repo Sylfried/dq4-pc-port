@@ -1,5 +1,5 @@
 """No-break (U+00A0), narrow (U+202F) and thin (U+2009) spaces: the FR patch puts a no-break space before "!", "?" and ":"; the menu font (SE-GARRIR) gives its glyph 160 an advance of 11 px against 5 px for the normal space, hence an almost
-double space. History: drew them like the normal space EVERYWHERE; limited that to the history; **("removes the extra visual spaces"): `ui_menu.BitmapFont` draws them like the normal space again in all menus** (no more `normal_spaces` function in the history: the font handles it). The message font (`MessageFont`, the engine's: its U+00A0 is already 5 px) is not touched.
+double space. History: drew them like the normal space EVERYWHERE; limited that to the history; **now `ui_menu.BitmapFont` draws them like the normal space again in all menus** (no more `normal_spaces` function in the history: the font handles it). The message font (`MessageFont`, the engine's: its U+00A0 is already 5 px) is not touched.
 
     python3 tests/test_nonbreaking_space.py
 

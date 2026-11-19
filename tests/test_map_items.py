@@ -211,7 +211,7 @@ class TestClocks(unittest.TestCase):
 
     def test_endless_loop(self):
         h, t = self.advance_time(0, 0, -1, 10, 12)
-        self.assertEqual(t, [2, 4, 6, 8, 10, 2, 4, 6, 8, 10, 2, 4])               # at the exact end we stay on the last key; beyond it, back to the start by the remainder of the overshoot
+        self.assertEqual(t, [2, 4, 6, 8, 10, 2, 4, 6, 8, 10, 2, 4])               # at the exact end the last key stays; beyond it, back to the start by the remainder of the overshoot
         self.assertFalse(h['finished'])
 
     def test_overshoot_kept(self):

@@ -20,7 +20,7 @@ from dq456_pc.core import pad_modes as PM
 from dq456_pc import games as GM
 
 COLS, LINES = 32, 18                       # screen grid (cells proportional to the window)
-SPEED_ANCHOR_DEFAULT = False                 # battle speed button: False = at its place in the grid, on the left edge of the screen (default: "put it back on the left edge for now"); True = attached to the bottom left corner of the bottom box
+SPEED_ANCHOR_DEFAULT = False                 # battle speed button: False = at its place in the grid, on the left edge of the screen (default); True = attached to the bottom left corner of the bottom box
 
 def speed_anchor():
     """Is the battle speed button attached to the bottom box? Not by default: it stays on the left edge of the screen, at the grid cell (DEFAULT) or where the player placed it. To try it: environment variable DQ_SPEED_ANCHOR=1 (attached to the bottom left corner of the box) or 0."""

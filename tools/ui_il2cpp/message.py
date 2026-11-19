@@ -29,7 +29,7 @@ NOW_TYPE = A.field('MenuMessage', 'm_nowType')
 
 
 def _border(uc, a, sz, ud):
-    """m_frame.Change(n): delegate call not emulated -> we set the frame mesh n on the window ourselves (then we skip the call)."""
+    """m_frame.Change(n): delegate call not emulated -> the frame mesh n is set on the window directly (then the call is skipped)."""
     n = uc.reg_read(UC_ARM64_REG_X1) & 0xffffffff
     if n >= len(BORDERS):                                         # a type whose frame number is not a frame (DQ VI: -1, no frame): the window keeps no frame mesh
         ALL.append(n); uc.reg_write(UC_ARM64_REG_PC, A.SET_CANVAS_MESH_FRAME_CALL + 4); return

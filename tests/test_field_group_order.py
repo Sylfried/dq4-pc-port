@@ -1,4 +1,4 @@
-"""World map: stacking order of the party members at landing ("once landed, Doc ended up in front of Ragnar").
+"""World map: stacking order of the party members at landing (after landing, Doc used to end up in front of Ragnar).
 
     python3 tests/test_field_group_order.py                                                    (engine-less part: Linux without a screen, pyglet in "headless" mode)
     DQ_APK=<folder of the patched APKs> DQ_SAVES=<folder of the saves> python3 tests/test_field_group_order.py      (adds the real engine scenario)
@@ -66,7 +66,7 @@ class RealEngineLanding(unittest.TestCase):
 
         def to_the_village(eng):
             """Needs chapter 1, the Ragnar + Doc party and the village `maout` outdoors. The first two are forced; the third
-            requires the party to start close enough to the door of `mak1f1`, which depends on the save: we check by walking."""
+            requires the party to start close enough to the door of `mak1f1`, which depends on the save: the test checks by walking."""
             SV.settle(eng); SV.force_chapter(eng, 1); SV.force_party(eng, self.RAGNAR, self.DOC)
             c = eng.core
             ha = c.export('_ZN6status9PartyData15originalPlayer_E') + 0x530 * self.DOC + 0xd0

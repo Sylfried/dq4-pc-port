@@ -1,5 +1,5 @@
 """Test (without engine or display) of the "Settings" screen: the screen that used to be called "Pause" (Esc menu) is now called "Settings" and no longer pauses the game: the game keeps running behind it
-(with no key or click: the menu keys do not make the hero walk). ("there must be no pause in any menu") NO page stops it, not even "History" or "Quit";
+(with no key or click: the menu keys do not make the hero walk). NO page stops it, not even "History" or "Quit";
 the mechanism (Pause.FROZEN_PAGES, empty) remains and is tried here with a frozen test page.
 
     python3 tests/test_params_without_pause.py
@@ -37,7 +37,7 @@ class TestFrozenPages(unittest.TestCase):
         for page in ('root', 'display', 'sound', 'controls', 'interface', 'states', 'difficulty', 'randomizer', 'cheats', 'achievements'):
             self.assertFalse(menu(page).freezes_game(), page)
 
-    def test_history_and_quit_no_longer_stop_the_game(self):                                                      # "the history menu pauses the game, there must be no pause in any menu"
+    def test_history_and_quit_no_longer_stop_the_game(self):                                                      # (the history menu used to pause the game)
         for page in ('history', 'quit'): self.assertFalse(menu(page).freezes_game(), page)
 
     def test_no_menu_page_freezes_the_game(self):

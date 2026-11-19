@@ -437,7 +437,7 @@ class MenusMixin:
 
     def _yesno_on_message(self, msg, wnd):
         """Yes / No stack placed on the top right corner of the dialogue box: -> (vertical offset in units that places the VISIBLE bottom edge of the stack YESNO_BOX_SPACING above the visible top edge of the box,
-        (visible right edge of the box, visible right edge of the stack)). The frames have different transparent margins (6 units on the right for the box): we align what is seen, not the mesh cells. None if a measurement is missing."""
+        (visible right edge of the box, visible right edge of the stack)). The frames have different transparent margins (6 units on the right for the box): what is seen is aligned, not the mesh cells. None if a measurement is missing."""
         mv = msg.visible_extent() if msg is not None else None; ev = wnd.visible_extent()
         if not mv or not ev: return None
         return float(mv[3] + YESNO_BOX_SPACING - ev[2]), (float(mv[1]), float(ev[1]))

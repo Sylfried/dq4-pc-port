@@ -1,11 +1,11 @@
 """Names of the savestates recorded before the code was in English (the French names stay HERE, nowhere else).
 
 A savestate (`persistence/savestates.py`) is a pickle: the `State` and `Interface` objects keep their attribute names, and the dictionaries they hold keep their keys. Each
-rename of the switch to English (05/11/2026: attributes; 10/11/2026: keys) is carried over on read by the functions below, which `State.__setstate__`,
+rename of the switch to English (first the attributes, then the keys) is carried over on read by the functions below, which `State.__setstate__`,
 `Interface.__setstate__` and `savestates.apply` call. Reading is idempotent: a state recorded since (English names) passes through as is, and when an old and a new name are
 both present the new one wins. This module is the only one whose French keys must not be renamed (tests/test_legacy_names.py checks that the new names are the ones the code uses)."""
 
-# Attributes of State / Interface (05/11/2026).
+# Attributes of State / Interface (first rename).
 OLD_ATTRIBUTES = {
     'attente': 'waiting', 'attente_charge': 'load_wait', 'cam_down': 'cam_down', 'cam_cible': 'cam_target', 'cam_libre': 'cam_free',
     'carte': 'game_map', 'cartes_chargees': 'loaded_maps', 'champ': 'field', 'champ_echelle': 'field_scale', 'chargement': 'loading',
@@ -38,7 +38,7 @@ def rename_values(d, mapping):
     return d
 
 
-# Keys of the dictionaries held by State (10/11/2026). attribute -> {old key: new key}; VALUE_KEYS: the attribute is a dictionary of dictionaries (slot -> {...}).
+# Keys of the dictionaries held by State (second rename). attribute -> {old key: new key}; VALUE_KEYS: the attribute is a dictionary of dictionaries (slot -> {...}).
 FADE_KEYS = {'fin': 'end', 'pas': 'step', 'noir': 'black', 'combat': 'battle'}
 STATE_KEYS = {
     'fade': FADE_KEYS, 'background_fade': FADE_KEYS, 'effect': {'duree': 'duration'}, 'field': {'tuiles': 'tiles'},
@@ -62,7 +62,7 @@ def renamed_dict_keys(attrs):
     return attrs
 
 
-# Keys of the dictionaries held by Interface (10/11/2026): `msg` (message window) and `f` (port -> menu window).
+# Keys of the dictionaries held by Interface (second rename): `msg` (message window) and `f` (port -> menu window).
 MSG_KEYS = {'qui': 'speaker', 'qui_att': 'speaker_pending'}
 WINDOW_KEYS = {'vis': 'visible', 'cases': 'cells', 'indic': 'indicators', 'dispo': 'layout', 'att': 'pending', 'ordre': 'order', 'entree': 'input', 'ferme': 'closed',
                'listes': 'lists', 'plaq': 'plates', 'suite': 'next_list', 'grille': 'grid', 'dgt': 'damage_pending'}
@@ -81,7 +81,7 @@ def renamed_interface_keys(attrs):
     return attrs
 
 
-# The state file itself (persistence/savestates.py, 10/11/2026): header, outer dictionary, `python` dictionary and `viewer` dictionary.
+# The state file itself (persistence/savestates.py, second rename): header, outer dictionary, `python` dictionary and `viewer` dictionary.
 INFO_KEYS = {'lieu': 'location', 'carte': 'map', 'partie': 'part', 'images': 'frames'}                  # header (JSON) of the file
 FILE_KEYS = {'fichiers': 'files'}
 PYTHON_KEYS = {'etat': 'state', 'images': 'frames', 'grille': 'grid', 'grille_img': 'grid_frame'}
@@ -129,7 +129,7 @@ def renamed_viewer(v):
 
 
 def carry_over_file(folder, old, new):
-    """Cache file whose name was in French (10/11/2026): `folder/old` is renamed `folder/new` if only the old one exists (nothing is rebuilt). -> path of `new`."""
+    """Cache file whose name was in French: `folder/old` is renamed `folder/new` if only the old one exists (nothing is rebuilt). -> path of `new`."""
     import os
     f_old, f_new = os.path.join(folder, old), os.path.join(folder, new)
     try:
@@ -139,7 +139,7 @@ def carry_over_file(folder, old, new):
     return f_new
 
 
-# Favorites file of the message history (core/history.py), version 2 -> 3 (10/11/2026): keys and outcome words in English.
+# Favorites file of the message history (core/history.py), version 2 -> 3: keys and outcome words in English.
 HISTORY_FILE_KEYS = {'suivant': 'next', 'favoris': 'favorites'}
 HISTORY_ELEMENT_KEYS = {'nom': 'name', 'texte': 'text', 'ennemis': 'enemies', 'or': 'gold', 'issue': 'outcome', 'objets': 'objects'}
 HISTORY_ENEMY_KEYS = {'nom': 'name', 'vaincus': 'defeated', 'fuis': 'fled', 'disparus': 'vanished'}

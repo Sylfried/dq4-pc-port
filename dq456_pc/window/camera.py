@@ -245,7 +245,7 @@ class CameraMixin:
         R = self._rot_camera(e)
         cam = np.array(e.cam_pos, float); fw = R @ np.array([0.0, 0.0, 1.0]); topmost = R @ np.array([0.0, 1.0, 0.0])
         fov_h = math.radians((e.cam_fov if e.cam_fov is not None else CB_FOV_NOMINAL) * 4.0 / 3.0)         # SceneCamera.Update: fov x 4/3, applied to the horizontal (transposed projection matrix)
-        fov_v = math.degrees(2 * math.atan(math.tan(fov_h / 2) / (4.0 / 3.0)))                         # original 4/3 view; in 16/9 we keep the same field height and show more scenery on the sides
+        fov_v = math.degrees(2 * math.atan(math.tan(fov_h / 2) / (4.0 / 3.0)))                         # original 4/3 view; in 16/9 the field height stays the same and more scenery shows on the sides
         M, _ = matrix(cam, cam + fw * 10, fov_v, aspect, n=CB_NEAR, f=CB_FAR, topmost=topmost)
         Ty = np.eye(4); Ty[1, 3] = CB_YOFFSET; M = Ty @ M                                              # SceneCamera.s_yOffset: vertical offset of the image
         if self.cb_mx: M = M @ np.diag([-1.0, 1.0, 1.0, 1.0])
@@ -266,7 +266,7 @@ class CameraMixin:
         print('PROJ n=%d' % self.n_loop, out, flush=True)
 
     def _edge_correction(self):
-        """Strength (0 to 1) of the sprite edge correction (towns, dungeons, towers; see _town_panel): 0 by default ("go back to the raw position of the NPCs, exactly as in the game": original panel,
+        """Strength (0 to 1) of the sprite edge correction (towns, dungeons, towers; see _town_panel): 0 by default (the raw position of the NPCs, exactly as in the game: original panel,
         without on-screen reconstruction); the former full correction (vertical edges, constant proportion) is obtained with the --edge-correction option or the DQ_EDGE_CORRECTION environment variable,
         from 0 (none, default) to 100 (full). It is not a player setting (there is no "sprite edge correction" option any more)."""
         v = getattr(self.args, 'edge_correction', None)

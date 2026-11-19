@@ -67,7 +67,7 @@ class Resume(unittest.TestCase):
         for name_str in ('data2.dat', 'data3.dat', 'data4.dat'): write(os.path.join(self.d.old_port_dir, name_str), b'portage_vieux_' + name_str.encode())
         phone = os.path.join(self.d.mobile, '20261103_222423')
         for name_str in NAMES: write(os.path.join(phone, name_str), b'tel_' + name_str.encode())
-        write(os.path.join(phone, 'manifest.json'), b'{"device": "SM S938B"}'); write(os.path.join(self.d.mobile, '20261007_190735', 'data1.dat'), b'tel_ancien')
+        write(os.path.join(phone, 'manifest.json'), b'{"device": "phone"}'); write(os.path.join(self.d.mobile, '20261007_190735', 'data1.dat'), b'tel_ancien')
         write(os.path.join(self.sv, 'before_import_20261101_192625', 'data2.dat'), b'AV'); write(os.path.join(self.d.savestates, 'state_01.dqs'), b'E1')
         write(os.path.join(self.t, 'dq4_pc', 'sauvegardes', 'data1.dat'), b'tres_vieux'); write(os.path.join(self.t, 'dq4_pc', 'sauvegardes', 'data3.dat'), b'tres_vieux3')
 
@@ -90,7 +90,7 @@ class Resume(unittest.TestCase):
         placement = [x for x in os.listdir(self.sv) if x.startswith('before_tidy_')]; self.assertEqual(len(placement), 1)
         for under in ('portage', 'mobile'): self.assertFalse(os.path.exists(os.path.join(self.sv, under)), under)                                      # no more portage\ or mobile\
         r = os.path.join(self.sv, placement[0])
-        self.assertEqual(content(r, 'portage', 'data2.dat'), b'portage_vieux_data2.dat'); self.assertEqual(content(r, 'mobile', '20261103_222423', 'manifest.json'), b'{"device": "SM S938B"}')
+        self.assertEqual(content(r, 'portage', 'data2.dat'), b'portage_vieux_data2.dat'); self.assertEqual(content(r, 'mobile', '20261103_222423', 'manifest.json'), b'{"device": "phone"}')
         self.assertEqual(content(r, 'mobile', '20261007_190735', 'data1.dat'), b'tel_ancien')
         after = set(all_files(self.sv))
         for f in before:                                                                                                                                # each earlier file is where it was put away, with the same content

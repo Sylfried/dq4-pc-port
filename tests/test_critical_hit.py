@@ -1,7 +1,7 @@
 """Critical hit ("kaishin") effect on the enemies: what the engine asks of the viewer.
 
 Real engine (Unicorn), slot 4, one weak monster (Encount + 0x34 / 0x44). The critical is forced on the hero by setting `BaseAction::kaishinFlag_` (LIB + 0x25c6ed) on exit from
-`BaseAction::checkActorKaishin` (0x1a81dc) when the actor is on our side (`[acteur + 8]` = 0; 1 = monsters, which roll for it: `rand(0x20) == 0`). Findings:
+`BaseAction::checkActorKaishin` (0x1a81dc) when the actor is on the party's side (`[acteur + 8]` = 0; 1 = monsters, which roll for it: `rand(0x20) == 0`). Findings:
   - a SECOND effect model (5344, slot 3) is loaded at the same instant as the hit effect (5303, slot 2), 17 frames; the viewer draws it like any battle model;
   - sound effect 407 (`SE0407.akb`, present in the data) is requested, plus a 0 (no file: no effect);
   - the damage number is 2.5 to 3 times larger (8 -> 26, 11 -> 27 measured) and the text "Coup critique !" is added;

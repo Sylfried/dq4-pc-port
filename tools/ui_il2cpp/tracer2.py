@@ -216,7 +216,7 @@ class Tr2(t.Tr):
             T.tr_of(X[0])
         for dn in ('MenuPortItem.FUNC_SetCode', 'MenuParts.IBase.IntChanger', 'MenuParts.IBase.StringChanger', 'MenuParts.FuncIsHit', 'MenuPortItemTable.Make_FUNC'):
             def mkd(dn=dn):
-                def f(X, F):             # delegate constructor: we remember (target, method) ; the lambdas will be run on demand
+                def f(X, F):             # delegate constructor: (target, method) is remembered; the lambdas will be run on demand
                     mn = T.kname.get(X[2], '') if len(X) > 2 else ''
                     T.deleg[X[0]] = (X[1], mn)
                 return f
@@ -279,7 +279,7 @@ class Tr2(t.Tr):
                 kk = T.klass_for_type(m_.group(1)) or (T.klass_named(m_.group(1)) if m_.group(1) != 'T' else None)          # (a Unity type: its class, so that a cast of the component to it succeeds, DQ VI's Make_BattleUpStatus)
                 if kk: kl = kk
                 cn = m_.group(1)
-                if cn == 'T':                # Create<T> (T = MenuParts or subclass): we take MenuParts
+                if cn == 'T':                # Create<T> (T = MenuParts or subclass): MenuParts is taken
                     cn = 'MenuParts'; kl = T.klass_for_type('MenuParts') or kl
             cn = cn.replace('_var', '')
             c = T.new_obj(kl, fill=True)

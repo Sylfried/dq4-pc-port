@@ -5,7 +5,7 @@ Question: does the original game play a chest-opening sound effect during these 
     BattleAutoFeed::setMessageSend) and give the item (PartyStatus::giveItem); none goes through SoundManager / Sound::sePlayDirect;
   - Unity only calls Sound.PlaySE directly in InputName.Update, MenuPortItem.Update and TouchPad.internalUpdate (buttons: sound effect 300);
   - in the real engine, with a forced loot, the only sound packets of the whole sequence are sound effect 300 ("beep") at the start of each of the 4 messages, played by ui_MsgLoop.
-This test keeps this observation: if one day the engine asked for another sound during these messages, `State.sounds` would contain it and the viewer (Sound.events) would play it; the test would fail so that we know.
+This test keeps this observation: if one day the engine asked for another sound during these messages, `State.sounds` would contain it and the viewer (Sound.events) would play it; the test would fail and show it.
 
 The loot is forced in a throwaway engine: MonsterParty::getDropItem / getDropItemMonster (fields +0x3eac and +0x3eb0 of MonsterParty, written by checkDropItem at the end-of-battle draw) return an item
 and a monster that are forced (the same method by which test_battle_history forces the composition of a group).

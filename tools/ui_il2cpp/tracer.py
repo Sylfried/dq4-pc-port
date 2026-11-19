@@ -141,7 +141,7 @@ class Tr:
     def _unm(self, uc, access, addr, size, value, ud):
         pc = uc.reg_read(UC_ARM64_REG_PC)
         if access == UC_MEM_FETCH_UNMAPPED:
-            # virtual call / delegate on a null address: we log and return
+            # virtual call / delegate on a null address: logged, then return
             self.event('virtcall', pc=pc, target=addr, lr=uc.reg_read(UC_ARM64_REG_X30))
             uc.reg_write(UC_ARM64_REG_PC, uc.reg_read(UC_ARM64_REG_X30)); uc.reg_write(UC_ARM64_REG_X0, 0)
             return True
@@ -284,7 +284,7 @@ class Tr:
             self.event('init', cls=rl.M.get(T))
         def objnew(a):
             X, _ = self.regs(); k = X[0]
-            if k not in self.kname:      # we received the value loaded from the variable
+            if k not in self.kname:      # the value loaded from the variable was received
                 pass
             o = self.new_obj(k)
             self.uc.reg_write(UC_ARM64_REG_X0, o)

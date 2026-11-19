@@ -265,7 +265,7 @@ class FilesV2(unittest.TestCase):
 
 @unittest.skipUnless(os.environ.get('DQ_APK_DQ5') or os.environ.get('DQ_APK_DQ6'), 'real game files: DQ_APK_DQ5 / DQ_APK_DQ6')
 class RealFilesV2(unittest.TestCase):
-    """(real data) the counts read on 17/11: zones, monsters, boss fights (the same with the bestiary's rule as with "a monster met in no zone")."""
+    """(real data) the counts read from the game data: zones, monsters, boss fights (the same with the bestiary's rule as with "a monster met in no zone")."""
     def test_counts(self):
         import zipfile
         for key, zones, mons, bosses in (('dq5', 86, 191, 22), ('dq6', 112, 193, 35)):

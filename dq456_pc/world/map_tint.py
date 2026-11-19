@@ -53,7 +53,7 @@ def compute(data):
                 except Exception: return o.read().m_Name         # otherwise full read of the object
             ids = sorted(o.path_id for o in data._objs.values() if o.type.name == 'Texture2D' and MARK in name_str(o))
         finally:
-            if loaded_here: data.free_up()                  # the 800 MB are released if we were the ones who read the pack
+            if loaded_here: data.free_up()                  # the 800 MB are released if this call read the pack
     f = os.path.join(data.cache, FILE)
     with open(f + '.tmp', 'w', encoding='utf-8') as fh: json.dump({'ids': ids, 'marque': MARK}, fh)
     os.replace(f + '.tmp', f)

@@ -214,7 +214,7 @@ class RealEngine(unittest.TestCase):
             self.advance(eng, 1, self.BTN_TALK); self.advance(eng, 20)
             if not eng.msg_visible and not (eng.flags() & 4): break
         self.advance(eng, 30); c = eng.core
-        SV.force_party(eng, self.RAGNAR, self.DOC)                        # the party comes from the player's save: we impose it, otherwise row 3 of the list is no longer Doc
+        SV.force_party(eng, self.RAGNAR, self.DOC)                        # the party comes from the player's save: it is imposed, otherwise row 3 of the list is no longer Doc
         orig = c.export('_ZN6status9PartyData15originalPlayer_E'); hs = lambda i: orig + 0x530 * i + 0x58
         if sort is not None:
             ha = orig + 0x530 * self.DOC + 0xd0
