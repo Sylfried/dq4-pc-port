@@ -46,6 +46,7 @@ from dq456_pc.window.helpers import adjust_size, camera_free, background_gradien
 from dq456_pc.window.menu_display import MenusMixin
 from dq456_pc.window.camera import CameraMixin
 from dq456_pc.window.field import FieldMixin
+from dq456_pc.window.field_followers import FieldFollowers
 from dq456_pc.window.keyboard_mouse import KeyboardMouseMixin
 from dq456_pc.window.capture_effects import CaptureEffectsMixin
 from dq456_pc.window.backdrop import BackdropMixin
@@ -108,6 +109,7 @@ class Game(FullScreenMixin, CameraMixin, FieldMixin, BattleMixin, TitleMixin, St
         self.cam_direction = (0, False); self.cam_recenter = False; self.cam_two = False; self.cam_request = 0.0      # camera: game camera buttons sent at the last step (direction, with the mouse?), return to north requested, the two arrows held, rotation requested with the mouse not yet done (degrees), rest of the speed (see camera.py)
         self.mouse = (0, 0); self.mouse_freeze = None
         self.mouse_guard = EN.MouseGuard(); self.wheel = EN.WheelGesture(); self.bar_gesture = EN.WheelGesture(); self.bar_center = False; self.bar_end = 0          # inputs: who has control (keyboard or mouse, see inputs.py; replaces mouse_freeze); middle button gesture (click = recenter, drag = rotate the camera)
+        self.field_followers = FieldFollowers()                                 # world map: the characters walking with the camera at a steady distance from it (field_followers.py)
         self.anchor_effect = {}; self._shadow_steps = {}; self._view_border = None; self._sprites_border = None          # town mesh effects: slot -> (character, depth ratio, angular offset); (position, right, up, forward) of the viewer's camera
         self.n_battle = 0; self.cb_tex = {}; self.cb_vl = {}
         self.ui_tf = {}; self.ui_k = 1.0; self.cur_local = {}; self.cursor_step = {}; self.press_state = None; self.press_node = None; self.hovered = None; self.hover_node = None; self.click_a = self.click_b = False; self.ui_dz = 0.0; self.ui_dzp = {}; self.ui_followers = set()       # mouse: button pressed (port, number, gamepad), clicks pending
@@ -582,6 +584,8 @@ class Game(FullScreenMixin, CameraMixin, FieldMixin, BattleMixin, TitleMixin, St
             if oc is not None and ps is not None and len(oc) >= 2: self._shadow_steps.setdefault(slot, collections.deque(maxlen=3)).append((oc[0] - ps[0], oc[1] - ps[1]))
             else: self._shadow_steps.pop(slot, None)
         self._anchor_effects(self.engine.state)
+        e = self.engine.state; field = e.part == ENGINE.PART_FIELD and e.field and e.field.get('cam')
+        self.field_followers.step(e.field['cam'] if field else None, {k: s.get('pos') for k, s in e.sprites.items()} if field else {})
         self._log_timing('step', t0)
 
     def _log_timing(self, kind, t0):
@@ -607,7 +611,7 @@ class Game(FullScreenMixin, CameraMixin, FieldMixin, BattleMixin, TitleMixin, St
         a jump (map change, forced move) is not interpolated. Returns what is needed to put everything back."""
         pr, a, e = self.prev, self.alpha, self.engine.state
         saved = []
-        if pr is None or a >= 1.0 or e.part == ENGINE.PART_BATTLE or pr['key'] != (e.part, e.game_map) or pr.get('ret', False) != (getattr(e, 'loading', None) is not None): return saved      # (the frame that lifts the loading hold is not interpolated from the camera of the hold)
+        if pr is None or a >= 1.0 or e.part == ENGINE.PART_BATTLE or pr['key'] != (e.part, e.game_map) or pr.get('ret', False) != (getattr(e, 'loading', None) is not None): return Game._follower_offsets(self, saved, 1.0)      # (the frame that lifts the loading hold is not interpolated from the camera of the hold)
         threshold = 24.0 if e.part == ENGINE.PART_FIELD else CAM_JUMP_TOWN       # map pixels / town units per step; beyond that, it is a jump
         whole = e.part == ENGINE.PART_FIELD and getattr(self, 'mode', None) == MODE_PP          # pixel perfect world map: the drawing puts the camera and the sprites on whole map pixels (round of each coordinate)
         flat = e.part == ENGINE.PART_FIELD                                     # world map: (x, y, height) in map pixels; the height (the balloon: 20 over the sea, 60 over land) is a depth for the stacking, never a movement
@@ -653,6 +657,16 @@ class Game(FullScreenMixin, CameraMixin, FieldMixin, BattleMixin, TitleMixin, St
         if e.field and e.field['cam']:
             v = between(pr['field'], e.field['cam'])
             if v is not None: saved.append((e.field, 'cam', e.field['cam'], False)); e.field['cam'] = v
+        return Game._follower_offsets(self, saved, a)
+
+    def _follower_offsets(self, saved, a):
+        """World map: the characters walking with the camera drawn at their smoothed distance from it (field_followers.py; `a`: fraction of the step)."""
+        e = self.engine.state; f = getattr(self, 'field_followers', None)
+        if f is None or e.part != ENGINE.PART_FIELD: return saved
+        for k, sp in e.sprites.items():
+            d = f.offset(k, a); p = sp.get('pos')
+            if d is None or p is None or len(p) < 2: continue
+            saved.append((sp, 'pos', p, False)); sp['pos'] = (p[0] + d[0], p[1] + d[1]) + tuple(p[2:])
         return saved
 
     def _interpolate_camera(self, pr, a):
@@ -707,7 +721,7 @@ class Game(FullScreenMixin, CameraMixin, FieldMixin, BattleMixin, TitleMixin, St
         saved = self._interpolate(); t0 = time.perf_counter(); self._drawing_kind = '?'
         try: self._draw()
         finally:
-            for obj, name_str, old, attr in saved:
+            for obj, name_str, old, attr in reversed(saved):              # (last changed, first put back: a position changed twice gets its own back)
                 if attr: setattr(obj, name_str, old)
                 else: obj[name_str] = old
             self._log_timing('draw', t0)

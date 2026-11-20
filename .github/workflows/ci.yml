@@ -90,6 +90,7 @@ jobs:
           python tests/test_debug_catalog.py
           python tests/test_return_to_title.py
           python tests/test_smooth_objects.py
+          python tests/test_field_followers.py
           python tests/test_play_time.py
           python tests/test_savestates_whitelist.py
           python tests/test_heap_alert.py
