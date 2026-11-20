@@ -68,6 +68,9 @@ jobs:
           python tests/test_sound_failures.py
           python tests/test_full_screen_effects.py
           python tests/test_keyboard_sfx.py
+          python tests/test_keyboard_reach.py
+          python tests/test_loading_bar.py
+          python tests/test_game_shaders.py
           python tests/test_sound_music_limits.py
           python tests/test_message_fallback.py
           python tests/test_focus_loss.py

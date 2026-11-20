@@ -16,7 +16,7 @@ from dq456_pc.window import game as WND
 class BattleSpeedKey(unittest.TestCase):
     def press(self, part):
         calls = []
-        j = types.SimpleNamespace(_ready=True, _window_shortcut=lambda s, m: False, mouse_guard=types.SimpleNamespace(keyboard=lambda m: None), mouse=None, pause=types.SimpleNamespace(opened=False),
+        j = types.SimpleNamespace(debug=None, _ready=True, _window_shortcut=lambda s, m: False, mouse_guard=types.SimpleNamespace(keyboard=lambda m: None), mouse=None, pause=types.SimpleNamespace(opened=False),
                                   _name_entry_in_progress=lambda: False, port_screen=None, license_panel=None, reg=RG.Settings(None), engine=types.SimpleNamespace(state=types.SimpleNamespace(part=part)),
                                   change_battle_speed=lambda *a: calls.append(1))
         WND.Game.on_key_press(j, pyglet.window.key.V, 0); return calls

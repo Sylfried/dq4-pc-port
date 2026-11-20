@@ -530,6 +530,7 @@
   {"key": "interface.window_as_like", "en": "window as you like.", "text": "옮기고 크기를 바꾸세요."},
   {"key": "interface.test_text_game_messages", "en": "Test text: the game messages", "text": "테스트 문장: 게임의 메시지는"},
   {"key": "interface.will_displayed_here_size", "en": "will be displayed here, at this size.", "text": "여기에 이 크기로 표시됩니다."},
+  {"key": "window.loading_percent", "en": "Loading... %d%%", "text": "불러오는 중... %d%%"},
   {"key": "window.frames_s_engine_steps_s", "en": "%.0f frames/s | engine %.1f steps/s (%.1f ms) | worst frame %.0f ms | Python drawing %.1f ms", "text": "%.0f fps | 엔진 %.1f 단계/초(%.1f ms) | 가장 느린 프레임 %.0f ms | Python 그리기 %.1f ms"},
   {"key": "window.pc_port", "en": "%s - PC port", "text": "%s - PC 이식판"},
   {"key": "window.failed_r", "en": "%s failed: %r", "text": "%s 실패: %r"},

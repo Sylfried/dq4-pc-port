@@ -64,6 +64,7 @@ from dq456_pc.window.slime_touch import SlimeTouchMixin
 from dq456_pc.window.slime_curling import SlimeCurlingMixin
 from dq456_pc.window.sugoroku import SugorokuMixin
 from dq456_pc.window.spotlight import SpotlightMixin
+from dq456_pc.window.loading_bar import ENGINE_SHARE, LoadingBarMixin, creep
 from dq456_pc.window.constants import *      # noqa: these names stay readable as `game.NAME` (tests, tools)
 from dq456_pc.window.shaders import *       # noqa
 from dq456_pc.window.helpers import *         # noqa
@@ -79,7 +80,7 @@ def note_error(text):
         print('Error not written to the log (%r): %s' % (ex, text.strip()), flush=True); return False
 
 
-class Game(FullScreenMixin, CameraMixin, FieldMixin, BattleMixin, TitleMixin, StaffrollMixin, SlimeTouchMixin, SlimeCurlingMixin, SugorokuMixin, SpotlightMixin, MenusMixin, KeyboardMouseMixin, SnapshotsMixin, OptionsMixin, CaptureEffectsMixin, BackdropMixin, MotionBlurMixin, ReplayMixin, ArenaAbortMixin, pyglet.window.Window):
+class Game(FullScreenMixin, CameraMixin, FieldMixin, BattleMixin, TitleMixin, StaffrollMixin, SlimeTouchMixin, SlimeCurlingMixin, SugorokuMixin, SpotlightMixin, MenusMixin, KeyboardMouseMixin, SnapshotsMixin, OptionsMixin, CaptureEffectsMixin, BackdropMixin, MotionBlurMixin, ReplayMixin, ArenaAbortMixin, LoadingBarMixin, pyglet.window.Window):
     def __init__(self, args, reg=None):
         SV.note('startup', width_px=args.width_px, height_px=args.height_px, full_screen=getattr(args, 'full_screen', 0), shot=bool(args.shot))
         self._logo_logged = False
@@ -98,7 +99,7 @@ class Game(FullScreenMixin, CameraMixin, FieldMixin, BattleMixin, TitleMixin, St
         self.game_rules = GR.GameRules(getattr(args, 'saves_write', None) or '.', self.reg)          # rules and settings of each game (persistence/game_rules.py)
         self.game_language = getattr(args, 'game_language', None) or LG.current_language()          # language of the loaded APKs: read at startup, it does not change until the next one
         self._log_window('creation')
-        self._wait('Loading the engine...')
+        self._wait('Loading the engine...', 0.02)
         self.mode = RG.valid_sprites_mode(args.hd); self.smoothing = not os.environ.get('DQ_NO_SMOOTHING'); self.aniso = self._anisotropy()          # texture smoothing: always on (no setting); DQ_NO_SMOOTHING=1: (debugging) nearest neighbor
         self.pool = ThreadPoolExecutor(max_workers=1); self.hd_jobs = {}; self.scenery_hd = {}; self.scenery_arr = {}; self.map_src = None; self.sprite_vl = {}; self.icon_vl = {}; self.icon_tex = {}; self._menu_tex = None; self._linked_domain = None; self.plans = {}
         self.field_key = None; self.field_tex = None; self.field_tex_icon = None; self.field_nearest = None; self.field_vl = None; self.field_base = None; self.field_icon = None
@@ -119,17 +120,17 @@ class Game(FullScreenMixin, CameraMixin, FieldMixin, BattleMixin, TitleMixin, St
         self.program_effect = ShaderProgram(Shader(VERTEX_EFFECT, 'vertex'), Shader(FRAG_EFFECT, 'fragment'))
         self.program_gradient = None; self.gradient_vl = None       # gradient background of towns: program and full-screen quad, created on first need
         self.effect_tex = None; self.sim_effect = None; self.effect_vl = None; self.ref_effect = None; self.effect_tex_ready = False      # battle start effect: screen capture, simulation, vertices
-        self.data = DO.Data(None, args.cache, log=lambda *a: print(*a, flush=True))
+        self.data = DO.Data(None, args.cache, log=self.loading_log(0.65))          # (the data pack, read once: the bar moves during the startup)
         self.backgrounds = TC.Backgrounds(self.data, log=lambda *a: print(*a, flush=True)); self.tz = TC.TzKeys(self.data, log=lambda *a: print(*a, flush=True)); self._gl_tint = None        # scenery tint (packet 33): "tz_" textures excluded; last value of the `tint` uniform
         self._start_engine(args)
-        self._wait('Loading the save...')
+        self._wait('Loading the save...', 0.55)
         self.data.apk = self.engine.apk_data
         if not args.slot and self.mode not in (0, MODE_PP): self._prepare_title_scenery()          # (the title comes after the opening credits: its enlarged scenery is ready before it)
         self.prep_stop = threading.Event(); self.prep_proc = None
         self.hud = HM.Buttons(self); self.hud_decl = 0; self.direct_keys = 0; self.map_view = 1; self.map_open = False; self.map_two_views = False; self.map_toggle = False; self.damage_count = []; self._tex_count = None
         if not args.no_preparation:           # extracts maps, sprites and monsters not yet in the cache in the background: no more reading of the big data packet in the middle of a game
             self._launch_preparation(args.cache)
-        self.sound = SOUND.Sound(self.engine.apk_data, args.cache, log=lambda *a: print(*a, flush=True), music_volume=args.music_volume, sfx_volume=args.sfx_volume, active=bool(self.reg['sound']) and not args.no_sound,
+        self.sound = SOUND.Sound(self.engine.apk_data, args.cache, log=self.loading_log(0.7), music_volume=args.music_volume, sfx_volume=args.sfx_volume, active=bool(self.reg['sound']) and not args.no_sound,
                            logfile=lambda t: note_error('--- %s: sound: %s ---\n' % (time.strftime('%Y-%m-%d %H:%M:%S'), t)))
         self.sound.preload(COMMON_SFX); self.sound.preload_music()
         self._sound_opt = None; self._t_preview = 0.0; self.apply_mix(initial=True); self.apply_text(); self.apply_game(); self.engine.scroll_callback = self._adopt_scroll; self.apply_scroll()
@@ -146,7 +147,7 @@ class Game(FullScreenMixin, CameraMixin, FieldMixin, BattleMixin, TitleMixin, St
             print('save %d loaded: yes' % args.slot if ok else 'save %d loaded: NO (file data%d.dat not found or invalid in %s)' % (args.slot, args.slot, args.saves_read), flush=True)
             if ok:      # the engine is left to start the saved map before the first display
                 for _ in range(6): self.engine.step(0, 0)
-                self._wait('Loading the map...')
+                self._wait('Loading the map...', 0.75)
                 e = self.engine.state
                 if e.game_map: self._load_map(e.game_map)      # heavy loading happens here, not during the game
                 for sp in list(e.sprites.values()): self._sheet(sheet_id(sp, e.part == ENGINE.PART_FIELD), self.mode)
@@ -155,7 +156,7 @@ class Game(FullScreenMixin, CameraMixin, FieldMixin, BattleMixin, TitleMixin, St
         self.msg_key = None; self.msg_img = None; self.msg_h = 0
         self.lbl_menu = {}; self.menu_to_release = None; self.section_focus = None; self.scenery_ticks = None; self._scenery_acc = 0.0; self._replay_skipping = False; self._closing_game_menu = 0
         self.ui_render = None; self.ui_g = None; self.ui_msg = None; self.canvas_key = None
-        self._init_ui()          # (simple menus only as a fallback, when the original layout is missing or unusable:; the test option --ui-simple was removed)
+        self._init_ui(); self.show_loading(1.0); self.loading = False          # (simple menus only as a fallback, when the original layout is missing or unusable:; the test option --ui-simple was removed)
         # fixed-step loop: the engine advances exactly at 30 Hz (like FixedUpdate in the original) whatever the display rate, and the displayed frame is computed between two steps
         self.acc = 0.0; self.t_loop = None; self.alpha = 1.0; self.prev = None; self.step_times = collections.deque(maxlen=60)
         self.n_loop = 0; self.base_c = {}
@@ -176,7 +177,7 @@ class Game(FullScreenMixin, CameraMixin, FieldMixin, BattleMixin, TitleMixin, St
         """Original menu windows (layout read from the game's Unity code); without the file cache/ui_layout.json the simple menus are kept. The game's sheets and fonts are
         extracted in any case: the field buttons, the D-pad, the bubbles and the Esc menu use them too."""
         a = self.args; lay = os.path.join(a.cache, 'ui_layout.json')
-        resources = UI.prepare_resources(a.apk, a.cache, log=lambda *x: print(*x, flush=True))
+        resources = UI.prepare_resources(a.apk, a.cache, log=self.loading_log(0.95))
         if not os.path.exists(lay):
             print('Menus: original layout missing (%s) -> simple menus. The launcher builds it at the first start of each game (tools\\generate_ui.bat does it by hand).' % lay, flush=True); return
         if not resources: return
@@ -200,10 +201,10 @@ class Game(FullScreenMixin, CameraMixin, FieldMixin, BattleMixin, TitleMixin, St
             except BaseException as ex: res['e'] = ex
         thread = threading.Thread(target=load, daemon=True, name='engine'); thread.start()
         self.pre_game_files = AP.paths(args.cache)
-        if len(self.pre_game_files) < len(AP.resources()) and not args.no_preparation: AP.prepare(args.apk, args.cache, log=lambda *a: print(*a, flush=True)); self.pre_game_files = AP.paths(args.cache)      # first time: the title images are extracted before the logos (the engine loads in the meantime)
+        if len(self.pre_game_files) < len(AP.resources()) and not args.no_preparation: AP.prepare(args.apk, args.cache, log=self.loading_log(ENGINE_SHARE[1])); self.pre_game_files = AP.paths(args.cache)      # first time: the title images are extracted before the logos (the engine loads in the meantime)
         logos = AP.Logos(self.pre_game_files) if self.pre_game_files and not args.no_logos and (args.logos or (not args.shot and not args.slot)) else None
         if logos is not None and not logos.ok: logos = None
-        t0 = time.perf_counter(); logo_count = 0; worst_logo = 0.0
+        t0 = t_start = time.perf_counter(); logo_count = 0; worst_logo = 0.0
         SV.note('logo loop', logos=logos is not None)
         while (logos is not None and not logos.finished) or thread.is_alive():
             if self._closed: sys.exit(0)
@@ -213,7 +214,7 @@ class Game(FullScreenMixin, CameraMixin, FieldMixin, BattleMixin, TitleMixin, St
             if logos is not None and not logos.finished:
                 if self._logo_touched: logos.touch()
                 logos.do_update(dt); logos.draw_all(self.width, self.height)
-            else: time.sleep(0.02)           # (the engine is still loading: black screen, no text)
+            else: self.load_progress(creep(t - t_start)); self.draw_load_bar(); time.sleep(0.02)           # (the engine is still loading: black screen and the loading bar)
             self._logo_touched = False
             self.flip()
             if not self._logo_logged: self._logo_logged = True; self._log_window('1st frame shown (logos)')
@@ -231,13 +232,10 @@ class Game(FullScreenMixin, CameraMixin, FieldMixin, BattleMixin, TitleMixin, St
         self.follow_journals()                                                                                # (what belongs to games no adventure log holds any more: deleted, see follow_journals)
         self.debug = DBG.DebugService(self) if getattr(args, 'debug', False) else None                        # debug mode (--debug): time control, overlay (dq456_pc/debug)
 
-    def _wait(self, text):
-        """Black screen, with no text at all (the text goes to the console instead): the window stays alive during the startup loads."""
+    def _wait(self, text, fraction=None):
+        """Black screen with the loading bar at `fraction` (the step's text goes to the console): the window stays alive during the startup loads."""
         print(text, flush=True)
-        try:
-            self.switch_to(); gl.glClearColor(0, 0, 0, 1); self.clear()
-            self.flip(); self.dispatch_events()
-        except Exception: pass
+        self.show_loading(fraction)
         SV.note('wait (black frame)', text=text)
 
     def _launch_preparation(self, cache):
@@ -1046,8 +1044,6 @@ class Game(FullScreenMixin, CameraMixin, FieldMixin, BattleMixin, TitleMixin, St
             self._paint(f['t'], vl)       # like Unity (Chara shader, normal ZTest): a character hidden by scenery is not visible at all
             if hue: self.prog['hue'] = (0.0, 0.0)
         if late: self.prog['cutoff'] = 0.05; self._paint_scenery(True, 'late', chara_queue); self.prog['cutoff'] = 0.05; self.prog['crisp'] = 0.0; self.prog['tsize'] = (1.0, 1.0)
-        self.prog['crisp'] = 2.0 if (pp or not self.smoothing) else 1.0; self.prog['tsize'] = (32.0, 32.0)
-        for tex, vl in icons: self._paint(tex, vl)                          # icon bubbles (Riseup), in front of the characters
         if not field and not is_battle and e.meshes and e.part in (ENGINE.PART_TOWN,) + ENGINE.MINIGAME_PARTS and cam3d is not None:
             # Mesh effects of the town (packets 21, 22: Morph spell, splashes, the prologue's sword strikes, credits and title logo), turned toward the camera. They go AFTER the
             # characters (Custom/Chara: Transparent queue, 3000): DssaChara Transparent+100, DssaMonster0 +150, DssaMonster1 +200, DssaCharaTransparent Overlay-150 (3850, ZTest
@@ -1062,7 +1058,12 @@ class Game(FullScreenMixin, CameraMixin, FieldMixin, BattleMixin, TitleMixin, St
                 self.prog['tsize'] = (float(tw), float(th)); self._paint(tex, vl)
                 if shader == 3: gl.glEnable(gl.GL_DEPTH_TEST)
             gl.glDepthMask(gl.GL_TRUE); self.prog['crisp'] = 0.0; self.prog['tsize'] = (1.0, 1.0)
-        if (field or (not is_battle and cam3d is not None)) and getattr(e, 'particles', None) is not None: self._paint_particles(e, field)          # DQ V / VI particles (snow, petals, leaves): Transparent+400, after the characters, icons and mesh effects
+        if (field or (not is_battle and cam3d is not None)) and getattr(e, 'particles', None) is not None: self._paint_particles(e, field)          # DQ V / VI particles (snow, petals, leaves): Transparent+400, after the characters and mesh effects
+        if icons:                                                            # icon bubbles (the item that rises out of a chest, a jar, a wardrobe; the "!" above a character): Custom/Riseup is
+            self.prog['cutoff'] = 0.05; self.prog['crisp'] = 2.0 if (pp or not self.smoothing) else 1.0; self.prog['tsize'] = (32.0, 32.0)          # queue Overlay-150 with ZTest and ZWrite off (read in the
+            gl.glDisable(gl.GL_DEPTH_TEST); gl.glDepthMask(gl.GL_FALSE)          # game's shader): after the mesh effects and the particles, over the whole scene (scenery in front included); only the
+            for tex, vl in icons: self._paint(tex, vl)                       # orthographic layer and the windows go over it
+            gl.glEnable(gl.GL_DEPTH_TEST); gl.glDepthMask(gl.GL_TRUE); self.prog['crisp'] = 0.0; self.prog['tsize'] = (1.0, 1.0)
         if not field and e.meshes and any(st.get('ortho') for st in e.mesh_state.values()):
             # DQ V / VI: meshes of the orthographic layer (packet MESH_ORTHO: logos, title texts), drawn over the scene by SceneCamera.s_DSSAOrthoCamera (depth 0.5, clears only the depth)
             self.prog['mvp'] = tuple(float(x) for x in self._ortho_matrix(aspect, e).T.ravel()); self.prog['cutoff'] = 0.05; self.prog['tsize'] = (1.0, 1.0)

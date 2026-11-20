@@ -216,7 +216,7 @@ if __name__ != '__main__' or not os.environ.get('DQ_PLATE_SCENARIO'):
             j.engine = eng; j.ui_g = types.SimpleNamespace(f={30: wnd}); j.cur_local = {(30, 1): UM.LANGUAGE_BUTTON}; j.hover_node = None
             j._is_start_menu = lambda port: True; j.open_language_screen = lambda: j.calls.append('screen')
             j._step_entry = lambda *a: False; j._page_arrow = lambda *a: None; j._port_for_gamepad = lambda port, pad: port; j.menu_to_release = None
-            j._neighbor = GM.Game._neighbor
+            j._neighbor = GM.Game._neighbor; j._cursor_targets = GM.Game._cursor_targets
             GM.Game._menu_input(j, 30, ENGINE.A)
             self.assertEqual([c for c in j.calls if c == 'screen'], ['screen']); self.assertEqual(sent, [])
 

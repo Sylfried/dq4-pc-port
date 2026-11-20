@@ -13,7 +13,7 @@ from dq456_pc.menus import ui_menu as UI
 from dq456_pc.core import engine as ENGINE
 from dq456_pc.core import window_layout as WL
 from dq456_pc.persistence import settings as RG
-from dq456_pc.window.constants import (BTN_LANGUAGE, BTN_SAVES, CB_MSG_BOTTOM, CB_ZONE_MENUS, CENTERED_WINDOWS, MSG_BOTTOM, YESNO_BOX_SPACING, FONTS, SFX_BUTTON,
+from dq456_pc.window.constants import (BTN_LANGUAGE, BTN_SAVES, CB_MSG_BOTTOM, CURSOR_CANCEL, CURSOR_ROW, button_sfx, CB_ZONE_MENUS, CENTERED_WINDOWS, MSG_BOTTOM, YESNO_BOX_SPACING, FONTS, SFX_BUTTON,
     UI_ZOOM)
 from dq456_pc.window.shaders import FRAG_GRADIENT, FRAG_SIDES, VERTEX_GRADIENT, VERTEX_SIDES
 from dq456_pc.window.helpers import background_gradient
@@ -23,6 +23,7 @@ MAP_WINDOWS = ('CityMap', 'WorldLargeMap', 'ShopMap')      # map overviews (town
 MAP_BUTTONS = 'MapButton'                       # their "map mode" and "back" buttons: just right of the map's bottom right corner
 MAP_BUTTON_GAP = 6.0                            # interface units between the map and its buttons
 CHARACTER_LIST = 4                 # Make_LeftCharaList: the party on the left of the field menu (Magic, Attributes, Misc > Equipment...)
+CANCEL, ROW = CURSOR_CANCEL, CURSOR_ROW
 LABEL_CACHE = 1500                 # text labels kept by _lbl (the Esc menu: about 400 at one size, the new-game panel and the name entry about 100 more)
 
 
@@ -287,7 +288,7 @@ class MenusMixin:
         if decl: self.hover_node = None                                # a key: the cursor takes control again (whole row highlighted)
         dirs = tuple((bit, ENGINE.MENU_DIRS[bit]) for bit in (ENGINE.UP, ENGINE.DOWN, ENGINE.LEFT, ENGINE.RIGHT))
         wnd = self.ui_g.f.get(port) if self.ui_g else None
-        z = {b: ((x0 + x1) / 2, (z0 + z1) / 2) for b, pad, x0, z0, x1, z1, _ in (wnd.buttons() if wnd else []) if b >= 0 and pad & 0x10}
+        z = self._cursor_targets(wnd)
         if not z and wnd is None and ENGINE.ENGINE_V2 and not f.get('grid'):          # DQ V / VI without the original layout: their touch menus ignore the gamepad's directions; a local cursor over the simple menu's lines
             z = {l[0]: (0.0, -10.0 * i) for i, l in enumerate(self._menu_lines(f))}
         if not f.get('grid') and len(z) <= 1 and self._step_entry(port, f, wnd, z, decl): return          # numeric entry menu (bet, tokens, amount): arrows = columns and ▲ / ▼
@@ -315,19 +316,67 @@ class MenusMixin:
         lookup_key = (port, f['order']); cur = self.cur_local.get(lookup_key)
         if cur not in z:
             cur = self.cur_local[lookup_key] = f['cur'] if f['cur'] in z else min(z, key=lambda b: (-round(z[b][1]), z[b][0]))       # start: the top left button
-        if decl & (ENGINE.LEFT | ENGINE.RIGHT) and wnd and wnd.typ in (58, 59, 63):                       # quantity (types 58 / 59: "Acheter" list, 63: quantity to sell): the cursor's row carries its own arrows (buttons of the same number, gamepad left 8 / right 4: "Acheter" list of a shop, quantity to sell) -> left / right change the quantity of the chosen row (like touching an arrow); the cursor keeps the whole row
-            row = [((x0 + x1) / 2.0, pd & 0xc) for b, pd, x0, z0, x1, z1, *_ in wnd.buttons() if b == cur and pd & 0xc]          # the row's ◀ / ▶ (minus / plus), told apart by their place: DQ IV's minus sends 8, DQ V / VI's 4
-            if row: eng.send_menu(port, 1, cur, (max(row) if decl & ENGINE.RIGHT else min(row))[1]); self.menu_to_release = port; return
+        row_no = cur[1] if isinstance(cur, tuple) and cur[0] == ROW else (cur if wnd and wnd.typ in (58, 59, 63) else None)
+        if decl & (ENGINE.LEFT | ENGINE.RIGHT) and row_no is not None:                       # quantity (types 58 / 59: "Acheter" list, 63: quantity to sell; a row with only its arrows: DQ VI's slime race bets): the cursor's row carries its own arrows (buttons of the same number, gamepad left 8 / right 4: "Acheter" list of a shop, quantity to sell) -> left / right change the quantity of the chosen row (like touching an arrow); the cursor keeps the whole row
+            row = [((x0 + x1) / 2.0, pd & 0xc) for b, pd, x0, z0, x1, z1, *_ in wnd.buttons() if b == row_no and pd & 0xc]          # the row's ◀ / ▶ (minus / plus), told apart by their place: DQ IV's minus sends 8, DQ V / VI's 4
+            if row: eng.send_menu(port, 1, row_no, (max(row) if decl & ENGINE.RIGHT else min(row))[1]); self.menu_to_release = port; return
         if len({round((x0 + x1) / 20.0) for b, pad, x0, z0, x1, z1, _ in (wnd.buttons() if wnd else []) if b >= 0 and pad & 0x10}) <= 1 and decl & (ENGINE.LEFT | ENGINE.RIGHT):       # a single column: left / right turn the pages if another window carries the arrows
             pad = 4 if decl & ENGINE.RIGHT else 8; q = self._port_for_gamepad(port, pad); fl = self._page_arrow(q, pad)
             if q != port: eng.send_menu(q, 1, -1, fl[2] if fl else ENGINE.MENU_DIRS[ENGINE.RIGHT if decl & ENGINE.RIGHT else ENGINE.LEFT]); self.menu_to_release = q; return          # (the arrow on that side, with its own key: 4 / 8 are swapped between DQ IV and DQ V / VI)
+        arrow = self._list_arrow(wnd, z, cur, ENGINE.UP if decl & ENGINE.UP else ENGINE.DOWN) if decl & (ENGINE.UP | ENGINE.DOWN) else None
+        if arrow is not None: eng.send_menu(port, 1, -1, arrow); self.menu_to_release = port; return          # (top or bottom of a list that scrolls: its ▲ / ▼, as the finger does; the cursor stays on its row)
         for bit, _ in dirs:
             if decl & bit: cur = self.cur_local[lookup_key] = self._neighbor(z, cur, bit)
         if decl and os.environ.get('DQ_MENUDBG'): print('MENU local cursor frame %d port %d decl %d -> %s ; buttons %s' % (self.n, port, decl, cur, {b: (round(c[0]), round(c[1])) for b, c in z.items()}), flush=True)
         if decl & ENGINE.A and cur == BTN_SAVES and self._is_start_menu(port): self.sound.play_sfx(SFX_BUTTON); self._open_saves()
         elif decl & ENGINE.A and cur == BTN_LANGUAGE and self._is_start_menu(port): self.sound.play_sfx(SFX_BUTTON); self.open_language_screen()          # language plate: never sent to the engine
+        elif decl & ENGINE.A and isinstance(cur, tuple):
+            if cur[0] == CANCEL and cur[1] in wnd.N: self._touch_node(port, wnd.N[cur[1]])          # (a row with only its arrows: nothing to confirm, left / right change it)
         elif decl & ENGINE.A: eng.send_menu(port, 1, cur, 0x10); self.menu_to_release = port; self.sound.play_sfx(SFX_BUTTON)
         elif decl & ENGINE.B: q = self._port_for_gamepad(port, 0x20); eng.send_menu(q, 1, -1, 0x20); self.menu_to_release = q
+
+    @staticmethod
+    def _cursor_targets(wnd):
+        """Where the keyboard cursor of a touch window goes: {key: center (x, z)}: the confirm buttons by their number (gamepad 0x10); the cancel buttons that have a number, by
+        (CANCEL, element) ("Rien" of the shops, "Quitter" of the church and of the other services: gamepad 0x20; their number can be a confirm button's, "Acheter" is 0 too); the rows
+        that only carry their own ◀ ▶ (numbered arrows with no confirm button of that number), by (ROW, number), when the window has two of them or more (DQ VI's slime race bets).
+        Every button of these windows can so be reached with the keyboard; the other ones have their own key (back: B / Esc, page arrows: left / right, L / R)."""
+        if wnd is None: return {}
+        bs = wnd.buttons(ident=True); mid = lambda t: ((t[2] + t[4]) / 2.0, (t[3] + t[5]) / 2.0)
+        z = {t[0]: mid(t) for t in bs if t[0] >= 0 and t[1] & 0x10}
+        z.update({(CANCEL, t[7]): mid(t) for t in bs if t[0] >= 0 and t[1] & 0x20 and not t[1] & 0x10})
+        rows = {}
+        for t in bs:
+            if t[0] >= 0 and t[1] & 0xc and t[0] not in z: rows.setdefault(t[0], []).append(mid(t))
+        if len(rows) >= 2: z.update({(ROW, b): (sum(p[0] for p in ps) / len(ps), sum(p[1] for p in ps) / len(ps)) for b, ps in rows.items()})
+        return z
+
+    def _cursor_nodes(self, port, wnd):
+        """Elements lit by the keyboard cursor when it is on a cancel button or an arrow row (the confirm buttons are lit by their number, `selection`): () otherwise."""
+        cur = self._cursor(port)
+        if not isinstance(cur, tuple) or wnd is None: return ()
+        if cur[0] == CANCEL: return (cur[1],)
+        return tuple(t[7] for t in wnd.buttons(ident=True) if t[0] == cur[1] and t[1] & 0xc)
+
+    @staticmethod
+    def _list_arrow(wnd, z, cur, bit):
+        """A list that scrolls (the party on the left of the field menu, DQ VI's Dharma list: ▲ / ▼ buttons with no number, gamepad up / down of the game): the gamepad key of
+        its ▲ (`bit` UP) or ▼ (DOWN) when the cursor is on its first (last) row and that arrow is shown, None otherwise (the cursor moves, looping). Up or down is the arrow's
+        own key (ENGINE.MENU_DIRS: DQ IV's up is 2, DQ V / VI's 1)."""
+        if wnd is None or cur not in z: return None
+        own = {n['pad'] for n in getattr(wnd, 'N', {}).values() if n.get('buttonId') == -1 and n.get('vtx')}
+        if not {ENGINE.MENU_DIRS[ENGINE.UP], ENGINE.MENU_DIRS[ENGINE.DOWN]} <= own: return None          # (both in its layout: a list; the map's "map mode" button is a lone up / down)
+        pad = ENGINE.MENU_DIRS[bit]
+        if not any(b < 0 and pd == pad for b, pd, *_ in wnd.buttons()): return None
+        y = z[cur][1]; sign = 1.0 if bit == ENGINE.UP else -1.0
+        return None if any((c[1] - y) * sign > 4.0 for c in z.values()) else pad
+
+    def _touch_node(self, port, node):
+        """The keyboard presses a button as the finger does (MenuPort.Send [1, number, gamepad]; a direct button adds its key to the game's keys instead)."""
+        direct = self._direct_button(port, node['pad'])
+        if direct: self.direct_keys |= direct
+        else: self.engine.send_menu(port, 1, node['buttonId'], node['pad']); self.menu_to_release = port
+        if button_sfx(node['pad']): self.sound.play_sfx(SFX_BUTTON)          # (a cancel button is silent, as under the finger)
 
     def _page_arrow(self, port, pad):
         """Page arrow ◀ (pad 8: previous) or ▶ (pad 4: next) of the `port` window: (port, button number, the arrow's own gamepad key), or None. The arrows are told apart by their
@@ -335,7 +384,8 @@ class MenusMixin:
         The shop quantity arrows (types 58, 59, 63: one per row) are not page arrows."""
         wnd = self.ui_g.f.get(port) if self.ui_g else None
         if wnd is None or wnd.typ in (58, 59, 63): return None
-        arrows = [((x0 + x1) / 2.0, b, pd & 0xc) for b, pd, x0, z0, x1, z1, *_ in wnd.buttons() if pd & 0xc]
+        rows = {k[1] for k in self._cursor_targets(wnd) if isinstance(k, tuple) and k[0] == ROW}          # (the arrows of the rows of a list of amounts are not page arrows either)
+        arrows = [((x0 + x1) / 2.0, b, pd & 0xc) for b, pd, x0, z0, x1, z1, *_ in wnd.buttons() if pd & 0xc and b not in rows]
         if len({round(x, 1) for x, _, _ in arrows}) < 2:                                          # one arrow, or arrows one above the other: their keys say which is which
             return next(((port, b, own) for x, b, own in arrows if own & pad), None)
         x, b, own = min(arrows) if pad & 8 else max(arrows)
@@ -381,12 +431,12 @@ class MenusMixin:
             direction = 1.0 if bit == ENGINE.RIGHT else -1.0
             before = [(b, (c[0] - x) * direction + 3.0 * abs(c[1] - y)) for b, c in z.items() if (c[0] - x) * direction > 4.0]
             if before: return min(before, key=lambda t: t[1])[0]
-            candidates = [(b, abs(c[1] - y) * 100.0 - (c[0] - x) * direction) for b, c in z.items() if b != cur and abs(c[1] - y) < 12.0]
+            candidates = [(b, abs(c[1] - y) * 100.0 + (c[0] - x) * direction) for b, c in z.items() if b != cur and abs(c[1] - y) < 12.0]          # (the farthest one: the other end of the row)
         else:
             direction = 1.0 if bit == ENGINE.UP else -1.0
             before = [(b, (c[1] - y) * direction + 3.0 * abs(c[0] - x)) for b, c in z.items() if (c[1] - y) * direction > 4.0]
             if before: return min(before, key=lambda t: t[1])[0]
-            candidates = [(b, abs(c[0] - x) * 100.0 - (c[1] - y) * direction) for b, c in z.items() if b != cur and abs(c[0] - x) < 12.0]
+            candidates = [(b, abs(c[0] - x) * 100.0 + (c[1] - y) * direction) for b, c in z.items() if b != cur and abs(c[0] - x) < 12.0]          # (the farthest one: the other end of the column)
         return min(candidates, key=lambda t: t[1])[0] if candidates else cur
 
     def _lbl(self, text, size_value, color=(255, 255, 255, 255), fonts=()):
@@ -672,6 +722,7 @@ class MenusMixin:
                 else:
                     wnd.press_node = None
                     wnd.selected_node = self.hover_node[1] if self.hover_node and self.hover_node[0] == p else (-1 if self.hover_node else None)       # mouse: only the pointed element (-1: window not hovered, nothing is lit by number)
+                wnd.cursor_nodes = self._cursor_nodes(p, wnd) if p == active and not self.hover_node and not self.press_state else ()
                 if p in self.ui_followers: topmost.append(wnd)
                 elif p in pictures:                                                # shop pictures: centered, one and a half times the game's size (SMALL_SCREEN_SCALE), unless the player placed them
                     if p not in custom:

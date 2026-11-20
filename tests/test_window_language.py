@@ -474,7 +474,7 @@ class Window(unittest.TestCase):
         att = ['Loading the engine...', 'Loading the save...', 'Loading the map...']                                      # (console text: English in both languages)
         for code in ('fr', 'en'):
             with entry(code):
-                j = types.SimpleNamespace(switch_to=lambda: None, clear=lambda: None, flip=lambda: None, dispatch_events=lambda: None)
+                j = types.SimpleNamespace(show_loading=lambda fraction=None: None)
                 _, text = output(lambda: [WND.Game._wait(j, t) for t in att])
             self.assertEqual(text.splitlines(), att)
 

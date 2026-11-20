@@ -530,6 +530,7 @@
   {"key": "interface.window_as_like", "en": "window as you like.", "text": "ventana como quieras."},
   {"key": "interface.test_text_game_messages", "en": "Test text: the game messages", "text": "Texto de prueba: los mensajes del juego"},
   {"key": "interface.will_displayed_here_size", "en": "will be displayed here, at this size.", "text": "se mostrarán aquí, a este tamaño."},
+  {"key": "window.loading_percent", "en": "Loading... %d%%", "text": "Cargando... %d %%"},
   {"key": "window.frames_s_engine_steps_s", "en": "%.0f frames/s | engine %.1f steps/s (%.1f ms) | worst frame %.0f ms | Python drawing %.1f ms", "text": "%.0f fps | motor %.1f pasos/s (%.1f ms) | peor fotograma %.0f ms | dibujo Python %.1f ms"},
   {"key": "window.pc_port", "en": "%s - PC port", "text": "%s - Port para PC"},
   {"key": "window.failed_r", "en": "%s failed: %r", "text": "%s ha fallado: %r"},

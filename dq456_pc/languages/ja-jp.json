@@ -530,6 +530,7 @@
   {"key": "interface.window_as_like", "en": "window as you like.", "text": "動かしたり大きさを変えたりできます。"},
   {"key": "interface.test_text_game_messages", "en": "Test text: the game messages", "text": "テスト用の文章：ゲームのメッセージは"},
   {"key": "interface.will_displayed_here_size", "en": "will be displayed here, at this size.", "text": "ここに、この大きさで表示されます。"},
+  {"key": "window.loading_percent", "en": "Loading... %d%%", "text": "読み込み中… %d%%"},
   {"key": "window.frames_s_engine_steps_s", "en": "%.0f frames/s | engine %.1f steps/s (%.1f ms) | worst frame %.0f ms | Python drawing %.1f ms", "text": "%.0f fps | エンジン %.1f ステップ/秒（%.1f ms） | 最遅フレーム %.0f ms | Python描画 %.1f ms"},
   {"key": "window.pc_port", "en": "%s - PC port", "text": "%s - PC移植版"},
   {"key": "window.failed_r", "en": "%s failed: %r", "text": "%sに失敗しました：%r"},

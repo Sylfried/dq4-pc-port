@@ -7,6 +7,7 @@ from dq456_pc import games as GM
 
 BTN_SAVES = 8         # button number of the "Sauv. cloud" box of the start menu (type 53): the port puts "Saves" there
 BTN_LANGUAGE = 12     # the port's language plate of the start menu, between "License" and "Saves" (ui_menu.LANGUAGE_BUTTON): never sent to the engine
+CURSOR_CANCEL, CURSOR_ROW = 'cancel', 'row'          # keys of the keyboard cursor of a game window other than a confirm button's number (menu_display.MenusMixin._cursor_targets): (CURSOR_CANCEL, element), (CURSOR_ROW, number)
 SFX_BUTTON = 300               # sound effect of a menu button press (played by Unity, MenuPortItem.Update)
 SFX_PADS = 0x810         # gamepad keys whose button plays SFX_BUTTON on press (MenuPortItem.Update: `m_gamepad & 0x810`): A (0x10) and action (0x800); B (0x20), back (0x400), arrows (1, 2, 4, 8) and zone 0x80 are silent
 SFX_PREVIEW = 316                # test sound effect for the volumes (Son page of the Esc menu): floor damage (CommonWalkDamage::checkWalk), short and unrelated to the interface

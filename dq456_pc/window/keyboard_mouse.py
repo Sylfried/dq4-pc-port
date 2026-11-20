@@ -9,7 +9,7 @@ from dq456_pc.core import engine as ENGINE
 from dq456_pc import games as GM
 from dq456_pc.persistence import pad_inputs as PI
 from dq456_pc.persistence import savestates as SS
-from dq456_pc.window.constants import EDGE_ACTIONS, BTN_MAP, BTN_CHAT, BTN_MENU, BTN_TALK, BTN_SAVES, BTN_LANGUAGE, SFX_BUTTON, button_sfx
+from dq456_pc.window.constants import CURSOR_CANCEL, CURSOR_ROW, EDGE_ACTIONS, BTN_MAP, BTN_CHAT, BTN_MENU, BTN_TALK, BTN_SAVES, BTN_LANGUAGE, SFX_BUTTON, button_sfx
 
 
 def physical_key(reg, symbol):
@@ -209,7 +209,9 @@ class KeyboardMouseMixin:
         _, _, port, h = max(key_list, key=lambda t: t[:2]); f = eng.ui.f[port]; self.hover_node = (port, h[3])
         if h[0] < 0: self.hovered = None                              # button with no number (back, page arrows): only the element lights up, the menu's cursor does not move
         elif f.get('grid'): self.hovered = [port, h[0], 0] if f['cur'] != h[0] else None
-        elif self.cur_local.get((port, f['order'])) != h[0]: self.cur_local[(port, f['order'])] = h[0]; self.hovered = None
+        else:
+            targets = self._cursor_targets(self.ui_g.f.get(port)); k = (CURSOR_CANCEL, h[3]) if (CURSOR_CANCEL, h[3]) in targets else ((CURSOR_ROW, h[0]) if (CURSOR_ROW, h[0]) in targets else h[0])          # ("Rien" shares its number with "Acheter": the cursor goes to the element)
+            if self.cur_local.get((port, f['order'])) != k: self.cur_local[(port, f['order'])] = k; self.hovered = None
 
     def _is_button(self, port, nid):
         """True if the element has a button drawing (plate, part 7) or an arrow drawing (part 10): the window frame that covers the screen (gamepad 128) is not one."""

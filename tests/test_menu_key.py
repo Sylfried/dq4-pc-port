@@ -116,7 +116,7 @@ class InWindow(unittest.TestCase):
 
     def fake_game(self, pause=False, name_str=False):
         WND = self.WND
-        j = types.SimpleNamespace(swallowed=set(), alt_cand=False, alt_tap=False, reg=RG.Settings(None), key_list=K.KeyStateHandler(), prev_action={}, n=0, _ready=True, combo=[False, False], _logo_touched=False, pause_presses=0, name_presses=0,
+        j = types.SimpleNamespace(debug=None, swallowed=set(), alt_cand=False, alt_tap=False, reg=RG.Settings(None), key_list=K.KeyStateHandler(), prev_action={}, n=0, _ready=True, combo=[False, False], _logo_touched=False, pause_presses=0, name_presses=0,
                                   pause=None, port_screen=None, license_panel=None, title_screen=None, last_device='', bascules=0, cancellations=0, is_fullscreen=False, mouse=(0, 0), mouse_guard=__import__('dq456_pc.window.inputs', fromlist=['MouseGuard']).MouseGuard(), helptext=False)
         j.pause = types.SimpleNamespace(opened=pause, capture=None, last_page=lambda: 'display', key_press=lambda sym, mods: setattr(j, 'pause_presses', j.pause_presses + 1))
         j.name_entry = types.SimpleNamespace(key_press=lambda sym, mods: setattr(j, 'name_presses', j.name_presses + 1))

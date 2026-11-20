@@ -530,6 +530,7 @@
   {"key": "interface.window_as_like", "en": "window as you like.", "text": "並調整此視窗的大小。"},
   {"key": "interface.test_text_game_messages", "en": "Test text: the game messages", "text": "測試文字：遊戲的訊息"},
   {"key": "interface.will_displayed_here_size", "en": "will be displayed here, at this size.", "text": "將以這個大小顯示在這裡。"},
+  {"key": "window.loading_percent", "en": "Loading... %d%%", "text": "正在載入… %d%%"},
   {"key": "window.frames_s_engine_steps_s", "en": "%.0f frames/s | engine %.1f steps/s (%.1f ms) | worst frame %.0f ms | Python drawing %.1f ms", "text": "%.0f 幀/秒 | 引擎 %.1f 步/秒（%.1f 毫秒） | 最慢幀 %.0f 毫秒 | Python 繪製 %.1f 毫秒"},
   {"key": "window.pc_port", "en": "%s - PC port", "text": "%s - PC 移植版"},
   {"key": "window.failed_r", "en": "%s failed: %r", "text": "%s 失敗：%r"},

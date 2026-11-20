@@ -119,7 +119,7 @@ class OnTheGame(unittest.TestCase):
         j._name_entry_in_progress = lambda: False; j._menu_hidden = lambda t: False
         j._bits_camera = lambda: 0; j._camera_forget = lambda: None            # (the game's camera has nothing to do with sound effects: test_entries.py and test_engine_camera.py)
         j.slime_touch_click = lambda x, y: False; j.slime_touch_keys = lambda p, d: (p, d); j.curling_press = lambda x, y: False; j.curling_release = lambda: False; j.sugoroku_click = lambda x, y: False; j.sugoroku_held = lambda p: p          # (no Slime Touch, curling or T'n'T here: window/slime_touch.py, slime_curling.py, sugoroku.py)
-        for name_str in ('_menu_input', '_step_entry', '_step_columns', '_active_step', '_neighbor', '_page_arrow', '_button_under', 'on_mouse_press', '_hud_sfx', '_entries', '_step_toward_hover', 'arena_back_shown', 'arena_abort_decl', 'arena_back_press', 'arena_back_release'):
+        for name_str in ('_menu_input', '_cursor_targets', '_cursor_nodes', '_touch_node', '_list_arrow', '_step_entry', '_step_columns', '_active_step', '_neighbor', '_page_arrow', '_button_under', 'on_mouse_press', '_hud_sfx', '_entries', '_step_toward_hover', 'arena_back_shown', 'arena_abort_decl', 'arena_back_press', 'arena_back_release'):
             f = inspect.getattr_static(WND.Game, name_str, None)
             if isinstance(f, staticmethod): setattr(j, name_str, f.__func__)
             elif f is not None: setattr(j, name_str, types.MethodType(f, j))

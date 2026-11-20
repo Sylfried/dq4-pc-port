@@ -329,7 +329,7 @@ class Window:
             for node in self.N.values():                  # CreateFromTexture fits the width (450) and deduces the height from the texture (256 x 128: 225): gold banner on a blue background, centered
                 if node['vtx'] and node['mats'] and node['mats'][0].get('sheet') is None:
                     node['vtx'] = [[-225.0, 112.5], [225.0, 112.5], [225.0, -112.5], [-225.0, -112.5]]; node['mats'][0] = dict(node['mats'][0], sheet='hyodai1', color=[1.0, 1.0, 1.0, 1.0])
-        self.was_seen = True; self.selected = None; self.selected_node = None; self.press_node = None; self.order = 0
+        self.was_seen = True; self.selected = None; self.selected_node = None; self.press_node = None; self.order = 0; self.cursor_nodes = ()      # cursor_nodes: lit by the keyboard cursor (a cancel button or an arrow row, see MenusMixin._cursor_targets)
         self.map_name = None; self.game_map = None            # map window (type 25): map image name, texture (set by the viewer)
         self.symbols = []; self.t_blink = None; self.map_mode = 3      # world map: discovered locations (x, y in pixels of the 256 x 192 map image), blinking start; filtering mode of the map image
         self.special = None                                                # small world map: special location (code 4), (x, y) in pixels of the 256 x 192 map image, or None
@@ -1275,12 +1275,13 @@ class Render:
                     sh = mat.get('sheet')
                     if sh not in self.tex and not self._load_face(sh): continue
                     col = list(mat.get('color') or (1, 1, 1, 1)); mode = 0; off = (0.0, 0.0)
-                    if k == 0 and node['buttonId'] is not None and 'part' in mat and mat['part'] == 10 and node['buttonId'] < 0 and win.selected_node == node['id']:
+                    if k == 0 and node['buttonId'] is not None and 'part' in mat and mat['part'] == 10 and (win.selected_node == node['id'] or node['id'] in getattr(win, 'cursor_nodes', ())):
                         if getattr(win, 'press_node', None) == node['id']: col = [c * 0.75 for c in col]        # PRESSED page arrow: like the mobile game (IButton(Material), DisplayClass6_0.b__0: Material.color = 0.75 on the four channels)
                         else: col[:3] = [1.4, 1.4, 1.4]                                 # hovered page arrow (PC, the mobile game has no hover): lightened
                     elif k == 0 and node['buttonId'] is not None and (node['buttonId'] >= 0 or win.selected_node == node['id']) and 'part' in mat and mat['part'] == 7:
                         if not is_state_active(node['state']): state = node['state']              # grayed / inverted / invisible: no hover or cursor (the contact test is cut off)
                         elif win.selected_node is not None: state = 1 if node['id'] == win.selected_node else node['state']       # mouse: only the pointed (or pressed) element is highlighted, not the whole row that shares its number
+                        elif getattr(win, 'cursor_nodes', ()): state = 1 if node['id'] in win.cursor_nodes else node['state']       # keyboard on a cancel button that shares its number ("Rien", number 0 like "Acheter"): that element alone
                         else: state = 1 if (win.selected is not None and win.selected == node['buttonId'] and not ((node['pad'] or 0) & 0xA0 and node['buttonId'] in ok_num[id(win)])) else node['state']       # a cancel button (gamepad 32 / 128, e.g. "Rien") that shares its number with a confirm button ("Acheter") does not light up with it
                         if state == 1 or state == 4: off = self.ml.pushed
                         if state == 2: col[3] = 0.0
