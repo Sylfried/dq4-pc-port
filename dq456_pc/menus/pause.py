@@ -236,7 +236,7 @@ class Pause:
         return self.opened and self.screen_page in self.FROZEN_PAGES
 
     def open_menu(self, page=None, new_game=False, side=None):
-        """`new_game`: the panel of a new game, at its name entry (title_screen._update_name_entry): Difficulty (open), Randomizer, Display, Sound, Controls, the hero's name and gender,
+        """`new_game`: the panel of a new game, at its name entry (title_screen._update_name_entry): Display (open), Sound, Controls, Difficulty, Randomizer, Cheats, the hero's name and gender,
         "Start the adventure"; its back button (or Esc at its root) goes back to the start menu. The game's rules start at their default (game_rules.GAME_KEYS: difficulty, cheats);
         display, sound and controls are the application's, the same for every game: shown as they are."""
         if self.opened: return
@@ -253,8 +253,8 @@ class Pause:
         self.dims = {}; self.left_zones = []; self.page_rect = None
         self._guard().keyboard(self.mouse_pos)                    # the selection is by keyboard as long as the pointer has not really moved (cumulative offset from its opening point: inputs.MouseGuard)
         if page: self.stack = [page]; self.selected[page] = 2           # directly opens this page (exit question: "No" preselected, "No" or Esc close everything)
-        if new_game: side = 'difficulty'
-        if side: self.stack = ['root', side]; self.selected['root'] = next((i for i, x in enumerate(self._entries_root()) if x.get('page') == side), 0)          # (Esc in the game: Display open on the right; a new game: Difficulty)
+        if new_game: side = 'display'
+        if side: self.stack = ['root', side]; self.selected['root'] = next((i for i, x in enumerate(self._entries_root()) if x.get('page') == side), 0)          # (Esc in the game: the page last open; a new game: Display, its first line)
         self.J.pause_game(True)
         if page == 'history' or (side == 'history' and not page): self.hist.enter()
 
@@ -339,13 +339,14 @@ class Pause:
         return va
 
     def _entries_root(self):
-        if self.new_game:                                  # panel of a new game: its rules, the application's settings, the hero's name (the game's name entry, drawn on the right), then the start
+        if self.new_game:                                  # panel of a new game: the application's settings, the game's rules, the hero's name (the game's name entry, drawn on the right) and gender, then the start
             ready = self._hero_ready()                     # ("Start the adventure" grayed as long as the hero has no name or no gender)
-            return [dict(t='act', l='menu.difficulty', ok=self._go('difficulty'), sub=True, page='difficulty'),
-                    dict(t='act', l='menu.randomizer', ok=self._go('randomizer'), sub=True, page='randomizer'),
-                    dict(t='act', l='menu.display', ok=self._go('display'), sub=True, page='display'),
+            return [dict(t='act', l='menu.display', ok=self._go('display'), sub=True, page='display'),
                     dict(t='act', l='menu.sound', ok=self._go('sound'), sub=True, page='sound'),
                     dict(t='act', l='menu.controls', ok=self._go('controls'), sub=True, page='controls'),
+                    dict(t='act', l='menu.difficulty', ok=self._go('difficulty'), sub=True, page='difficulty'),
+                    dict(t='act', l='menu.randomizer', ok=self._go('randomizer'), sub=True, page='randomizer'),
+                    dict(t='act', l='menu.cheats', ok=self._go('cheats'), sub=True, page='cheats'),
                     dict(t='act', l='new_game.hero_name', ok=self._go('name'), sub=True, page='name', hint='new_game.name_hero_new_game'),
                     *([] if ENGINE.ENGINE_V2 else [          # (DQ V / VI: the hero is a boy, the game asks no gender)
                         dict(t='act', l='new_game.hero_gender', ok=self._go('gender'), sub=True, page='gender', hint='new_game.gender_hero_new_game')]),
@@ -1706,7 +1707,7 @@ class Pause:
                 except Exception as ex: failed.append(('root', ex)); continue
                 if two is None: continue
                 xl, xr, top, wl, wr, kk, hb = two
-                for p in ('root',) + (('difficulty', 'randomizer', 'name') if new else self.SIDE_PAGES):
+                for p in ('root',) + (('display', 'difficulty', 'randomizer', 'cheats', 'name') if new else self.SIDE_PAGES):
                     self.stack = ['root'] if p == 'root' else ['root', p]
                     try:
                         if p == 'root': self._draw_page('root', 'left', (xl, top, wl), kk); self._draw_page('root', 'side', (xl, top, wl), kk)

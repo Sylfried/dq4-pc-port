@@ -112,14 +112,16 @@ class TestStraightSprites(unittest.TestCase):
                 if v is not None: os.environ[k] = v
 
     def test_left_right_option(self):
-        """(always on in the game's drawing, Game._draw: `lr` True): the game's panel, with its top slid back sideways: the axis of the sprite stands vertical on screen at the left and right edges
-        (top center above bottom center), while the heights, the depths, the bottom and the top widths and the vertical position stay the game's. At the center: no change."""
+        """(always on in the game's drawing, Game._draw: `lr` True): the game's panel, slid back sideways: the axis of the sprite stands vertical on screen above its foot at the left and right
+        edges (bottom and top centers at the foot's x: no drift over the ground when the camera turns), while the heights, the depths, the bottom and the top widths and the vertical position stay
+        the game's. At the center: no change."""
         for name_str, (dx, dz) in itertools.product(SAVESTATES, POSITIONS):
-            (M, q, cam3d, C), _ = scenario(name_str, dx, dz, 0.0, 0.0, True); (_, q0, _, _), _ = scenario(name_str, dx, dz, 0.0)
+            (M, q, cam3d, C), hero = scenario(name_str, dx, dz, 0.0, 0.0, True); (_, q0, _, _), _ = scenario(name_str, dx, dz, 0.0)
             A, B, Cc, D = (px(M, x) for x in q); A0, B0, C0, D0 = (px(M, x) for x in q0)
             self.assertAlmostEqual((A[0] + B[0]) / 2, (Cc[0] + D[0]) / 2, delta=0.01)                                    # (vertical axis)
             for a, b in ((A, A0), (B, B0), (Cc, C0), (D, D0)): self.assertAlmostEqual(a[1], b[1], delta=0.01)          # (same heights on screen)
-            self.assertAlmostEqual(Cc[0] - D[0], C0[0] - D0[0], delta=0.01); self.assertTrue(np.allclose(q[0], q0[0]) and np.allclose(q[1], q0[1]))
+            self.assertAlmostEqual(Cc[0] - D[0], C0[0] - D0[0], delta=0.01); self.assertAlmostEqual(B[0] - A[0], B0[0] - A0[0], delta=0.01)          # (same widths)
+            self.assertAlmostEqual((A[0] + B[0]) / 2, px(M, hero + np.array([dx, 0.0, dz]))[0], delta=0.01)                          # (the bottom center on the foot)
             r_, u_, f_ = cam3d
             for x, x0 in zip(q, q0): self.assertAlmostEqual(float((x - C) @ f_), float((x0 - C) @ f_), 9)              # (same depths)
         (M, q, _, _), _ = scenario('defaut', 0.0, 0.0, 0.0, 0.0, True); (_, q0, _, _), _ = scenario('defaut', 0.0, 0.0, 0.0)

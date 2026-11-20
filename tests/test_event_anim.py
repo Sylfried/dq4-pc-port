@@ -147,6 +147,17 @@ class EventAnim(unittest.TestCase):
         self.assertEqual(mo.state[4]['motion_time'], 0)
         self.assertLess(float(mo.cur['k'][12:15, 0].mean()), x_before)
 
+    def test_common_animation_zero_keeps_the_movement_of_an_object_without_sequence_slot(self):
+        """FldObject.SetCommonAnimation does nothing to an object whose seq_obj_id is -1 (the three games), number 0 included: DQ V's ev06 sends 0 to the docked harbour of its
+        second event animation, whose movement places it (the pier and its people stayed 21 units away when that order dropped the movement)."""
+        mo = OC.MapObjects(carte(UIDS, 4, EAN, pmv_of={4: 0})); mo.event_anim(1)
+        for _ in range(10): mo.tick()
+        moved = mo.display_position(4)
+        mo.common_anim(4, 0)
+        self.assertIn(4, mo.auto); self.assertEqual(mo.display_position(4), moved)
+        mo.objs[4]['sequence_object'] = 0; mo.common_anim(4, 0)                # (an object with a sequence slot: back to its original model, motionless)
+        self.assertNotIn(4, mo.auto); self.assertEqual(mo.display_position(4), (0.0, 0.0, 0.0))
+
     def test_state_round_trip(self):
         mo = self.mo; mo.event_anim(2)
         copy = OC.MapObjects(carte(UIDS, 4, EAN)); copy.reinit(); copy.restore(mo.state, mo.auto, mo.event_state())

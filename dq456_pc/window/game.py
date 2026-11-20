@@ -156,7 +156,10 @@ class Game(FullScreenMixin, CameraMixin, FieldMixin, BattleMixin, TitleMixin, St
         self.msg_key = None; self.msg_img = None; self.msg_h = 0
         self.lbl_menu = {}; self.menu_to_release = None; self.section_focus = None; self.scenery_ticks = None; self._scenery_acc = 0.0; self._replay_skipping = False; self._closing_game_menu = 0
         self.ui_render = None; self.ui_g = None; self.ui_msg = None; self.canvas_key = None
-        self._init_ui(); self.show_loading(1.0); self.loading = False          # (simple menus only as a fallback, when the original layout is missing or unusable:; the test option --ui-simple was removed)
+        self._init_ui()          # (simple menus only as a fallback, when the original layout is missing or unusable:; the test option --ui-simple was removed)
+        self._preload_first_scene()
+        self.show_loading(1.0); self.loading = False
+        self._play_logos()                                                        # (the entry logos, once everything is loaded)
         # fixed-step loop: the engine advances exactly at 30 Hz (like FixedUpdate in the original) whatever the display rate, and the displayed frame is computed between two steps
         self.acc = 0.0; self.t_loop = None; self.alpha = 1.0; self.prev = None; self.step_times = collections.deque(maxlen=60)
         self.n_loop = 0; self.base_c = {}
@@ -193,8 +196,9 @@ class Game(FullScreenMixin, CameraMixin, FieldMixin, BattleMixin, TitleMixin, St
             print('Menus: original layout unusable (%r) -> simple menus.' % (e,), flush=True); self.ui_render = None; self.ui_g = None
 
     def _start_engine(self, args):
-        """The engine loads in a thread while the entry logos (Boot.Logo: SQUARE ENIX, ArtePiazza) play, as on mobile where they cover the loading; a press skips the current logo.
-        No logos for a direct launch on a save (--slot N), for test captures (except --logos) or with --no-logos."""
+        """The engine loads in a thread, the title images are read meanwhile (once), behind the loading bar. The entry logos (Boot.Logo: SQUARE ENIX, ArtePiazza) are chosen here and
+        played once everything is loaded (`_play_logos`): no black loading screen after them. No logos for a direct launch on a save (--slot N), for test captures (except --logos)
+        or with --no-logos."""
         res = {}
         def load():
             try: res['m'] = ENGINE.Engine(args.apk, args.saves_read, args.saves_write)
@@ -203,23 +207,13 @@ class Game(FullScreenMixin, CameraMixin, FieldMixin, BattleMixin, TitleMixin, St
         self.pre_game_files = AP.paths(args.cache)
         if len(self.pre_game_files) < len(AP.resources()) and not args.no_preparation: AP.prepare(args.apk, args.cache, log=self.loading_log(ENGINE_SHARE[1])); self.pre_game_files = AP.paths(args.cache)      # first time: the title images are extracted before the logos (the engine loads in the meantime)
         logos = AP.Logos(self.pre_game_files) if self.pre_game_files and not args.no_logos and (args.logos or (not args.shot and not args.slot)) else None
-        if logos is not None and not logos.ok: logos = None
-        t0 = t_start = time.perf_counter(); logo_count = 0; worst_logo = 0.0
-        SV.note('logo loop', logos=logos is not None)
-        while (logos is not None and not logos.finished) or thread.is_alive():
+        self.logos = logos if logos is not None and logos.ok else None
+        t_start = time.perf_counter()
+        while thread.is_alive():                                                  # (black screen and the loading bar while the engine loads)
             if self._closed: sys.exit(0)
-            self.switch_to(); self.dispatch_events()
-            t = time.perf_counter(); worst_logo = max(worst_logo, t - t0); dt = min(t - t0, 0.1); t0 = t; logo_count += 1
-            gl.glClearColor(0.0, 0.0, 0.0, 1.0); self.clear(); gl.glViewport(0, 0, *self.get_framebuffer_size())
-            if logos is not None and not logos.finished:
-                if self._logo_touched: logos.touch()
-                logos.do_update(dt); logos.draw_all(self.width, self.height)
-            else: self.load_progress(creep(t - t_start)); self.draw_load_bar(); time.sleep(0.02)           # (the engine is still loading: black screen and the loading bar)
-            self._logo_touched = False
-            self.flip()
-            if not self._logo_logged: self._logo_logged = True; self._log_window('1st frame shown (logos)')
+            self.show_loading(creep(time.perf_counter() - t_start)); time.sleep(0.02)
         thread.join()
-        SV.note('logos and engine finished', frames=logo_count, worst_gap_ms=round(1000 * worst_logo))
+        SV.note('engine loaded', seconds=round(time.perf_counter() - t_start, 2))
         if 'e' in res: raise res['e']
         self.engine = res['m']; self.engine.ignored_types = (ARENA_ABORT,); self.engine.force_monster = args.force_monster; self.engine.anim_duration = self._anim_duration; self.engine.map_obj_pos = self._map_obj_pos; self.engine.bgm_alive = lambda: self.sound.bgm_alive(); self.engine.fbx_clips = self._fbx_clips; self.engine.text_asset = self.data.text_asset; self.engine.prefab_clips = self._slime_touch_clips
         self.engine.items_plan = lambda uid: RI.plan_for_code(self.game_rules.seed_of(uid), self.engine.core.fs)          # randomizer, items: the plan of the game being played (its seed, rules file)
@@ -231,6 +225,32 @@ class Game(FullScreenMixin, CameraMixin, FieldMixin, BattleMixin, TitleMixin, St
         except Exception as ex: print('savestates not sorted by game:', ex, flush=True)
         self.follow_journals()                                                                                # (what belongs to games no adventure log holds any more: deleted, see follow_journals)
         self.debug = DBG.DebugService(self) if getattr(args, 'debug', False) else None                        # debug mode (--debug): time control, overlay (dq456_pc/debug)
+
+    def _preload_first_scene(self):
+        """What the first frames loaded behind a black screen, loaded now behind the loading bar (before the logos): the title's map (read from the APK files on a first launch; the
+        engine's title then finds it in place), the shader programs made on first use and the Esc menu's labels."""
+        if not self.args.slot and self.map_name is None and TITLE_MAP:
+            try: self._load_map(TITLE_MAP)
+            except Exception as ex: print('title map not loaded in advance (%r)' % (ex,), flush=True)
+            self.show_loading(0.97)
+        self.pause.warm_up(); self._warm_up_gl(); self.warmed_up = True
+
+    def _play_logos(self):
+        """The entry logos (Boot.Logo: SQUARE ENIX, ArtePiazza), everything being loaded: a press (key, click) skips the current logo."""
+        logos, self.logos = getattr(self, 'logos', None), None
+        if logos is None: return
+        t0 = time.perf_counter(); count = 0; worst = 0.0; self._logo_touched = False
+        while not logos.finished:
+            if self._closed: sys.exit(0)
+            self.switch_to(); self.dispatch_events()
+            t = time.perf_counter(); worst = max(worst, t - t0); dt = min(t - t0, 0.1); t0 = t; count += 1
+            gl.glClearColor(0.0, 0.0, 0.0, 1.0); self.clear(); gl.glViewport(0, 0, *self.get_framebuffer_size())
+            if self._logo_touched: logos.touch()
+            logos.do_update(dt); logos.draw_all(self.width, self.height)
+            self._logo_touched = False
+            self.flip()
+            if not self._logo_logged: self._logo_logged = True; self._log_window('1st frame shown (logos)')
+        SV.note('logos finished', frames=count, worst_gap_ms=round(1000 * worst))
 
     def _wait(self, text, fraction=None):
         """Black screen with the loading bar at `fraction` (the step's text goes to the console): the window stays alive during the startup loads."""
@@ -673,8 +693,9 @@ class Game(FullScreenMixin, CameraMixin, FieldMixin, BattleMixin, TitleMixin, St
         self._drawing_count = getattr(self, '_drawing_count', 0) + 1
         if self._drawing_count == 1:
             self._log_window('1st game frame')
-            self.pause.warm_up()                                         # (the Esc menu's text labels, built while the loading screen is still shown: its first opening no longer stalls)
-            self._warm_up_gl()                                           # (the shader programs made on first use: compiled now, behind the loading screen)
+            if not getattr(self, 'warmed_up', False):                    # (done during the loading, before the logos: _preload_first_scene)
+                self.pause.warm_up()                                     # (the Esc menu's text labels: its first opening no longer stalls)
+                self._warm_up_gl()                                       # (the shader programs made on first use)
             if getattr(self, 'dwm_cut', False): pyglet.clock.schedule_once(lambda dt: transitions_dwm(self, True), 2.0)
         if self._drawing_count <= 90 or self._drawing_count % 120 == 0: self._check_real_size()
         saved = self._interpolate(); t0 = time.perf_counter(); self._drawing_kind = '?'

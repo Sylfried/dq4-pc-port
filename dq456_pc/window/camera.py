@@ -311,16 +311,18 @@ class CameraMixin:
         average of those of the bottom and the top), so the sprite keeps its proportions everywhere. At the center of the image, nothing changes. In between: linear blend of the vertices. Unknown camera or panel against the camera: the original.
         `inc` (0 to 1, trial, see _sprite_tilt): the rebuilt panel is then SHEARED toward the world vertical, feet fixed: the top slides by inc x (on-screen tilt of a world vertical at the character's foot) x height,
         at the same depth. Size, depth and bottom unchanged; 0: vertical edges; 1: edges parallel to the walls. At the center of the image the world vertical is straight: nothing changes.
-        `lr` (always; left and right only): the original panel, but its top slid back sideways by what its depth makes it slide away from the center of the image:
-        on screen (focal length 1) the top's center is d.r / (z - zt) and the bottom's d.r / (z - zb); the top's two vertices move along r by d.r x (zb - zt) / (z - zb) (world units at the
-        top's depth), so the edges stand like at the center of the image. Heights, depths, the top and bottom widths and everything up and down are those of the game."""
+        `lr` (always; left and right only): the original panel, slid back sideways by what its depths make it slide away from the center of the image: on screen (focal length 1)
+        the foot is at d.r / z, the panel's bottom center at d.r / (z - zb) and its top center at d.r / (z - zt); the bottom's two vertices move along r by -d.r x zb / z and the top's by
+        -d.r x zt / z (world units at their depths), so the panel stands straight above its foot, on its shadow, wherever it is on the screen: the character no longer slides over the ground
+        when the camera turns (the wide field of 16/9 made the original's drift reach a third of a tile at the left and right edges). Heights, depths, the top and bottom widths and
+        everything up and down are those of the game."""
         a, b = p - r_ * (w / 2), p + r_ * (w / 2)
         orig = (a - f_ * zb, b - f_ * zb, b + u_ * h - f_ * zt, a + u_ * h - f_ * zt)
         if lr and t <= 0.0 and C is not None:
             d = p - C; z = float(d @ f_)
             if z > zt * 1.5:
-                k = r_ * (float(d @ r_) * (zb - zt) / (z - zb))
-                orig = (orig[0], orig[1], orig[2] + k, orig[3] + k)
+                x = float(d @ r_); kb, kt = r_ * (-x * zb / z), r_ * (-x * zt / z)
+                orig = (orig[0] + kb, orig[1] + kb, orig[2] + kt, orig[3] + kt)
         if t <= 0.0 or C is None: return orig
         d = p - C; z = float(d @ f_)
         if z <= zt * 1.5: return orig

@@ -5,7 +5,7 @@
   3. GameRules follows the game being played: a new game (the engine's new ID) gets the rules prepared by the "new game" panel (or those of the moment) and writes them; entering a game puts its
      settings in place (each game keeps its own), what is changed during it is written to its file, the title forgets the game; a game without a file gets one with the settings of the start;
   4. export / import of the saves: the rules files go with the adventure logs;
-  5. the "new game" panel of the Esc menu: opens on Difficulty, every setting at its default; Randomizer, the hero's name (the name entry, on the right, without OK) and gender, "Start the
+  5. the "new game" panel of the Esc menu: Display (open), Sound, Controls, Difficulty, Randomizer, Cheats, every rule at its default; the hero's name (the name entry, on the right, without OK) and gender, "Start the
      adventure" (grayed until the name and the gender are chosen); the Randomizer page shows the drawn seed, takes a typed or pasted one, draws another; starting records the rules and sends the name and the gender (without a name: the name
      page), Enter after typing the name goes to "Start the adventure"; the back button (or Esc, from any page) goes back to the start menu; during a game the Randomizer page shows the game's seed
      (Enter copies it) or says the game was started without the randomizer;
@@ -239,16 +239,16 @@ class NewGamePanel(unittest.TestCase):
     def setUp(self): self.t = tempfile.mkdtemp(prefix='rules_panel_'); LG.select_language('fr')
     def tearDown(self): shutil.rmtree(self.t, ignore_errors=True)
 
-    ROOT = ['menu.difficulty', 'menu.randomizer', 'menu.display', 'menu.sound', 'menu.controls', 'new_game.hero_name', 'new_game.hero_gender', 'new_game.start_adventure']
-    NAME, GENDER, START = 5, 6, 7
+    ROOT = ['menu.display', 'menu.sound', 'menu.controls', 'menu.difficulty', 'menu.randomizer', 'menu.cheats', 'new_game.hero_name', 'new_game.hero_gender', 'new_game.start_adventure']
+    NAME, GENDER, START = 6, 7, 8
 
     def test_panel_pages_and_starting_records_the_rules(self):
         J = FakeGame(self.t); J.reg['difficulty'] = 4; J.reg['random_encounters'] = False; J.reg['exp_rate'] = 1.5; J.reg['music_volume'] = 0.5
         p = PA.Pause(J); p.open_menu(new_game=True)
-        self.assertEqual(p.stack, ['root', 'difficulty'])                                            # (opens on Difficulty)
+        self.assertEqual(p.stack, ['root', 'display'])                                               # (opens on Display, its first line)
         self.assertEqual([J.reg[k] for k in GR.GAME_KEYS], [RG.DEFAULT[k] for k in GR.GAME_KEYS])     # (a new game: its rules at their default)
         self.assertEqual(J.reg['music_volume'], 0.5)                                                 # (display, sound, controls: the application's, as they are)
-        self.assertEqual([e.get('page') for e in p._entries_root()][2:5], ['display', 'sound', 'controls'])          # (their pages, the same as during a game)
+        self.assertEqual([e.get('page') for e in p._entries_root()][:6], ['display', 'sound', 'controls', 'difficulty', 'randomizer', 'cheats'])          # (their pages, the same as during a game)
         self.assertEqual([e['l'] for e in p._entries_root()], self.ROOT)
         self.assertIsNone(p.draft_seed)                                                               # (randomizer mode off: no seed drawn)
         p.stack[-1] = 'randomizer'; e = p._entries(); self.assertEqual([x['l'] for x in e], ['randomizer.randomizer_mode'])          # (off: the switch alone)

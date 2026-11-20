@@ -47,5 +47,24 @@ class Bar(unittest.TestCase):
             t = LG.catalog(lg).get(LB.LOADING_TEXT); self.assertTrue(t, lg); self.assertIn('42', t % 42, lg)
 
 
+class Order(unittest.TestCase):
+    """Everything loads behind the bar, before the entry logos: no black loading screen after them (read as text: no window here)."""
+    def setUp(self):
+        import ast
+        src = open(os.path.join(HERE, '..', 'dq456_pc', 'window', 'game.py'), encoding='utf-8').read(); tree = ast.parse(src)
+        game = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == 'Game')
+        self.f = {n.name: ast.get_source_segment(src, n) for n in game.body if isinstance(n, ast.FunctionDef)}
+
+    def test_logos_after_the_loads(self):
+        init = self.f['__init__']; at = [init.index(x) for x in ('self._start_engine(', 'self._init_ui()', 'self._preload_first_scene()', 'self.show_loading(1.0)', 'self._play_logos()')]
+        self.assertEqual(at, sorted(at))
+
+    def test_engine_loading_plays_no_logo(self):
+        self.assertNotIn('draw_all', self.f['_start_engine']); self.assertIn('draw_all', self.f['_play_logos'])
+
+    def test_first_scene_preloaded(self):
+        pre = self.f['_preload_first_scene']; self.assertIn('self._load_map(TITLE_MAP)', pre); self.assertIn('self._warm_up_gl()', pre)
+
+
 if __name__ == '__main__':
     unittest.main(verbosity=1)

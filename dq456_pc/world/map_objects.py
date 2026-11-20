@@ -212,7 +212,9 @@ class MapObjects:
         return self.valid(i) and i not in self.tbl_hidden
 
     def common_anim(self, i, no):
-        if not self.reachable(i): return
+        """Packet 5 (FldObject.SetCommonAnimation). An object without a sequence slot (seq_obj_id -1, the three games) is left as it is, number 0 included: DQ V's ev06 sends 0 to the docked
+        harbour of its arrival (event animation 2), whose movement places it; dropping that movement left the pier 21 units away, the people of the quay standing on the water."""
+        if not self.reachable(i) or self.objs[i].get('sequence_object', -1) == -1: return
         o = self.objs[i]; st = self._st(i)
         self.auto.pop(i, None); st['motion'] = st['sequence'] = None; st['time'] = st['motion_time'] = st['sequence_time'] = 0; st['finished'] = False
         if no <= 0: st['model'] = o['model']

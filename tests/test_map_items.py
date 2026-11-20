@@ -61,7 +61,7 @@ def map_object(pos, rot, local_pts, lookup_keys, movement_flag=4, scl=(1.0, 1.0,
     def word(last_one): return dict(flag=movement_flag, nkey=2, repeat=1, delay=0, loop_delay=0, end=end, keys=[(0,) + ident, (end,) + last_one])
     words = [word(ident), word(lookup_keys), word(lookup_keys), word(ident)]
     words[0]['end'] = 2; words[0]['keys'] = [(0,) + ident, (2,) + ident]
-    obj = dict(i=0, pos=tuple(pos), rot=tuple(rot), scl=tuple(scl), model=1, canim=0, flag=0, sequence_object=-1, pmv=-1, id=0, com=0, uid=0, prio=0, rest='')
+    obj = dict(i=0, pos=tuple(pos), rot=tuple(rot), scl=tuple(scl), model=1, canim=0, flag=0, sequence_object=0, pmv=-1, id=0, com=0, uid=0, prio=0, rest='')
     return {'objects': [obj], 'groups': {'k': (world, np.zeros((n, 2), np.float32), np.ones((n, 4), np.float32))}, 'spans': {0: [('k', 0, n)]}, 'var': {},
             'tabs': [[(1, -1, 0), (1, -1, 1), (1, -1, 2), (1, -1, 3)]], 'motions': words, 'sequences': [], 'sequence_entries': [], 'imgobj': {}}
 
@@ -175,12 +175,12 @@ def auto_map_object(local_pts, lookup_keys, end, repeat=-1, delay=0, loop_delay=
     with its own duration (two vertex frames: the object and the same one shifted by 0.5 in height)."""
     pts = np.array(local_pts, np.float64); n = len(pts); world = (np.array(pos, np.float64) + pts).astype(np.float32)
     word = dict(flag=0, nkey=len(lookup_keys), repeat=repeat, delay=delay, loop_delay=loop_delay, end=end, keys=[(f, (0.0, 0.0, 0.0), tuple(float(v) for v in r), (1.0, 1.0, 1.0)) for f, r in lookup_keys])
-    obj = dict(i=0, pos=tuple(pos), rot=(0.0, 0.0, 0.0), scl=(1.0, 1.0, 1.0), model=1, canim=0 if common else -1, flag=0, sequence_object=-1, pmv=-1 if common else 0, id=0, com=0, uid=0, prio=0, rest='')
+    obj = dict(i=0, pos=tuple(pos), rot=(0.0, 0.0, 0.0), scl=(1.0, 1.0, 1.0), model=1, canim=0 if common else -1, flag=0, sequence_object=0 if common else -1, pmv=-1 if common else 0, id=0, com=0, uid=0, prio=0, rest='')
     c = {'objects': [obj], 'groups': {'k': (world, np.zeros((n, 2), np.float32), np.ones((n, 4), np.float32))}, 'spans': {0: [('k', 0, n)]}, 'var': {}, 'tabs': [], 'motions': [word],
          'sequences': [], 'sequence_entries': [], 'imgobj': {}}
     if seq_end:
         c['sequences'] = [dict(flag=0, nkey=4, repeat=-1, delay=0, loop_delay=0, end=seq_end, keys=[(0, 0), (seq_end // 2, 1), (seq_end, 0), (seq_end, 2)])]     # (last key = terminator, as in the data)
-        c['sequence_entries'] = [(0, 0, 0, 0, 0, -1, 0, -1)]                              # (object, sequence, group, start delay, delay between two loops, number of loops, _, original number of loops)
+        c['sequence_entries'] = [(0, 0, 0, 0, 0, -1, 0, 0 if common else -1)]                              # (object, sequence, group, start delay, delay between two loops, number of loops, _, original number of loops)
         c['imgobj'] = {0: [{'pos': np.stack([world, world + np.array([0.0, 0.5, 0.0], np.float32)]), 'uv': None, 'col': None}]}
         if common: c['tabs'] = [[(1, 0, 0)]]
         else: obj['sequence_object'] = 0
