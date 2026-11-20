@@ -599,6 +599,7 @@ class Game(FullScreenMixin, CameraMixin, FieldMixin, BattleMixin, TitleMixin, St
                     cam_pos=tup(e.cam_pos), cam_target=tup(e.cam_target), field=tup(e.field['cam']) if e.field and e.field['cam'] else None,
                     fbx={k: (tup(m.get('pos')), tup(m.get('rot'))) for k, m in getattr(e, 'fbx', {}).items()},
                     icons={k: (ic.get('id'), tup(ic.get('pos')), ic.get('alpha')) for k, ic in getattr(e, 'icons', {}).items()},
+                    meshes={k: (getattr(e, 'models', {}).get(k), tup(mm.get('pos'))) for k, mm in getattr(e, 'meshes', {}).items()},
                     shadow={k: (tup(s.get('shadow_field')), tup(s.get('shadow_pos'))) for k, s in e.sprites.items() if s.get('shadow_field') is not None or s.get('shadow_pos') is not None})
 
     def _interpolate(self):
@@ -641,6 +642,11 @@ class Game(FullScreenMixin, CameraMixin, FieldMixin, BattleMixin, TitleMixin, St
             if v is not None: saved.append((ic, 'pos', ic['pos'], False)); ic['pos'] = v
             if isinstance(q[2], (int, float)) and isinstance(ic.get('alpha'), (int, float)) and q[2] != ic['alpha']:
                 saved.append((ic, 'alpha', ic['alpha'], False)); ic['alpha'] = q[2] + (ic['alpha'] - q[2]) * a
+        for k, mm in getattr(e, 'meshes', {}).items():                         # monster meshes of a town scene (DQ IV's last boss rising at the end, the camera following him; DQ V / VI's monsters in town):
+            q = pr.get('meshes', {}).get(k)                                   # drawn at the step's position next to the interpolated camera, they shook by a step's movement
+            if q is None or q[0] != getattr(e, 'models', {}).get(k): continue   # (another model in the slot: from its own first position)
+            v = between(q[1], mm.get('pos'))
+            if v is not None: saved.append((mm, 'pos', mm['pos'], False)); mm['pos'] = v
         cam = self._interpolate_camera(pr, a) if e.part != ENGINE.PART_FIELD else None          # (town: the target, and the camera around it when it rotates; world map: map camera, further down)
         if cam is not None:
             for name_str, v in zip(('cam_pos', 'cam_target'), cam): saved.append((e, name_str, getattr(e, name_str), True)); setattr(e, name_str, v)

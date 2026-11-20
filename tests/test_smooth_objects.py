@@ -86,6 +86,30 @@ class FbxModels(unittest.TestCase):
 
 
 @unittest.skipIf(FieldMixin is None, 'window not importable here')
+class TownMeshes(unittest.TestCase):
+    """a monster drawn as a mesh in a town scene (DQ IV's last boss rising into the sky after the fight) shook: its position moved at 30 Hz while the camera following it was interpolated"""
+    def state(self):
+        st = types.SimpleNamespace(part=ENGINE.PART_TOWN, game_map='dab1', sprites={}, cam_pos=None, cam_target=None, field=None, loading=None, fbx={},
+                                   models={2: 255}, meshes={2: {'pos': (0.0, 1.0, 0.0), 'v': []}})
+        g = types.SimpleNamespace(engine=types.SimpleNamespace(state=st), mode=None); g._interpolate_camera = lambda pr, a: None
+        return st, g
+
+    def test_position_between_two_steps(self):
+        st, g = self.state()
+        g.prev = G.Game._snapshot(g); st.meshes[2]['pos'] = (0.0, 2.0, 0.0); g.alpha = 0.5
+        saved = G.Game._interpolate(g)
+        self.assertEqual(st.meshes[2]['pos'], (0.0, 1.5, 0.0))
+        for obj, name, old, attr in saved: obj[name] = old
+        self.assertEqual(st.meshes[2]['pos'], (0.0, 2.0, 0.0), 'put back after the drawing')
+
+    def test_other_model_not_interpolated(self):
+        st, g = self.state()
+        g.prev = G.Game._snapshot(g); st.models[2] = 146; st.meshes[2]['pos'] = (5.0, 0.0, 0.0); g.alpha = 0.5
+        G.Game._interpolate(g)
+        self.assertEqual(st.meshes[2]['pos'], (5.0, 0.0, 0.0))
+
+
+@unittest.skipIf(FieldMixin is None, 'window not importable here')
 class RisingIcons(unittest.TestCase):
     """the item that rises out of a chest, a jar, a wardrobe (packets 19/20, Riseup: 0.25 up per step for 6 steps, then a fade) went up by jerks of 30 Hz: drawn between two steps now"""
     def state(self, icons):

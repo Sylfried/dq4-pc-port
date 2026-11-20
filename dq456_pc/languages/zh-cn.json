@@ -164,13 +164,13 @@
   {"key": "controls.goes_from_manual_normal_fast", "en": "Goes from Manual to Normal, Fast, Very fast, then back to Manual", "text": "从手动依次切换到普通、快、很快，再回到手动"},
   {"key": "controls.also_works_middle_battle_setting", "en": "Also works in the middle of a battle (the setting is just below)", "text": "战斗中途也有效（设置就在下方）"},
   {"key": "controls.rotates_camera_around_hero_towns", "en": "Rotates the camera around the hero (towns, dungeons and towers)", "text": "围绕主角旋转镜头（城镇、迷宫和塔）"},
-  {"key": "controls.both_arrow_keys_together_recenters", "en": "Both arrow keys together: recenters the camera (animation)", "text": "同时按两个方向键：镜头复位（带动画）"},
+  {"key": "controls.both_arrow_keys_together_recenters", "en": "Both camera keys together: recenters the camera (animation)", "text": "同时按两个镜头键：镜头复位（带动画）"},
   {"key": "controls.mouse_hold_middle_click_move", "en": "Mouse: hold middle click + move = rotates the camera", "text": "鼠标：按住中键 + 移动 = 旋转镜头"},
   {"key": "controls.middle_click_recenters_camera", "en": "Middle click: recenters the camera", "text": "鼠标中键：镜头复位"},
   {"key": "controls.menus_previous_next_character_tab", "en": "In menus: previous / next character, tab or page, looping (otherwise, a direction)", "text": "在菜单中：上一个 / 下一个角色、标签页或页面，循环（否则为方向）"},
   {"key": "controls.camera_moved_mouse_hold_middle", "en": "Camera moved with the mouse (hold middle click + move): inverts the left / right direction", "text": "用鼠标移动镜头（按住中键 + 移动）：反转左右方向"},
-  {"key": "controls.no_dragging_right_rotates_like", "en": "No: dragging to the right rotates like the right arrow key", "text": "否：向右拖动的旋转方向与右方向键相同"},
-  {"key": "controls.keyboard_arrow_keys_do_not", "en": "The keyboard arrow keys do not change", "text": "键盘方向键不受影响"},
+  {"key": "controls.no_dragging_right_rotates_like", "en": "No: dragging to the right rotates like the camera right key", "text": "否：向右拖动的旋转方向与右镜头键相同"},
+  {"key": "controls.keyboard_arrow_keys_do_not", "en": "The keyboard camera keys do not change", "text": "键盘镜头键不受影响"},
   {"key": "controls.battles_only_animations_follow_one", "en": "Battles only: animations follow one another without dead time (the damage number appears quickly after the hit); Fast, Very fast: animations, movements and messages 2 or 3 times faster", "text": "仅限战斗：动画之间没有等待（伤害数字在命中后很快出现）；快、很快：动画、移动和消息加快 2 或 3 倍"},
   {"key": "controls.manual_normal_speed_advance_each", "en": "Manual: normal speed, you advance each message with Enter, Space or a click", "text": "手动：普通速度，每条消息用 Enter、空格或点击翻页"},
   {"key": "controls.music_sound_effects_keep_their", "en": "Music and sound effects keep their speed", "text": "音乐和音效保持原速"},
@@ -584,6 +584,11 @@
   {"key": "debug.catalog_fight_row", "en": "fight: row %d", "text": "战斗：第 %d 行"},
   {"key": "debug.catalog_boss_no_map", "en": "boss %d: its map is unknown", "text": "头目 %d：其地图未知"},
   {"key": "debug.catalog_boss", "en": "boss %d: %s", "text": "头目 %d：%s"},
-  {"key": "debug.catalog_boss_not_reached", "en": "boss %d: %s not reached", "text": "头目 %d：未到达%s"}
+  {"key": "debug.catalog_boss_not_reached", "en": "boss %d: %s not reached", "text": "头目 %d：未到达%s"},
+  {"key": "debug.catalog_item_bad", "en": "item %s: unknown, or a count outside 1 to 99", "text": "道具 %s：未知，或数量不在 1 到 99 之间"},
+  {"key": "debug.catalog_item_given", "en": "given: %s (x%d)", "text": "已给予 %s（x%d）"},
+  {"key": "debug.catalog_gold_bad", "en": "gold: %s is not a whole number", "text": "金币：%s 不是整数"},
+  {"key": "debug.catalog_gold", "en": "gold %+d", "text": "金币 %+d"},
+  {"key": "debug.catalog_missing", "en": "%s: not in this game's library", "text": "%s：此游戏的库中没有"}
  ]
 }

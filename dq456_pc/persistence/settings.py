@@ -8,19 +8,20 @@ from dq456_pc.language import N_
 # Default keys: action -> [primary key, secondary key] (pyglet.window.key names)
 DEFAULT_KEYS = {
     'left': ['A', None], 'right': ['D', None], 'up': ['W', None], 'down': ['S', None],      # (WASD; on an AZERTY keyboard: ZQSD, see layout_keys below)
-    'cam_left': ['LEFT', None], 'cam_right': ['RIGHT', None],      # the left / right arrows: on the field they rotate the town camera (both together recenter it), everywhere else (menus, messages, battles) they are left / right (the up / down arrows are no longer used by default)
+    'cam_left': ['Q', 'LEFT'], 'cam_right': ['E', 'RIGHT'],      # Q / E (A / E on an AZERTY keyboard, see layout_keys) and the left / right arrows: on the field they rotate the town camera (both together recenter it), everywhere else (menus, messages, battles) they are left / right (the up / down arrows are no longer used by default)
     'menu': ['RETURN', 'TAB'], 'chat': ['LALT', 'RALT'], 'map': ['M', None],
     'A': ['SPACE', None], 'B': ['BACKSPACE', None], 'accel': ['LSHIFT', 'RSHIFT'],
-    'L': ['Q', None], 'R': ['R', None], 'info': ['F1', None], 'modifier': ['LCTRL', 'RCTRL'],
-    'extra': ['E', None],              # DQ VI's vehicle command (the extra field button of the mobile game, key 0x2000: Gourd Island, submarine, Pegasus; see core/pad_modes.py)
+    'L': ['R', None], 'R': ['T', None], 'info': ['F1', None], 'modifier': ['LCTRL', 'RCTRL'],          # (previous / next page: R and T, beside the camera keys)
+    'extra': ['F', None],              # DQ VI's vehicle command (the extra field button of the mobile game, key 0x2000: Gourd Island, submarine, Pegasus; see core/pad_modes.py)
     'battle_speed': ['V', None],        # cycles through the battle speed (Manual, Normal, Fast, Very fast): in battle only; V for velocity (a free key: neither the movement keys, nor arrows, nor F1, nor the digits of the savestates)
 }
 
 
-# Movement and "Page precedente" (L): the keys that the keyboard LAYOUT puts at the physical places of W, A, S, D and Q on a QWERTY. AZERTY: Z Q S D and A; QWERTY, QWERTZ: W A S D and Q.
+# Movement and camera: the keys that the keyboard LAYOUT puts at the physical places of W, A, S, D, Q and E on a QWERTY. AZERTY: Z Q S D, A and E; QWERTY, QWERTZ: W A S D, Q and E.
 # Detection on Windows only (scan code -> virtual key of the active layout); elsewhere, or if the layout is unusual (Dvorak...): W A S D and Q.
 # Only the DEFAULT values change: the keys already saved in reglages.json are kept as they are.
-PHYSICAL_KEYS = {'up': (0x11, 'W'), 'left': (0x1E, 'A'), 'down': (0x1F, 'S'), 'right': (0x20, 'D'), 'L': (0x10, 'Q')}      # action: (scan code of the QWERTY position, QWERTY letter)
+PHYSICAL_KEYS = {'up': (0x11, 'W'), 'left': (0x1E, 'A'), 'down': (0x1F, 'S'), 'right': (0x20, 'D'), 'cam_left': (0x10, 'Q'), 'cam_right': (0x12, 'E')}      # action: (scan code of the QWERTY position, QWERTY letter)
+OLD_L_SCANCODE = 0x10                 # "Previous page" sat at the place of Q before v9 (keys_version): A on an AZERTY keyboard
 
 
 def windows_letter(scancode):
@@ -35,14 +36,14 @@ def windows_letter(scancode):
 
 
 def layout_keys(letter_of=windows_letter):
-    """{action: key name} of the PHYSICAL_KEYS keys for the keyboard layout; W A S D and Q (QWERTY) if a place is not a letter, if two places give the same letter or if a letter is already taken by another action."""
+    """{action: key name} of the PHYSICAL_KEYS keys for the keyboard layout; W A S D, Q and E (QWERTY) if a place is not a letter, if two places give the same letter or if a letter is already taken by another action."""
     others = {n for a, ts in DEFAULT_KEYS.items() if a not in PHYSICAL_KEYS for n in ts if n}
     found = {a: letter_of(sc) for a, (sc, _) in PHYSICAL_KEYS.items()}
     if None in found.values() or len(set(found.values())) < len(found) or others & set(found.values()): return {a: q for a, (_, q) in PHYSICAL_KEYS.items()}
     return found
 
 
-DEFAULT_KEYS.update({a: [n, None] for a, n in layout_keys().items()})
+DEFAULT_KEYS.update({a: [n, DEFAULT_KEYS[a][1]] for a, n in layout_keys().items()})          # (the second keys stay: the camera's arrows)
 OLD_MENU = ['RETURN', None]         # default of the "Menu" action before v5 (keys_version): Enter alone; a file that still contains it also receives Tab (see Settings.__init__)
 # action labels ("Controls" menu: the page groups the lines by sections, see pause.py; L / R: pages of the game's menus, fixed keys absent from the menu)
 ACTIONS = [('up', N_('controls.up')), ('down', N_('controls.down')), ('left', N_('controls.left')), ('right', N_('controls.right')),
@@ -62,7 +63,8 @@ NAMES = {'LEFT': '←', 'RIGHT': '→', 'UP': '↑', 'DOWN': '↓', 'LSHIFT': N_
 # the battle action messages (types 2 and 3 of the message window) make it 510. By default these windows are enlarged to the width of the dialogue boxes (510 / 459): the
 # speed button, stuck to the bottom-left corner of the bottom box, no longer shifts when an action message replaces the menu at the start of a turn. Same mechanism as
 # any window adjusted in the editor: [relative size, x offset, y offset].
-BATTLE_COMMAND_WINDOWS = ('BattleRoot', 'BattleAction', 'BattleTarget', 'BattleGo', 'BattleIM', 'BattleInfo', 'BattleChangeInfo')
+BATTLE_COMMAND_WINDOWS = ('BattleRoot', 'BattleAction', 'BattleTarget', 'BattleEnemyTarget', 'BattlePartyTarget', 'BattleGo', 'BattleIM', 'BattleInfo', 'BattleChangeInfo')
+WINDOW_COMPANIONS = {'BattleChangeButton': 'BattleIM'}          # a window drawn inside another's frame (the party change's Examine / Choose bar, in the bottom of the member list) takes that window's size and place
 COMMANDS_WIDTH = round(510.0 / 459.0, 4)
 # The small screens laid over the game (map overviews, the town's shop list, their buttons; the shop pictures, window/menu_display.py): one and a half times the size of the game's
 # (the three games). The maps and their buttons are editor windows (their default size below); the pictures are not in the editor (fixed size).
@@ -114,9 +116,9 @@ DEFAULT = {
     'buttons_pos': {},            # button or 'croix' -> [column, row] of its top-left corner on the screen grid (empty: original positions, see hud_mobile.py); the battle speed button has its own (speed_button_pos)
     'vehicle_button': True, 'vehicle_button_size': 1.0, 'vehicle_button_pos': [],      # "Vehicle button" interface (DQ VI's extra field button, core/pad_modes.py): shown or not; relative size; [column, row] of its top-left corner (empty: above Commands, as on mobile)
     'speed_button': True, 'speed_button_size': 1.0, 'speed_button_pos': [],      # "Battle: speed button" interface (split out of "On-screen buttons and D-pad"): shown in battle or not; relative size; [column, row] of its top-left corner (empty: stuck under the bottom box, see hud_mobile.Buttons.anchor)
-    'interface_version': 3,             # version of the default sizes of the game windows (interface_windows): a file saved before (without this key) receives the new default sizes once, except for a window the player has adjusted; v2: battle command windows at the width of the dialogues; v3: the small screens (maps, shop list, their buttons) one and a half times larger
+    'interface_version': 4,             # version of the default sizes of the game windows (interface_windows): a file saved before (without this key) receives the new default sizes once, except for a window the player has adjusted; v4: the two target lists at the width of the other battle command windows; v2: battle command windows at the width of the dialogues; v3: the small screens (maps, shop list, their buttons) one and a half times larger
     'interface_hidden': [],     # interface editor, "Show this interface on screen" = No: names of the game windows (Make_*, or 'msg' for the dialogues) that are not drawn; for the on-screen buttons and D-pad, it is the 'boutons' setting
-    'keys_version': 8,               # settings version (v7 -> v8: battle speed 1 (Normal), the old default, -> 0 (Manual); v6 -> v7: shader 4, the old default, -> 0 "None"; v5 -> v6: vignette 0.3, the old default, -> 0): a key list older than v3 is discarded (v3: ZQSD to walk, arrow keys = camera, Space = action); v3 -> v4: "Party chat" = Alt / Alt Gr (if those keys are free), accelerator x1.5 (if running was at the original x2); v4 -> v5: "Menu" = Enter and Tab (if "Menu" still had the old default, Enter alone, and Tab is free); an action added since takes its default key
+    'keys_version': 9,               # settings version (v8 -> v9: camera Q / E (A / E in AZERTY) with the arrows as second keys, previous / next page R / T, vehicle command F, for the exact old defaults; v7 -> v8: battle speed 1 (Normal), the old default, -> 0 (Manual); v6 -> v7: shader 4, the old default, -> 0 "None"; v5 -> v6: vignette 0.3, the old default, -> 0): a key list older than v3 is discarded (v3: ZQSD to walk, arrow keys = camera, Space = action); v3 -> v4: "Party chat" = Alt / Alt Gr (if those keys are free), accelerator x1.5 (if running was at the original x2); v4 -> v5: "Menu" = Enter and Tab (if "Menu" still had the old default, Enter alone, and Tab is free); an action added since takes its default key
     'keys': {k: list(v) for k, v in DEFAULT_KEYS.items()},
     'gamepads': {f: dict(PI.DEFAULTS[f]) for f in PI.FAMILIES},       # third column of "Controls", one binding per controller family (Xbox, PlayStation, Nintendo Switch): action -> gamepad input (PI.PAD_INPUTS name), list of inputs, or None; read as extra keys, see window/gamepad.py. `Settings.v['gamepad']` (not saved) is the binding of the family in use
 }
@@ -315,7 +317,7 @@ class Settings:
                 if d.get('defilement_force') is True and old == 4: d['battle_speed'] = BATTLE_MANUAL      # old forced "Battle messages: Manual" -> "Battle speed: Manual" (the other notches no longer have an equivalent: the wait follows the battle speed; nothing forced: the saved speed stays)
                 saved_v = d.get('keys_version')
                 for k, x in d.items():
-                    if k == 'keys' and saved_v not in (3, 4, 5, 6, 7, DEFAULT['keys_version']): continue
+                    if k == 'keys' and saved_v not in (3, 4, 5, 6, 7, 8, DEFAULT['keys_version']): continue
                     if k == 'keys' and isinstance(x, dict):
                         for a, ts in x.items():
                             if a in DEFAULT_KEYS and isinstance(ts, list): self.v['keys'][a] = (list(ts) + [None, None])[:2]
@@ -338,6 +340,7 @@ class Settings:
                 if saved_v in (3, 4, 5) and self.v['vignette'] == 0.3: self.v['vignette'] = DEFAULT['vignette']          # v5 -> v6: the old default becomes the new one; a value the player chose stays
                 if saved_v in (3, 4, 5, 6) and self.v['sprite_mode'] == 4: self.v['sprite_mode'] = DEFAULT['sprite_mode']          # v6 -> v7: the old default shader (pixel perfect) becomes the new one, "None"
                 if saved_v in (3, 4, 5, 6, 7) and d.get('battle_speed') == BATTLE_NORMAL: self.v['battle_speed'] = DEFAULT['battle_speed']          # v7 -> v8: the old default battle speed (Normal) becomes the new one, "Manual"
+                if saved_v in (3, 4, 5, 6, 7, 8): self.migrate_camera_keys(self.v['keys'])          # v8 -> v9: the camera on Q / E (A / E in AZERTY)
                 saved = d.get('keys') if isinstance(d.get('keys'), dict) else {}
                 for a in DEFAULT_KEYS:                                  # action added since: its original key is dropped if another action has taken it
                     if a in saved: continue
@@ -499,6 +502,18 @@ class Settings:
             ts[action][col] = name_str
         self.codes_cache = {}
         return lost
+
+    @staticmethod
+    def migrate_camera_keys(ts):
+        """v8 -> v9: the keys still at their old default take the new one: camera left / right (the arrows) -> Q / E for the keyboard's layout (A / E in AZERTY), the arrows staying as second
+        keys; "Previous page" (the place of Q: A in AZERTY) -> R, "Next page" (R) -> T, vehicle command (E) -> F. A key the player chose stays; a new key another action already has stays with it."""
+        moved = []
+        if ts['L'][1] is None and ts['L'][0] in ('Q', windows_letter(OLD_L_SCANCODE)): ts['L'] = list(DEFAULT_KEYS['L']); moved.append('L')
+        for a, old in (('R', ['R', None]), ('extra', ['E', None]), ('cam_left', ['LEFT', None]), ('cam_right', ['RIGHT', None])):
+            if list(ts[a]) == old: ts[a] = list(DEFAULT_KEYS[a]); moved.append(a)
+        for a in moved:
+            for i, n in enumerate(ts[a]):
+                if n and any(n in l for b, l in ts.items() if b != a): ts[a][i] = None
 
     def is_default_binding(self, action):
         return list(self.v['keys'][action]) == list(DEFAULT_KEYS[action])

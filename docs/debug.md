@@ -63,7 +63,7 @@ The server never touches the engine itself: everything goes through the debug se
 
 To reach what needs testing without playing up to it. What it changes is the engine's own data, through the game's own functions:
 
-- **Map**: any town or dungeon of the game data (`assets/map/<name>.stg`), entered as the game sends the hero through a link: `setExtraExitTown`
+- **Map**: any town or dungeon of the game data (`assets/map/<name>.stg`, a drop-down list; each map named after the first story step that goes there), entered as the game sends the hero through a link: `setExtraExitTown`
   (DQ IV, DQ V) / `setDirectLinkTownSurface` (DQ VI), the functions of the floor exits and of Evac (`StageLink::setTownExitIndex`, then `Global::startTown`).
   The hero arrives at the map's most obvious entrance, read from the game's links (`assets/map/map_link.bin`): the one from the world map, or else from the
   nearest map. A map no link leads to (event maps): its origin.
@@ -74,6 +74,9 @@ To reach what needs testing without playing up to it. What it changes is the eng
   DQ V / VI: `<game>ds_event_list.dat`): the panel shows French names (`dq456_pc/debug/story_steps_fr.py`: places, characters and items as the games' French
   texts name them, a plain description where they name none); "go to its map" starts it. Items, levels and gold do not change: a real save is still the
   reference to check a whole playthrough.
+- **Items and gold**: any item of the game (the list of its texts, `assets/msg/en/b1000000.mpt`, with a search field), 1 to 99 at once, each given as the game
+  gives an item it finds: `PartyStatus::giveItem` (DQ IV, on `g_Party`) / `PartyStatusUtility::giveItem` (DQ V, DQ VI): the first member with room, otherwise
+  the bag. Gold added or taken (negative amount) through the scripts' own "gold" command (`cmd_set_gold` / `cmdSetGold`), so the game's limits apply.
 - **Switches**: the three sets of 1,024 the scripts test (`status::g_GlobalFlag`, `g_AreaFlag`, `g_LocalFlag`): the ones on are listed (a click turns one off), any
   number can be turned on or off.
 - **Fight**:

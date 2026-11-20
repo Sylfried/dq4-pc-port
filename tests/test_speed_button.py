@@ -87,6 +87,20 @@ class Border(unittest.TestCase):
                 self.assertAlmostEqual((border_part[2] - border_part[0]) * RG.COMMANDS_WIDTH, msg_width, delta=0.6, msg=n)
                 self.assertAlmostEqual((border_part[0] + border_part[2]) / 2 * RG.COMMANDS_WIDTH, (lm[0] + lm[1]) / 2, delta=0.6, msg=n)           # and centered at the same place: same left edge
 
+    def test_companion_inside_its_window(self):
+        """The party change's Examine / Choose bar (BattleChangeButton) lies inside the member list's frame (BattleIM): it takes that window's size and place (WINDOW_COMPANIONS),
+        otherwise the enlarged list covered it with its background (the buttons looked grayed) and the bar stood beside the list's bottom."""
+        self.assertEqual(RG.WINDOW_COMPANIONS, {'BattleChangeButton': 'BattleIM'}); self.assertIn('BattleIM', RG.BATTLE_COMMAND_WINDOWS)
+        lay = os.path.join(_paths.ui_cache('/tmp/uicache47_vitesse'), 'ui_layout.json')
+        if not os.path.exists(lay): self.skipTest('ui_layout.json absent')
+        from dq456_pc.menus import ui_menu as UI
+        ml = UI.PageLayout(lay, os.path.join(os.path.dirname(lay), 'ui_frameData.bin')); names = {}
+        for num, t in ml.types.items():
+            if t.get('err') in (None, 'None') and t.get('nodes'): names.setdefault(t.get('name', '').replace('Make_', '').replace('()', ''), []).append(int(num))
+        frame = max((r for num in names['BattleIM'] for r in UI.Window(ml, num).rects()), key=lambda r: (r[2] - r[0]) * (r[3] - r[1]))
+        for num in names['BattleChangeButton']:
+            for r in UI.Window(ml, num).rects(): self.assertTrue(frame[0] - 1 <= r[0] and r[2] <= frame[2] + 1 and frame[1] - 1 <= r[1] and r[3] <= frame[3] + 1, (r, frame))
+
 
 class Migration(unittest.TestCase):
     def load(self, d):

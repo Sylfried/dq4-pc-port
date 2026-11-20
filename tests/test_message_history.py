@@ -670,8 +670,8 @@ class TestView(unittest.TestCase):
         keystroke(v, K.END); self.assertEqual((v.pos, v.selected), (0.0, 19))
 
     def test_game_actions_for_pages(self):
-        """The game's "Page precedente / suivante" keys (L / R: A (AZERTY) or Q (other keyboards) and R by default, PAGE_UP / PAGE_DOWN) skip the same 3 messages."""
-        K = pyglet.window.key; v = make_view(); v.key_press(getattr(K, RG.DEFAULT_KEYS['L'][0])); self.assertEqual(v.selected, 16); v.key_press(K.R); self.assertEqual(v.selected, 19)
+        """The game's "Page precedente / suivante" keys (L / R: R and T by default, PAGE_UP / PAGE_DOWN) skip the same 3 messages."""
+        K = pyglet.window.key; v = make_view(); v.key_press(getattr(K, RG.DEFAULT_KEYS['L'][0])); self.assertEqual(v.selected, 16); v.key_press(getattr(K, RG.DEFAULT_KEYS['R'][0])); self.assertEqual(v.selected, 19)
 
     def test_wheel(self):
         v = make_view(); step = 28.0 * UH.WHEEL_STEP

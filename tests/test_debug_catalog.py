@@ -47,6 +47,7 @@ class Core:
     def mem_w(self, a, b): self.ram[a:a + len(b)] = b
     encount_stage = 0; stage_encount = 1
     def cstr(self, b): return 0x900
+    def scratch(self, name, n): return 0xa00
     def call(self, a, *args, label=None):
         self.calls.append((label, args))
         if 'getSingleton' in (label or ''): return 0x777
@@ -170,8 +171,36 @@ class Catalog(unittest.TestCase):
         self.assertIn(CT.SET_EVENT_FLAG, labels); self.assertIn(CT.SET_EVENT_PARTY, labels)
         self.assertIn('error', self.c.story_step({'step': len(steps)}))
 
+    def test_items_and_gold(self):
+        """an item given by the game's own function (DQ IV: a method of g_Party; DQ V / VI: static), gold through the scripts' "gold" command (amount, then 0 = add / 1 = take)"""
+        key = GM_key(); core = self.g.engine.core; obj, fn = CT.GIVE_ITEM[key]; gold, off = CT.SET_GOLD[key]
+        SYMS.update({fn: 0x940, gold: 0x944, '_ZN6status7g_PartyE': 0x600})
+        self.c._items = [(12, 'Herbe médicinale')]
+        self.assertEqual(self.c.give_item({'item': 12, 'count': 3}), {'ok': True})
+        given = [a for l, a in core.calls if l == 'PartyStatus::giveItem']
+        self.assertEqual(given, [(0x600, 12) if obj else (12,)] * 3)
+        for bad in ({'item': 0}, {'item': 'x'}, {'item': 12, 'count': 100}): self.assertIn('error', self.c.give_item(bad))
+        self.assertEqual(self.c.give_gold({'amount': '-250'}), {'ok': True})
+        self.assertEqual(core.calls[-1], ('cmd_set_gold', (0xa00,)))
+        self.assertEqual(struct.unpack_from('<2i', core.ram, 0xa00 + off), (250, 1))
+        self.c.give_gold({'amount': 5000}); self.assertEqual(struct.unpack_from('<2i', core.ram, 0xa00 + off), (5000, 0))
+        self.assertIn('error', self.c.give_gold({'amount': '1.5'}))
+
+    def test_item_names(self):
+        """the names of the game's texts (an MPT0 file: "@4" the name, ";" a line break of the patch removed)"""
+        texts = ['', '@0F@2la @3une @4massue de ;chêne@5les @6', '@0M@2le @3un @4@5']
+        enc = [t.encode() + b'\0' * (-len(t.encode()) % 4) for t in texts]; table = b''; body = b''
+        for i, t in enumerate(texts):
+            table += struct.pack('<3H', i, len(t.encode()), len(body) // 4); body += enc[i]
+        table += b'\0' * (-len(table) % 4)
+        mpt = b'MPT0' + struct.pack('<6I', 0, 0, 2, len(texts), 28, len(table)) + table + body
+        reader = type('R', (), {'read': lambda self, n: mpt})()
+        self.g.engine.core.fs.names[CT.ITEM_NAMES] = reader
+        self.assertEqual(self.c.items(), [(1, 'massue de chêne')])
+        self.assertEqual(self.c.info()['items'], [(1, 'massue de chêne')])
+
     def test_panel_commands_registered(self):
-        for k in ('goto_map', 'goto_world', 'story_step', 'flag', 'battle'): self.assertIn(k, self.d.panel_commands)
+        for k in ('goto_map', 'goto_world', 'story_step', 'flag', 'battle', 'give_item', 'gold'): self.assertIn(k, self.d.panel_commands)
         self.assertIn('/api/catalog', self.d.panel_pages)
         self.assertEqual(set(self.c.info({'only': 'flags'})), {'map', 'flags'})
 

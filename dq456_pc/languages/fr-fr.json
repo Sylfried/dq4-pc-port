@@ -164,13 +164,13 @@
   {"key": "controls.goes_from_manual_normal_fast", "en": "Goes from Manual to Normal, Fast, Very fast, then back to Manual", "text": "Passe de Manuel à Normal, Rapide, Très rapide, puis revient à Manuel"},
   {"key": "controls.also_works_middle_battle_setting", "en": "Also works in the middle of a battle (the setting is just below)", "text": "Marche aussi en plein combat (le réglage est juste en dessous)"},
   {"key": "controls.rotates_camera_around_hero_towns", "en": "Rotates the camera around the hero (towns, dungeons and towers)", "text": "Tourne la caméra autour du héros (villes, donjons et tours)"},
-  {"key": "controls.both_arrow_keys_together_recenters", "en": "Both arrow keys together: recenters the camera (animation)", "text": "Les deux flèches ensemble : recentre la caméra (animation)"},
+  {"key": "controls.both_arrow_keys_together_recenters", "en": "Both camera keys together: recenters the camera (animation)", "text": "Les deux touches de caméra ensemble : recentre la caméra (animation)"},
   {"key": "controls.mouse_hold_middle_click_move", "en": "Mouse: hold middle click + move = rotates the camera", "text": "Souris : clic molette maintenu + déplacement = tourne la caméra"},
   {"key": "controls.middle_click_recenters_camera", "en": "Middle click: recenters the camera", "text": "Clic molette : recentre la caméra"},
   {"key": "controls.menus_previous_next_character_tab", "en": "In menus: previous / next character, tab or page, looping (otherwise, a direction)", "text": "Dans les menus : personnage, onglet ou page précédent / suivant, en boucle (sinon, une direction)"},
   {"key": "controls.camera_moved_mouse_hold_middle", "en": "Camera moved with the mouse (hold middle click + move): inverts the left / right direction", "text": "Caméra déplacée à la souris (clic molette maintenu + déplacement) : inverse le sens gauche / droite"},
-  {"key": "controls.no_dragging_right_rotates_like", "en": "No: dragging to the right rotates like the right arrow key", "text": "Non : glisser vers la droite tourne comme la flèche droite"},
-  {"key": "controls.keyboard_arrow_keys_do_not", "en": "The keyboard arrow keys do not change", "text": "Les flèches du clavier ne changent pas"},
+  {"key": "controls.no_dragging_right_rotates_like", "en": "No: dragging to the right rotates like the camera right key", "text": "Non : glisser vers la droite tourne comme la touche caméra droite"},
+  {"key": "controls.keyboard_arrow_keys_do_not", "en": "The keyboard camera keys do not change", "text": "Les touches de caméra du clavier ne changent pas"},
   {"key": "controls.battles_only_animations_follow_one", "en": "Battles only: animations follow one another without dead time (the damage number appears quickly after the hit); Fast, Very fast: animations, movements and messages 2 or 3 times faster", "text": "Combats seulement : les animations s'enchaînent sans temps mort (le nombre de dégâts apparaît vite après le coup) ; Rapide, Très rapide : animations, déplacements et messages 2 ou 3 fois plus rapides"},
   {"key": "controls.manual_normal_speed_advance_each", "en": "Manual: normal speed, you advance each message with Enter, Space or a click", "text": "Manuel : vitesse normale, on passe chaque message avec Entrée, Espace ou un clic"},
   {"key": "controls.music_sound_effects_keep_their", "en": "Music and sound effects keep their speed", "text": "La musique et les bruitages gardent leur vitesse"},
@@ -584,6 +584,11 @@
   {"key": "debug.catalog_fight_row", "en": "fight: row %d", "text": "combat : ligne %d"},
   {"key": "debug.catalog_boss_no_map", "en": "boss %d: its map is unknown", "text": "boss %d : sa carte est inconnue"},
   {"key": "debug.catalog_boss", "en": "boss %d: %s", "text": "boss %d : %s"},
-  {"key": "debug.catalog_boss_not_reached", "en": "boss %d: %s not reached", "text": "boss %d : %s pas atteinte"}
+  {"key": "debug.catalog_boss_not_reached", "en": "boss %d: %s not reached", "text": "boss %d : %s pas atteinte"},
+  {"key": "debug.catalog_item_bad", "en": "item %s: unknown, or a count outside 1 to 99", "text": "objet %s : inconnu, ou quantité hors de 1 à 99"},
+  {"key": "debug.catalog_item_given", "en": "given: %s (x%d)", "text": "objet donné : %s (x%d)"},
+  {"key": "debug.catalog_gold_bad", "en": "gold: %s is not a whole number", "text": "or : %s n'est pas un nombre entier"},
+  {"key": "debug.catalog_gold", "en": "gold %+d", "text": "or %+d"},
+  {"key": "debug.catalog_missing", "en": "%s: not in this game's library", "text": "%s : absent de la bibliothèque de ce jeu"}
  ]
 }

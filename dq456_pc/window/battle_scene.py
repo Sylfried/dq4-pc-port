@@ -119,7 +119,7 @@ class BattleMixin:
             ft = self.cb_tex.get((mid, 'sharp'))
             if ft is None:
                 base = self._monster_texture(mid)
-                t = self._tex(base['arr'], False, 0); gl.glBindTexture(t.target, t.id)
+                t = self._tex(base['arr'], True, 0); gl.glBindTexture(t.target, t.id)
                 gl.glTexParameteri(t.target, gl.GL_TEXTURE_MIN_FILTER, gl.GL_NEAREST); gl.glTexParameteri(t.target, gl.GL_TEXTURE_MAG_FILTER, gl.GL_NEAREST)
                 ft = self.cb_tex[(mid, 'sharp')] = dict(base, t=t)
             return ft
@@ -132,7 +132,7 @@ class BattleMixin:
                 if arr is None: print('monster texture missing from the data:', mid, flush=True)          # 25 numbers have no m<id> texture
             if arr is None: arr = np.zeros((16, 16, 4), np.uint8)               # monster not drawn (transparent texture) rather than stopping the game
             elif ENGINE.ENGINE_V2: arr = HD._dilate(arr, 2)          # DQ V / VI: transparent pixels = the color of the neighboring edge (alpha unchanged); their sheets keep a color under them (DQ VI pure green, DQ V pale pink) that linear filtering showed as a fringe
-            t = self._tex(arr, False, 0)
+            t = self._tex(arr, True, 0)          # wrap Repeat like the game's monster sheets (Texture2D wrapMode 0): some animations use v beyond 1 (DQ IV's last boss parting from his head)
             gl.glTexParameteri(t.target, gl.GL_TEXTURE_MIN_FILTER, gl.GL_LINEAR); gl.glTexParameteri(t.target, gl.GL_TEXTURE_MAG_FILTER, gl.GL_LINEAR)
             orig = self.cb_tex[(mid, 0)] = dict(t=t, tw=arr.shape[1], th=arr.shape[0], hd=False, arr=arr)
         if self.mode in (0, MODE_PP): return orig
@@ -148,7 +148,7 @@ class BattleMixin:
         try: a = fut.result()
         except Exception as ex:
             print('HD smoothing failed (monster %d): %s' % (mid, ex), flush=True); self.cb_tex[lookup_key] = orig; return orig
-        self.cb_tex[lookup_key] = dict(t=self._tex(a, False, HD_LEVELS), tw=a.shape[1], th=a.shape[0], hd=a is not orig['arr'])
+        self.cb_tex[lookup_key] = dict(t=self._tex(a, True, HD_LEVELS), tw=a.shape[1], th=a.shape[0], hd=a is not orig['arr'])
         if not self.smoothing: self._filter_texture(self.cb_tex[lookup_key]['t'], False)
         return self.cb_tex[lookup_key]
 

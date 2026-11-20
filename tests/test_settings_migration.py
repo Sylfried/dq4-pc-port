@@ -90,5 +90,36 @@ class Migration(unittest.TestCase):
         r, _ = load({'vitesse_course': 3.0}); self.assertEqual(r['accel_speed'], 3.0)
 
 
+class CameraKeys(unittest.TestCase):
+    """v8 -> v9: the camera on Q / E (A / E on an AZERTY keyboard) with the arrows as second keys; previous / next page R / T and the vehicle command F free those places.
+    Only the keys still at their old default change."""
+    def azerty(self):
+        letters = {0x11: 'Z', 0x1E: 'Q', 0x1F: 'S', 0x20: 'D', 0x10: 'A', 0x12: 'E'}
+        old = (RG.windows_letter, {a: list(v) for a, v in RG.DEFAULT_KEYS.items()})
+        RG.windows_letter = letters.get; RG.DEFAULT_KEYS.update({a: [n, RG.DEFAULT_KEYS[a][1]] for a, n in RG.layout_keys(letters.get).items()})
+        def restore(): RG.windows_letter = old[0]; RG.DEFAULT_KEYS.clear(); RG.DEFAULT_KEYS.update(old[1])
+        self.addCleanup(restore)
+
+    V8_AZERTY = {'up': ['Z', None], 'left': ['Q', None], 'down': ['S', None], 'right': ['D', None], 'cam_left': ['LEFT', None], 'cam_right': ['RIGHT', None], 'L': ['A', None], 'R': ['R', None], 'extra': ['E', None]}
+
+    def test_old_defaults_move(self):
+        self.azerty()
+        self.assertEqual((RG.DEFAULT_KEYS['cam_left'], RG.DEFAULT_KEYS['cam_right']), (['A', 'LEFT'], ['E', 'RIGHT']))
+        r, _ = load({'keys_version': 8, 'keys': dict(self.V8_AZERTY)})
+        self.assertEqual({a: r['keys'][a] for a in ('cam_left', 'cam_right', 'L', 'R', 'extra', 'left', 'up')},
+                         {'cam_left': ['A', 'LEFT'], 'cam_right': ['E', 'RIGHT'], 'L': ['R', None], 'R': ['T', None], 'extra': ['F', None], 'left': ['Q', None], 'up': ['Z', None]})
+        self.assertEqual(r['keys_version'], RG.DEFAULT['keys_version'])
+        every = [n for ts in r['keys'].values() for n in ts if n]; self.assertEqual(len(every), len(set(every)))          # (a key serves one action)
+
+    def test_keys_the_player_chose_stay(self):
+        self.azerty()
+        keys = dict(self.V8_AZERTY, cam_left=['J', None], extra=['G', None], L=['A', 'P'])
+        r, _ = load({'keys_version': 8, 'keys': keys})
+        self.assertEqual({a: r['keys'][a] for a in ('cam_left', 'cam_right', 'L', 'R', 'extra')},
+                         {'cam_left': ['J', None], 'cam_right': ['E', 'RIGHT'], 'L': ['A', 'P'], 'R': ['T', None], 'extra': ['G', None]})
+        r, _ = load({'keys_version': 9, 'keys': dict(self.V8_AZERTY)})                                       # (already v9: nothing moves)
+        self.assertEqual(r['keys']['cam_left'], ['LEFT', None])
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -164,13 +164,13 @@
   {"key": "controls.goes_from_manual_normal_fast", "en": "Goes from Manual to Normal, Fast, Very fast, then back to Manual", "text": "수동에서 보통, 빠름, 매우 빠름으로 바뀐 뒤 다시 수동으로 돌아갑니다"},
   {"key": "controls.also_works_middle_battle_setting", "en": "Also works in the middle of a battle (the setting is just below)", "text": "전투 도중에도 작동합니다(설정은 바로 아래)"},
   {"key": "controls.rotates_camera_around_hero_towns", "en": "Rotates the camera around the hero (towns, dungeons and towers)", "text": "주인공을 중심으로 카메라를 회전합니다(마을, 던전, 탑)"},
-  {"key": "controls.both_arrow_keys_together_recenters", "en": "Both arrow keys together: recenters the camera (animation)", "text": "두 방향키를 함께: 카메라 원위치(애니메이션)"},
+  {"key": "controls.both_arrow_keys_together_recenters", "en": "Both camera keys together: recenters the camera (animation)", "text": "두 카메라 키를 함께: 카메라 원위치(애니메이션)"},
   {"key": "controls.mouse_hold_middle_click_move", "en": "Mouse: hold middle click + move = rotates the camera", "text": "마우스: 가운데 클릭 유지 + 이동 = 카메라 회전"},
   {"key": "controls.middle_click_recenters_camera", "en": "Middle click: recenters the camera", "text": "가운데 클릭: 카메라 원위치"},
   {"key": "controls.menus_previous_next_character_tab", "en": "In menus: previous / next character, tab or page, looping (otherwise, a direction)", "text": "메뉴에서: 이전 / 다음 캐릭터, 탭, 페이지(순환. 그 밖에서는 방향)"},
   {"key": "controls.camera_moved_mouse_hold_middle", "en": "Camera moved with the mouse (hold middle click + move): inverts the left / right direction", "text": "마우스로 움직이는 카메라(가운데 클릭 유지 + 이동): 좌우 방향을 반전합니다"},
-  {"key": "controls.no_dragging_right_rotates_like", "en": "No: dragging to the right rotates like the right arrow key", "text": "아니요: 오른쪽으로 끌면 오른쪽 방향키처럼 회전"},
-  {"key": "controls.keyboard_arrow_keys_do_not", "en": "The keyboard arrow keys do not change", "text": "키보드의 방향키는 바뀌지 않습니다"},
+  {"key": "controls.no_dragging_right_rotates_like", "en": "No: dragging to the right rotates like the camera right key", "text": "아니요: 오른쪽으로 끌면 오른쪽 카메라 키처럼 회전"},
+  {"key": "controls.keyboard_arrow_keys_do_not", "en": "The keyboard camera keys do not change", "text": "키보드의 카메라 키는 바뀌지 않습니다"},
   {"key": "controls.battles_only_animations_follow_one", "en": "Battles only: animations follow one another without dead time (the damage number appears quickly after the hit); Fast, Very fast: animations, movements and messages 2 or 3 times faster", "text": "전투 전용: 애니메이션이 대기 시간 없이 이어집니다(피해 숫자가 공격 직후에 나옴). 빠름, 매우 빠름: 애니메이션, 이동, 메시지가 2배 또는 3배 빠름"},
   {"key": "controls.manual_normal_speed_advance_each", "en": "Manual: normal speed, you advance each message with Enter, Space or a click", "text": "수동: 보통 속도이며, 메시지는 Enter, 스페이스, 클릭으로 넘깁니다"},
   {"key": "controls.music_sound_effects_keep_their", "en": "Music and sound effects keep their speed", "text": "음악과 효과음의 속도는 바뀌지 않습니다"},
@@ -584,6 +584,11 @@
   {"key": "debug.catalog_fight_row", "en": "fight: row %d", "text": "전투: %d행"},
   {"key": "debug.catalog_boss_no_map", "en": "boss %d: its map is unknown", "text": "보스 %d: 지도를 알 수 없음"},
   {"key": "debug.catalog_boss", "en": "boss %d: %s", "text": "보스 %d: %s"},
-  {"key": "debug.catalog_boss_not_reached", "en": "boss %d: %s not reached", "text": "보스 %d: %s에 도달하지 못함"}
+  {"key": "debug.catalog_boss_not_reached", "en": "boss %d: %s not reached", "text": "보스 %d: %s에 도달하지 못함"},
+  {"key": "debug.catalog_item_bad", "en": "item %s: unknown, or a count outside 1 to 99", "text": "아이템 %s: 알 수 없음, 또는 개수가 1~99 범위 밖"},
+  {"key": "debug.catalog_item_given", "en": "given: %s (x%d)", "text": "%s 지급 (x%d)"},
+  {"key": "debug.catalog_gold_bad", "en": "gold: %s is not a whole number", "text": "골드: %s 은(는) 정수가 아닙니다"},
+  {"key": "debug.catalog_gold", "en": "gold %+d", "text": "골드 %+d"},
+  {"key": "debug.catalog_missing", "en": "%s: not in this game's library", "text": "%s: 이 게임의 라이브러리에 없음"}
  ]
 }

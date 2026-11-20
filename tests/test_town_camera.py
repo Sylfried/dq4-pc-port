@@ -263,8 +263,8 @@ class TestTownCamera(unittest.TestCase):
         self.assertIn('self._interpolate_camera(pr, a)', inspect.getsource(F.Game._interpolate))
 
     def test_camera_settings(self):
-        """By default: Left > left arrow, Right > right arrow, drag direction not inverted; no more camera speed setting. Visible in Commandes (see test_pause_pages)."""
-        self.assertEqual(RG.DEFAULT_KEYS['cam_left'], ['LEFT', None]); self.assertEqual(RG.DEFAULT_KEYS['cam_right'], ['RIGHT', None])
+        """By default: Left > Q (A on an AZERTY keyboard) and the left arrow, Right > E and the right arrow, drag direction not inverted; no more camera speed setting. Visible in Commandes (see test_pause_pages)."""
+        self.assertEqual(RG.DEFAULT_KEYS['cam_left'], [RG.layout_keys()['cam_left'], 'LEFT']); self.assertEqual(RG.DEFAULT_KEYS['cam_right'], [RG.layout_keys()['cam_right'], 'RIGHT'])
         self.assertIs(RG.DEFAULT['camera_invert_lr'], False); self.assertNotIn('camera_invert_lr', RG.OBSOLETE_KEYS)
         self.assertNotIn('vitesse_camera', RG.DEFAULT); self.assertNotIn('vitesse_camera', RG.BOUNDS); self.assertIn('vitesse_camera', RG.OBSOLETE_KEYS)
         self.assertEqual(dict(RG.ACTIONS)['cam_left'], 'controls.camera_left'); self.assertEqual(dict(RG.ACTIONS)['cam_right'], 'controls.camera_right')

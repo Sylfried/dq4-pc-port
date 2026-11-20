@@ -70,14 +70,14 @@ Everything the port writes (saves, savestates, settings, caches, logs) stays in 
 | Command menu / confirm | Enter or Tab | Y |
 | Cancel / back | Backspace | B |
 | Map | M | X |
-| Rotate the camera | ← → (both together: recenter), middle click held + mouse | LB / RB |
+| Rotate the camera | Q E (A E on AZERTY) or ← → (both together: recenter), middle click held + mouse | LB / RB |
 | Accelerator (held) | Shift | RT |
 | Battle speed (in battle) | V | LT |
 | Settings menu (history, savestates, settings) | Esc | Menu |
 | On-screen information | F1 | — |
 | Full screen | F11 or Alt + Enter | — |
 
-Every button of the game's windows can be reached with the keyboard: the movement keys go from button to button ("Rien", "Quitter" and the other back buttons included; at the top or bottom of a list that scrolls, they scroll it), Space or Enter presses the button, Backspace or Esc goes back, ← → turn the pages.
+Every button of the game's windows can be reached with the keyboard: the movement keys go from button to button ("Rien", "Quitter" and the other back buttons included; at the top or bottom of a list that scrolls, they scroll it), Space or Enter presses the button, Backspace or Esc goes back, the camera keys turn the pages; R and T are the game's previous / next page keys, F DQ VI's vehicle command.
 
 Savestates: a special key (Ctrl by default) + a digit loads a savestate; the settings menu saves, loads and deletes them. Command line: `--slot N` loads adventure log N directly, `--no-logos` skips the intro logos; `python -m dq456_pc --help` lists every option.
 

@@ -7,6 +7,8 @@
   `setEventParty(step)`: the party of that step). The games also give each step its map (DQ IV: `param/param_player_event1-4.dat`, DQ V / VI:
   `<game>ds_event_list.dat`, with a name in Japanese: shown in French, story_steps_fr.py): jumping there starts that map too. Only the switches and the party: items, levels and gold stay as they are.
 - Switches: the three sets of 1,024 the scripts test (`status::g_GlobalFlag`, `g_AreaFlag`, `g_LocalFlag`), each bit readable and changeable.
+- Items and gold: an item given as the game gives one it finds (`PartyStatus::giveItem`: the first member with room, otherwise the bag), gold added or taken as
+  the scripts' own "gold" command does (`cmd_set_gold`: the game's limits apply).
 - Fights. A boss (a row a script starts) is fought at its own place, as its script does: the map whose script starts it is loaded first, then
   `Encount::forceEventBrew(row)` (DQ IV: `BattleScriptManager::setEncountMap(row)` before it, as `cmd_encount` does): the backdrop is the place's own.
   Any other fight only where the game itself could start a random encounter at that moment, as its whistle does (ENCOUNT_ON...): never in a town,
@@ -45,6 +47,12 @@ STAGE_ENCOUNT = {'dq4': ('_ZN6status7g_StageE', '_ZNK6status11StageStatus9isEnco
                  'dq5': ('_ZN6status16g_StageAttributeE', '_ZNK6status14StageAttribute9isEncountEv'),
                  'dq6': ('_ZN6status16g_StageAttributeE', '_ZNK6status14StageAttribute9isEncountEv')}
 FORCE_ENCOUNT = {'dq4': '_ZN7Encount12forceEncountEv', 'dq5': '_ZN3btl7Encount12forceEncountEv', 'dq6': '_ZN3btl7Encount12forceEncountEv'}
+ITEM_NAMES = 'assets/msg/en/b1000000.mpt'              # item names (entry = item number; "@4" the name)
+GIVE_ITEM = {'dq4': ('_ZN6status7g_PartyE', '_ZN6status11PartyStatus8giveItemEi'),          # PartyStatus::giveItem(item) on g_Party; DQ V / VI: a static function, the item in w0
+             'dq5': (None, '_ZN6status18PartyStatusUtility8giveItemEi'), 'dq6': (None, '_ZN6status18PartyStatusUtility8giveItemEi')}
+SET_GOLD = {'dq4': ('_Z12cmd_set_goldP16CommandParameter', 4), 'dq5': ('_Z10cmdSetGoldPv', 0), 'dq6': ('_ZN6script10cmdSetGoldEPv', 0)}          # the scripts' "gold" command: its two
+# parameters (amount, then 0 = add, anything else = take) at this offset of the block it receives
+ITEM_COUNT_MAX = 99                                   # copies of an item given at once
 MONSTER_NAMES = 'assets/msg/en/b1002000.mpt'           # monster names (entry = monster number; "@4" the name; the French patch writes its texts in the English slot)
 ARRIVAL_STEPS = 900                                   # a boss's map must be shown, faded in and the player free within this many engine steps
 MAP_LINK = 'assets/map/map_link.bin'                  # the game's links between maps (doors, stairs, exits): DQ IV by map name (NAME, DATA, HASH), DQ V / VI by map number (DATA, INDX)
@@ -205,7 +213,8 @@ class Catalog:
         self.restore = None                               # an ordinary fight of another row than the place's: (the place's row, engine frame of the request)
         service.ticks.append(self.tick)
         service.panel_pages['/api/catalog'] = self.info
-        service.panel_commands.update({'goto_map': self.goto_map, 'goto_world': self.goto_world, 'story_step': self.story_step, 'flag': self.set_flag, 'battle': self.battle})
+        service.panel_commands.update({'goto_map': self.goto_map, 'goto_world': self.goto_world, 'story_step': self.story_step, 'flag': self.set_flag, 'battle': self.battle,
+                                         'give_item': self.give_item, 'gold': self.give_gold})
 
     # --- reading ---------------------------------------------------------------------------------------------------------------------------------------------
     def maps(self):
@@ -297,6 +306,19 @@ class Catalog:
             except Exception: pass
         return self._monsters
 
+    def items(self):
+        """[(item number, name)] from the game's texts (`assets/msg/en/b1000000.mpt`, entry = item number; the French texts of the patch), [] if unreadable."""
+        if getattr(self, '_items', None) is None:
+            self._items = []
+            try:
+                fs = self.g.engine.core.fs; n = ITEM_NAMES; d = fs.names[n].read(n)
+                for idx, text in sorted(mpt_entries(d).items()):
+                    m = re.search(r'@4([^@]*)', text)
+                    name = m.group(1).replace(';', '').replace('$', '').strip() if m else ''
+                    if idx and name: self._items.append((idx, name))
+            except Exception: pass
+        return self._items
+
     def flags(self):
         c = self.g.engine.core; out = {}
         for name, sym in FLAG_SETS:
@@ -307,7 +329,7 @@ class Catalog:
     def info(self, q=None):
         if q and q.get('only') == 'flags': return {'map': self.g.engine.state.game_map, 'flags': self.flags()}          # (what changes: asked again while the tab is open)
         return {'game': self.key, 'map': self.g.engine.state.game_map, 'maps': self.maps(), 'steps': self.steps(), 'flags': self.flags(),
-                'bosses': self.bosses(), 'in_battle': self.g.engine.state.part == ENGINE.PART_BATTLE}
+                'bosses': self.bosses(), 'items': self.items(), 'in_battle': self.g.engine.state.part == ENGINE.PART_BATTLE}
 
     # --- commands ---------------------------------------------------------------------------------------------------------------------------------------------
     def goto_map(self, c):
@@ -315,6 +337,31 @@ class Catalog:
         if name not in self.maps(): return {'error': tr(N_('debug.catalog_unknown_map')) % name}
         self.in_step.append(lambda: self.start_town(name))
         self.d.note((tr(N_('debug.catalog_map')) if name in self.entrances() else tr(N_('debug.catalog_map_origin'))) % name)
+        return {'ok': True}
+
+    def give_item(self, c):
+        """`count` copies of item `item`, each given as the game gives an item it finds (the first member with room, otherwise the bag)."""
+        try: item, n = int(c.get('item')), int(c.get('count') or 1)
+        except (TypeError, ValueError): return {'error': tr(N_('debug.catalog_item_bad')) % c.get('item')}
+        if not 0 < item < 0x10000 or not 1 <= n <= ITEM_COUNT_MAX: return {'error': tr(N_('debug.catalog_item_bad')) % item}
+        core = self.g.engine.core; obj, fn = GIVE_ITEM[self.key]; f = core.export(fn)
+        if not f: return {'error': tr(N_('debug.catalog_missing')) % fn}
+        for _ in range(n):
+            if obj: core.call(f, core.export(obj), item, label='PartyStatus::giveItem')
+            else: core.call(f, item, label='PartyStatus::giveItem')
+        self.d.note(tr(N_('debug.catalog_item_given')) % (dict(self.items()).get(item, '#%d' % item), n))
+        return {'ok': True}
+
+    def give_gold(self, c):
+        """Gold added (`amount` > 0) or taken (< 0) through the scripts' own command."""
+        try: amount = int(c.get('amount'))
+        except (TypeError, ValueError): return {'error': tr(N_('debug.catalog_gold_bad')) % c.get('amount')}
+        core = self.g.engine.core; fn, off = SET_GOLD[self.key]; f = core.export(fn)
+        if not f: return {'error': tr(N_('debug.catalog_missing')) % fn}
+        block = bytearray(16); struct.pack_into('<2i', block, off, abs(amount), 1 if amount < 0 else 0)
+        p = core.scratch('catalog_gold', len(block)); core.mem_w(p, bytes(block))
+        core.call(f, p, label='cmd_set_gold')
+        self.d.note(tr(N_('debug.catalog_gold')) % amount)
         return {'ok': True}
 
     def goto_world(self, c):

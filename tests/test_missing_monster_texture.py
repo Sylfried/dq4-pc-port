@@ -39,6 +39,13 @@ class AbsentTexture(unittest.TestCase):
         self.assertEqual(received[0].shape, (16, 16, 4)); self.assertFalse(received[0].any())  # transparent
         self.assertEqual((r['tw'], r['th']), (16, 16)); self.assertIs(SC.BattleMixin._monster_texture(j, 199), r)       # kept in memory: a single console line
 
+    def test_texture_repeats(self):
+        """the sheets are Repeat textures in the game (Texture2D wrapMode 0): DQ IV's last boss parting from his head draws parts with v beyond 1, which vanished with a clamped texture"""
+        calls = []
+        j = types.SimpleNamespace(cb_tex={}, mode=0, data=Data(np.zeros((8, 8, 4), np.uint8)), _tex=lambda arr, repeat, mip=0: calls.append(repeat) or types.SimpleNamespace(target=0))
+        SC.BattleMixin._monster_texture(j, 255)
+        self.assertEqual(calls, [True])
+
     def test_unreadable_texture_replaced(self):
         j, received = self.game(OSError('fichier abime'))
         r = SC.BattleMixin._monster_texture(j, 3)

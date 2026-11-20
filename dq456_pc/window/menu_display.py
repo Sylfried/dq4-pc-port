@@ -698,8 +698,8 @@ class MenusMixin:
             if ov:
                 for _, p in entries:
                     if self.ui_g.f[p].typ == 1 or p in self.ui_followers: continue
-                    name_str = self._type_name(self.ui_g.f[p].typ) or ''; v = ov.get(name_str) if name_str not in RG.REMOVED_WINDOWS else None
-                    if v: custom[p] = self.ui_tf[p] = self._ui_custom(mode_of(p), s, v)
+                    name_str = self._type_name(self.ui_g.f[p].typ) or ''; v = ov.get(RG.WINDOW_COMPANIONS.get(name_str, name_str)) if name_str not in RG.REMOVED_WINDOWS else None
+                    if v: custom[p] = self.ui_tf[p] = self._ui_custom(mode_of(p), s, v)          # (a companion window, drawn inside another's frame, follows that window: same size, same place, drawn after it)
             names = {p: self._type_name(self.ui_g.f[p].typ) or '' for _, p in entries}
             for _, p in entries:                                                         # map overviews and their buttons: PC default place (centered map, buttons beside it), then the player's settings
                 if names[p] in MAP_WINDOWS or names[p] == MAP_BUTTONS:
