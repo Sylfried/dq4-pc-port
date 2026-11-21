@@ -524,6 +524,8 @@ class FieldMixin:
         one object at a time between the characters (`only` = [(key, first, count)] in drawing order, see _same_queue_objects). FldObject.set_priority gives a transparent material (Custom/fld_trans*, queue 3000)
         the render queue 3000 + priority; the characters (Custom/Chara, ZWrite on) are in queue 3000 + `queue` (0, except DQ V: Chara.SetPriorityShader), so the scenery of a higher priority is drawn
         after them: in front of a character it covers it (mist, light shafts), behind it the character's depth hides it. Same priority: left before the characters."""
+        e = self.engine.state
+        if e.part == ENGINE.PART_TOWN and not e.game_map: return          # (no map in the engine: DQ V's opening credits on black, the title's map loaded in advance is not drawn under them with no camera of its own)
         r = self._hd_scenery() if self.mode not in (0, MODE_PP) else None
         sharp_o = 1.0 if (sharp and r is None and self.smoothing and not os.environ.get('DQ_SCENERY_BLUR')) else 0.0           # towns and dungeons in "Originaux" / pixel perfect: sharp texels, only the boundary between two texels is softened (like the sprites); in battle, stretched paintings: normal smoothing
         is_tr = lambda k: isinstance(k, tuple) and k[0] == 'tr'
