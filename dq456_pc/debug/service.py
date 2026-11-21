@@ -88,6 +88,10 @@ class DebugService:
             from dq456_pc.debug import catalog as CT
             self.catalog = CT.Catalog(self)                       # scene catalog: maps, story steps, switches, fights (the panel's "Scenes" tab)
         except Exception as ex: self.catalog = None; print('debug scene catalog not available:', ex, flush=True)
+        try:
+            from dq456_pc.debug import party as PY
+            self.party = PY.Party(self, self.catalog)                    # members, money, items (the panel's "Party" tab)
+        except Exception as ex: self.party = None; print('debug party tools not available:', ex, flush=True)
         port = getattr(getattr(game, 'args', None), 'debug_port', None)
         if port != 0:                                             # (--debug-port 0: no web panel)
             try:

@@ -589,6 +589,23 @@
   {"key": "debug.catalog_item_given", "en": "given: %s (x%d)", "text": "已給予 %s（x%d）"},
   {"key": "debug.catalog_gold_bad", "en": "gold: %s is not a whole number", "text": "金幣：%s 不是整數"},
   {"key": "debug.catalog_gold", "en": "gold %+d", "text": "金幣 %+d"},
-  {"key": "debug.catalog_missing", "en": "%s: not in this game's library", "text": "%s：此遊戲的函式庫中沒有"}
+  {"key": "debug.catalog_missing", "en": "%s: not in this game's library", "text": "%s：此遊戲的函式庫中沒有"},
+  {"key": "debug.party_not_member", "en": "character %s: not in the party", "text": "角色 %s：不在隊伍中"},
+  {"key": "debug.party_level_bad", "en": "level %s: from 1 to 99", "text": "等級 %s：1 到 99"},
+  {"key": "debug.party_level", "en": "character %d: level %d", "text": "角色 %d：等級 %d"},
+  {"key": "debug.party_exp_bad", "en": "experience %s: from 0 to 9,999,999", "text": "經驗值 %s：0 到 9,999,999"},
+  {"key": "debug.party_exp", "en": "character %d: experience %d", "text": "角色 %d：經驗值 %d"},
+  {"key": "debug.party_unknown", "en": "character %d: the game has no such character", "text": "角色 %d：遊戲中沒有"},
+  {"key": "debug.party_joined", "en": "%s joins the party", "text": "%s 加入隊伍"},
+  {"key": "debug.party_left", "en": "%s leaves the party", "text": "%s 離開隊伍"},
+  {"key": "debug.party_value_bad", "en": "value %s: not valid", "text": "數值 %s：無效"},
+  {"key": "debug.party_value", "en": "%s: %d", "text": "%s：%d"},
+  {"key": "debug.party_no_sack", "en": "the bag was not found", "text": "沒有找到袋子"},
+  {"key": "debug.party_items_max", "en": "%d items, 99 of each, in the bag", "text": "%d 種道具各 99 個放入袋子"},
+  {"key": "debug.catalog_row_bad", "en": "row %s: a number", "text": "行 %s：數字"},
+  {"key": "debug.catalog_minigame_bad", "en": "mini-game %s: not in this game", "text": "小遊戲 %s：本遊戲沒有"},
+  {"key": "debug.catalog_minigame", "en": "mini-game: %s", "text": "小遊戲：%s"},
+  {"key": "debug.catalog_book", "en": "monster book", "text": "怪物圖鑑"},
+  {"key": "debug.catalog_backdrop", "en": "battle backdrop: %s", "text": "戰鬥背景：%s"}
  ]
 }

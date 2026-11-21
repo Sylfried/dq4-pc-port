@@ -202,6 +202,14 @@ class PageLayout:
 # Windows that are only a picture, created by their code function (MenuParts.CreateFromTexture(name, bFitWidth = true, 0.75): 450 wide, 337.5 high, built at the center of the screen): the names by value.
 # DQ V Make_Sugoroku_Shop (the shops of the T'n'T boards): value 0 = the inn, any other = the shop. DQ VI Make_ShopPicture: the value is the index (shop, inn, church); its code 1 is the opacity, value / 31.
 PICTURE_WINDOWS = {'Make_Sugoroku_Shop(': ('yado_pic', 'yorozu_pic'), 'Make_ShopPicture(': ('yorozu_pic', 'yado_pic', 'kyokai_pic')}
+# MenuPortItemTable.<Sub_BattleTactics>b__0(code), the tactics rows: what the code does besides moving the name (the layout exporter records only that). By code, the icon
+# each IBase of the row shows (1 the portrait, 2 and 3 the two icons AddIcon puts in it); the row's button gets state 4 with code 4, 0 with the others; code 0 hides the row.
+# DQ IV: code 1 a member (portrait sent by the engine, the two icons empty cells), code 2 the "Équipe" row (an empty portrait cell 18, the wagon 22), code 3 (icon 40 of the
+# command icons alone). DQ V / VI: the portrait is a texture (ITexture 0: none, the games have no f00 picture), code 2 icon 92, code 3 icon 94.
+TACTICS_CODES = {'dq4': {1: {2: 24, 3: 58}, 2: {1: 18, 2: 22, 3: 58}, 3: {1: 18, 2: 24, 3: 40}, 4: {2: 24, 3: 58}},
+                 'dq5': {1: {2: 0}, 2: {1: 0, 2: 92}, 3: {1: 0, 2: 94}, 4: {2: 0}}}
+TACTICS_CODES['dq6'] = TACTICS_CODES['dq5']
+TACTICS_ROW = '<Sub_BattleTactics>b__0'
 NUMBER_TEXT = '<Sub_ChangeNameButton>b__0'          # (int function of the level text of DQ VI's name change buttons, see Window.param_int)
 NAMES_PRESETS = ((4, 382.0, 67.0), (5, 382.0, 67.0), (5, 434.0, 67.0), (6, 434.0, 67.0), (5, 412.0, 67.0))
 NAMES_START, NAMES_STEP = 382.0, 67.0         # exported layout: row k at y coordinate 382 - 67 k (NAME_BUTTON_Y, NAME_BUTTON_DY)
@@ -412,7 +420,27 @@ class Window:
         for b, ib in enumerate(pt['ib']):
             if ib['k'] != 'icon' or ib.get('partsNo') != 1 or b in bound or not node.get('sub'): continue          # (type 42: its status icons, sheet 13, are driven by a StatusIconChanger)
             for k, idx in node['sub'].items():
-                if ib['vtx'] in idx and int(k) < len(node['mats']): node['mats'][int(k)]['color'] = [0.0, 0.0, 0.0, 0.0]
+                if ib['vtx'] in idx and int(k) < len(node['mats']): m = node['mats'][int(k)]; m.setdefault('shown_color', m.get('color')); m['color'] = [0.0, 0.0, 0.0, 0.0]
+
+    def _tactics_row(self, e, c):
+        """The icons and the button state of a tactics row for its code (TACTICS_CODES); the row is the part that code 0 hides."""
+        icons = TACTICS_CODES.get(GM.profile().key, {}).get(c)
+        hidden = ((e.get('fx') or {}).get('0') or {}).get('d') or {}
+        j = next((j for j, pt in enumerate(self.parts) if str(pt.get('node')) in hidden), None)
+        if icons is None or j is None: return
+        pt = self.parts[j]; node = self.N.get(pt['node'])
+        if node is None: return
+        for b, v in icons.items():
+            ib = pt['ib'][b] if b < len(pt['ib']) else None
+            if ib is None: continue
+            if ib['k'] == 'icon' and node.get('uv'):
+                for q, uv in enumerate(uv_icon(self.ml.info[ib['partsNo']], v, 0)):
+                    if ib['vtx'] + q < len(node['uv']): node['uv'][ib['vtx'] + q] = list(uv)
+                for k, idx in (node.get('sub') or {}).items():             # (DQ V / VI: the cell hidden as a placeholder when the window was built is shown again)
+                    m = node['mats'][int(k)] if int(k) < len(node['mats']) else None
+                    if m is not None and ib['vtx'] in idx and 'shown_color' in m: m['color'] = m['shown_color']
+            elif ib['k'] == 'other' and ib.get('cls', '').endswith('ITexture'): self._face(j, v)
+        if pt['ib'] and pt['ib'][0]['k'] == 'button': node['state'] = 4 if c == 4 else 0
 
     def _item_num(self, i, v):
         """ItemNumCTRL.Changer(v) (0xD08060): passive two-digit counter of a line of the item list (Sub_ItemButton: IBase 3 = tens, IBase 4 = ones, sheet 12, 32 px tiles).
@@ -495,6 +523,7 @@ class Window:
                 pt = self.parts[e['parts']]
                 if pt['node'] in self.N: self.N[pt['node']]['act'] = (c != 0)
             elif e['kind'] == 'func':
+                if TACTICS_ROW in (e.get('method') or ''): self._tactics_row(e, c)
                 fx = (e.get('fx') or {}).get(str(c))
                 if not fx: self._mask_code(e, c); continue
                 moved = {int(n) for v in e['fx'].values() for n, dd in v['d'].items() if 'pos' in dd}

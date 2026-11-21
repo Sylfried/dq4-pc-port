@@ -589,6 +589,23 @@
   {"key": "debug.catalog_item_given", "en": "given: %s (x%d)", "text": "gegeben: %s (x%d)"},
   {"key": "debug.catalog_gold_bad", "en": "gold: %s is not a whole number", "text": "Gold: %s ist keine ganze Zahl"},
   {"key": "debug.catalog_gold", "en": "gold %+d", "text": "Gold %+d"},
-  {"key": "debug.catalog_missing", "en": "%s: not in this game's library", "text": "%s: nicht in der Bibliothek dieses Spiels"}
+  {"key": "debug.catalog_missing", "en": "%s: not in this game's library", "text": "%s: nicht in der Bibliothek dieses Spiels"},
+  {"key": "debug.party_not_member", "en": "character %s: not in the party", "text": "Figur %s: nicht in der Gruppe"},
+  {"key": "debug.party_level_bad", "en": "level %s: from 1 to 99", "text": "Stufe %s: von 1 bis 99"},
+  {"key": "debug.party_level", "en": "character %d: level %d", "text": "Figur %d: Stufe %d"},
+  {"key": "debug.party_exp_bad", "en": "experience %s: from 0 to 9,999,999", "text": "Erfahrung %s: von 0 bis 9.999.999"},
+  {"key": "debug.party_exp", "en": "character %d: experience %d", "text": "Figur %d: Erfahrung %d"},
+  {"key": "debug.party_unknown", "en": "character %d: the game has no such character", "text": "Figur %d: gibt es im Spiel nicht"},
+  {"key": "debug.party_joined", "en": "%s joins the party", "text": "%s tritt der Gruppe bei"},
+  {"key": "debug.party_left", "en": "%s leaves the party", "text": "%s verlässt die Gruppe"},
+  {"key": "debug.party_value_bad", "en": "value %s: not valid", "text": "Wert %s: ungültig"},
+  {"key": "debug.party_value", "en": "%s: %d", "text": "%s: %d"},
+  {"key": "debug.party_no_sack", "en": "the bag was not found", "text": "der Beutel wurde nicht gefunden"},
+  {"key": "debug.party_items_max", "en": "%d items, 99 of each, in the bag", "text": "%d Gegenstände, je 99, im Beutel"},
+  {"key": "debug.catalog_row_bad", "en": "row %s: a number", "text": "Zeile %s: eine Zahl"},
+  {"key": "debug.catalog_minigame_bad", "en": "mini-game %s: not in this game", "text": "Minispiel %s: nicht in diesem Spiel"},
+  {"key": "debug.catalog_minigame", "en": "mini-game: %s", "text": "Minispiel: %s"},
+  {"key": "debug.catalog_book", "en": "monster book", "text": "Monsterbuch"},
+  {"key": "debug.catalog_backdrop", "en": "battle backdrop: %s", "text": "Kampfkulisse: %s"}
  ]
 }

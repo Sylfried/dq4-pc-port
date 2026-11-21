@@ -589,6 +589,23 @@
   {"key": "debug.catalog_item_given", "en": "given: %s (x%d)", "text": "%s を渡した（x%d）"},
   {"key": "debug.catalog_gold_bad", "en": "gold: %s is not a whole number", "text": "ゴールド：%s は整数ではありません"},
   {"key": "debug.catalog_gold", "en": "gold %+d", "text": "ゴールド %+d"},
-  {"key": "debug.catalog_missing", "en": "%s: not in this game's library", "text": "%s：このゲームのライブラリにありません"}
+  {"key": "debug.catalog_missing", "en": "%s: not in this game's library", "text": "%s：このゲームのライブラリにありません"},
+  {"key": "debug.party_not_member", "en": "character %s: not in the party", "text": "キャラクター %s：パーティにいません"},
+  {"key": "debug.party_level_bad", "en": "level %s: from 1 to 99", "text": "レベル %s：1〜99"},
+  {"key": "debug.party_level", "en": "character %d: level %d", "text": "キャラクター %d：レベル %d"},
+  {"key": "debug.party_exp_bad", "en": "experience %s: from 0 to 9,999,999", "text": "経験値 %s：0〜9,999,999"},
+  {"key": "debug.party_exp", "en": "character %d: experience %d", "text": "キャラクター %d：経験値 %d"},
+  {"key": "debug.party_unknown", "en": "character %d: the game has no such character", "text": "キャラクター %d：ゲームにありません"},
+  {"key": "debug.party_joined", "en": "%s joins the party", "text": "%s が仲間になった"},
+  {"key": "debug.party_left", "en": "%s leaves the party", "text": "%s が離脱した"},
+  {"key": "debug.party_value_bad", "en": "value %s: not valid", "text": "値 %s：無効"},
+  {"key": "debug.party_value", "en": "%s: %d", "text": "%s：%d"},
+  {"key": "debug.party_no_sack", "en": "the bag was not found", "text": "ふくろが見つかりません"},
+  {"key": "debug.party_items_max", "en": "%d items, 99 of each, in the bag", "text": "%d 種類のアイテムを 99 個ずつ ふくろに"},
+  {"key": "debug.catalog_row_bad", "en": "row %s: a number", "text": "行 %s：数値"},
+  {"key": "debug.catalog_minigame_bad", "en": "mini-game %s: not in this game", "text": "ミニゲーム %s：このゲームにありません"},
+  {"key": "debug.catalog_minigame", "en": "mini-game: %s", "text": "ミニゲーム：%s"},
+  {"key": "debug.catalog_book", "en": "monster book", "text": "モンスター図鑑"},
+  {"key": "debug.catalog_backdrop", "en": "battle backdrop: %s", "text": "戦闘の背景：%s"}
  ]
 }

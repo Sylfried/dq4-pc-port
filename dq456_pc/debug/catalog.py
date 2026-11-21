@@ -16,7 +16,7 @@
 
 The calls that start a scene (startTown, startField, startBattle) are made during an engine step, just before GameUpdate: their packets (the fade) are then
 read with the step's, as the game's own scripts do; outside a step they would be lost."""
-import re, struct
+import json, re, struct
 
 from dq456_pc import games as GM
 from dq456_pc.core import engine as ENGINE
@@ -52,7 +52,14 @@ GIVE_ITEM = {'dq4': ('_ZN6status7g_PartyE', '_ZN6status11PartyStatus8giveItemEi'
              'dq5': (None, '_ZN6status18PartyStatusUtility8giveItemEi'), 'dq6': (None, '_ZN6status18PartyStatusUtility8giveItemEi')}
 SET_GOLD = {'dq4': ('_Z12cmd_set_goldP16CommandParameter', 4), 'dq5': ('_Z10cmdSetGoldPv', 0), 'dq6': ('_ZN6script10cmdSetGoldEPv', 0)}          # the scripts' "gold" command: its two
 # parameters (amount, then 0 = add, anything else = take) at this offset of the block it receives
-ITEM_COUNT_MAX = 99                                   # copies of an item given at once
+ITEM_COUNT_MAX = 99
+# Mini-games started from anywhere, as the game starts them: DQ IV / V the scripts' own command (cmd_mini_game / cmdMiniGame: 0 poker, 1 slot machines), DQ VI
+# Global::setMinigame then startCasino (what its CmdMiniGame does), the other parts by their own Global::start... call.
+MINIGAMES = {'dq4': (('poker', 'cmd', 0), ('slots', 'cmd', 1)),
+             'dq5': (('poker', 'cmd', 0), ('slots', 'cmd', 1), ('slime_race', 'global', '_ZN6Global14startSlimeRaceEv'), ('slime_touch', 'global', '_ZN6Global15startSlimeTouchEv')),
+             'dq6': (('poker', 'casino', 0), ('slots', 'casino', 1), ('curling', 'global', '_ZN6Global12startCurlingEv'))}
+MINIGAME_CMD = {'dq4': ('_Z13cmd_mini_gameP16CommandParameter', 4), 'dq5': ('_Z11cmdMiniGamePv', 0)}          # (function, offset of the game number in its block)
+START_BOOK = '_ZN6Global9startBookEv'                                   # copies of an item given at once
 MONSTER_NAMES = 'assets/msg/en/b1002000.mpt'           # monster names (entry = monster number; "@4" the name; the French patch writes its texts in the English slot)
 ARRIVAL_STEPS = 900                                   # a boss's map must be shown, faded in and the player free within this many engine steps
 MAP_LINK = 'assets/map/map_link.bin'                  # the game's links between maps (doors, stairs, exits): DQ IV by map name (NAME, DATA, HASH), DQ V / VI by map number (DATA, INDX)
@@ -214,7 +221,8 @@ class Catalog:
         service.ticks.append(self.tick)
         service.panel_pages['/api/catalog'] = self.info
         service.panel_commands.update({'goto_map': self.goto_map, 'goto_world': self.goto_world, 'story_step': self.story_step, 'flag': self.set_flag, 'battle': self.battle,
-                                         'give_item': self.give_item, 'gold': self.give_gold})
+                                         'give_item': self.give_item, 'gold': self.give_gold, 'battle_here': self.battle_here, 'minigame': self.minigame, 'book': self.open_book,
+                                         'backdrop': self.set_backdrop})
 
     # --- reading ---------------------------------------------------------------------------------------------------------------------------------------------
     def maps(self):
@@ -289,10 +297,19 @@ class Catalog:
                     fs = core.fs; names = [n for n in fs.names if n.startswith('assets/script/')]
                     cat = RN.Catalog.from_files(lambda n: fs.names[n].read(n), names, self.key)
                 else: cat = RN.Catalog.from_core(core)
+                self._encounter_catalog = cat
                 places = self.boss_places(); names = self.monster_names()
                 self._bosses = sorted((row, [names.get(m, str(m)) for m in sorted({m for m, *_ in boss})], places.get(row)) for row, (sp, boss, others) in cat.bosses.items())
             except Exception as ex: self._bosses = []; self.d.note('catalog bosses: %s' % ex)
         return self._bosses
+
+    def encounters(self):
+        """[(encounter row, [its monsters' names])] of every random encounter group of the game (randomizer's catalog)."""
+        if getattr(self, '_encounters', None) is None:
+            self.bosses(); cat = getattr(self, '_encounter_catalog', None); names = self.monster_names()
+            from dq456_pc.randomizer import encounters as RN
+            self._encounters = [(row, [names.get(m, str(m)).replace('$', '') for m in sorted(set(slots)) if m != RN.NONE]) for row, slots in sorted(cat.zones.items())] if cat else []
+        return self._encounters
 
     def monster_names(self):
         """{monster number: name} from the game's texts (`assets/msg/en/b1002000.mpt`, entry = monster number; the French texts of the patch), {} if unreadable."""
@@ -329,7 +346,9 @@ class Catalog:
     def info(self, q=None):
         if q and q.get('only') == 'flags': return {'map': self.g.engine.state.game_map, 'flags': self.flags()}          # (what changes: asked again while the tab is open)
         return {'game': self.key, 'map': self.g.engine.state.game_map, 'maps': self.maps(), 'steps': self.steps(), 'flags': self.flags(),
-                'bosses': self.bosses(), 'items': self.items(), 'in_battle': self.g.engine.state.part == ENGINE.PART_BATTLE}
+                'bosses': self.bosses(), 'items': self.items(), 'encounters': self.encounters(), 'minigames': [m[0] for m in MINIGAMES.get(self.key, ())],
+                'backdrops': self.backdrops(), 'backdrop': getattr(self.g, 'battle_scenery', None),
+                'in_battle': self.g.engine.state.part == ENGINE.PART_BATTLE}
 
     # --- commands ---------------------------------------------------------------------------------------------------------------------------------------------
     def goto_map(self, c):
@@ -429,6 +448,56 @@ class Catalog:
             core.call(core.export(FORCE_ENCOUNT[self.key]), enc, label='Encount::forceEncount')
         self.in_step.append(start); self.d.note(tr(N_('debug.catalog_fight_row')) % row)
         return {'ok': True, 'row': row}
+
+    def battle_here(self, c):
+        """Any encounter row, here, from a town too: Encount::forceBrew(row), the scripts' own ordinary fight (cmd_encount, mode 0), during the next step; the place's backdrop."""
+        raw = str(c.get('row', '')).strip()
+        if not raw.lstrip('-').isdigit(): return {'error': tr(N_('debug.catalog_row_bad')) % raw}
+        row = int(raw); e = self.g.engine.state
+        if e.part not in (ENGINE.PART_TOWN, ENGINE.PART_FIELD): return {'error': tr(N_('debug.catalog_not_now'))}
+        core = self.g.engine.core
+        self.in_step.append(lambda: core.call(core.export(ENCOUNT[self.key][2]), self._encount(), row, label='Encount::forceBrew'))
+        self.d.note(tr(N_('debug.catalog_fight_row')) % row)
+        return {'ok': True, 'row': row}
+
+    def minigame(self, c):
+        """A mini-game started from here (MINIGAMES), during the next step."""
+        m = next((m for m in MINIGAMES.get(self.key, ()) if m[0] == c.get('id')), None)
+        if m is None: return {'error': tr(N_('debug.catalog_minigame_bad')) % c.get('id')}
+        if self.g.engine.state.part not in (ENGINE.PART_TOWN, ENGINE.PART_FIELD): return {'error': tr(N_('debug.catalog_not_now'))}
+        eng = self.g.engine; core = eng.core; _id, kind, arg = m
+        def start():
+            if kind == 'cmd':
+                fn, off = MINIGAME_CMD[self.key]; block = bytearray(16); struct.pack_into('<i', block, off, arg)
+                p = core.scratch('catalog_minigame', len(block)); core.mem_w(p, bytes(block)); core.call(core.export(fn), p, label=fn)
+            elif kind == 'casino':
+                core.call(core.export('_ZN6Global11setMinigameEi'), eng._global(), arg, label='Global::setMinigame')
+                core.call(core.export('_ZN6Global11startCasinoEv'), eng._global(), label='Global::startCasino')
+            else: core.call(core.export(arg), eng._global(), label=arg)
+        self.in_step.append(start); self.d.note(tr(N_('debug.catalog_minigame')) % m[0])
+        return {'ok': True}
+
+    def backdrops(self):
+        """The battle sceneries of the game data (its prepared list of maps: the names that start with "btl")."""
+        if getattr(self, '_backdrops', None) is None:
+            try:
+                with open(self.g.data._prep_file(), encoding='utf-8') as f: self._backdrops = sorted(n for n in json.load(f)['maps'] if n.startswith('btl'))
+            except Exception: self._backdrops = []
+        return self._backdrops
+
+    def set_backdrop(self, c):
+        """The scenery drawn behind the next fights (empty: each fight's own). Drawing only: the engine's fight is the same."""
+        name = str(c.get('name') or '').strip().lower() or None
+        if name is not None and name not in self.backdrops(): return {'error': tr(N_('debug.catalog_unknown_map')) % name}
+        self.g.battle_scenery = name
+        self.d.note(tr(N_('debug.catalog_backdrop')) % (name or '-')); return {'ok': True}
+
+    def open_book(self, c=None):
+        """The monster book, from here (Global::startBook, as the menu does)."""
+        if self.g.engine.state.part not in (ENGINE.PART_TOWN, ENGINE.PART_FIELD): return {'error': tr(N_('debug.catalog_not_now'))}
+        eng = self.g.engine
+        self.in_step.append(lambda: eng.core.call(eng.core.export(START_BOOK), eng._global(), label='Global::startBook'))
+        self.d.note(tr(N_('debug.catalog_book'))); return {'ok': True}
 
     def boss_fight(self, row):
         """The boss of that row at its own place: its map is loaded first if needed, the fight starts once the map is shown and the player free (tick)."""

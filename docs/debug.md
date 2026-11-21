@@ -88,5 +88,25 @@ To reach what needs testing without playing up to it. What it changes is the eng
     an encounter row where the hero stands (`Encount + 8`; DQ IV also `Encount::isEncountStage`). Then `Encount::forceEncount()`: the next update starts it as a
     random encounter, with its backdrop (the world map's ground included). Empty row: the group of the place; another row: for that fight only.
     The panel says why a fight is refused.
+  - any random encounter group of the game (the list gives each row's monsters) fought **here**, from a town too: `Encount::forceBrew(row)`, the scripts' own
+    ordinary fight (`cmd_encount`, mode 0), during the next step;
+  - the **backdrop** drawn behind the next fights: any battle scenery of the game data (the names that start with "btl"), or each fight's own. Drawing only: the
+    engine's fight is the same.
+- **Mini-games and book**, started from where the hero is, as the game starts them: DQ IV / V the scripts' `cmd_mini_game` / `cmdMiniGame` (0 poker, 1 slot
+  machines), DQ VI `Global::setMinigame` then `startCasino`; DQ V's slime race and slime touch, DQ VI's slime curling by their `Global::start...`; the monster
+  book by `Global::startBook`.
 
 The calls that start a scene are made during the next engine step, just before GameUpdate, so that their packets (the fade) are read with the step's.
+
+## Party (panel, "Party" tab)
+
+`dq456_pc/debug/party.py`, through the game's own functions:
+
+- **Members**: each member's level and experience. The level is set by `HaveStatusInfo::levelup(level)`, the call the game makes for a character joining at a given
+  level (the stats of that level, its experience threshold, the spells learnt up to it); the experience by `HaveStatusInfo::setExp`.
+- **Joining and leaving**: any character the game has a name for (TextAPI kind 5: DQ IV's 20, DQ V's people and monsters, DQ VI's), through the scripts' own commands
+  (DQ IV `cmd_set_party_join` / `cmd_set_party_quit`, DQ V `cmdCharacterSetPartyJoin` / `...Quit`, DQ VI `cmdSetPartyJoin` / `...Quit`), during the next engine step.
+- **Money and play time**: gold, bank, casino tokens, mini medals through `BasePartyStatus`'s setters (their limits apply), the play time (1/60 s) through
+  `GameStatus::setPlayTime`; DQ IV's adventure record too (battles, victories, wipeouts, escapes, monsters defeated, gold earned, highest damage, title...,
+  `status::BattleHistory`'s getters and setters; the chapter's counters are the current chapter's).
+- **Every item × 99**: `HaveItemSack::add(item, 99)` on the bag for every item the game names, the ones the game's own `HaveItemSack::fill` leaves out included.

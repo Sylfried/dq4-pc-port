@@ -199,8 +199,33 @@ class Catalog(unittest.TestCase):
         self.assertEqual(self.c.items(), [(1, 'massue de chêne')])
         self.assertEqual(self.c.info()['items'], [(1, 'massue de chêne')])
 
+    def test_any_group_here_minigames_book_backdrop(self):
+        """any encounter row fought here (Encount::forceBrew, the scripts' ordinary fight, during the next step), a mini-game or the monster book from here, the backdrop drawn
+        behind the next fights (drawing only)"""
+        e = self.g.engine; core = e.core; key = GM_key(); e._global = lambda: 0x880
+        SYMS.update({CT.START_BOOK: 0x960, '_ZN6Global11setMinigameEi': 0x964, '_ZN6Global11startCasinoEv': 0x968})
+        if key in CT.MINIGAME_CMD: SYMS[CT.MINIGAME_CMD[key][0]] = 0x96c
+        e.state.part = ENGINE.PART_TOWN
+        self.assertEqual(self.c.battle_here({'row': '12'}), {'ok': True, 'row': 12})
+        e._return_to_title_before()
+        self.assertIn(('Encount::forceBrew', (0x777, 12)), core.calls)
+        self.assertIn('error', self.c.battle_here({'row': 'x'}))
+        self.assertEqual(self.c.minigame({'id': 'poker'}), {'ok': True}); e._return_to_title_before()
+        if key in CT.MINIGAME_CMD:
+            (label, args), = [c for c in core.calls if c[0] == CT.MINIGAME_CMD[key][0]]
+            self.assertEqual(struct.unpack_from('<i', core.ram, args[0] + CT.MINIGAME_CMD[key][1])[0], 0)          # (0: poker)
+        self.assertIn('error', self.c.minigame({'id': 'nothing'}))
+        self.assertEqual(self.c.open_book(), {'ok': True}); e._return_to_title_before()
+        self.assertIn(('Global::startBook', (0x880,)), core.calls)
+        self.c._backdrops = ['btl_pl_d', 'btlcc1_d']
+        self.assertEqual(self.c.set_backdrop({'name': 'BTLCC1_D'}), {'ok': True}); self.assertEqual(self.g.battle_scenery, 'btlcc1_d')
+        self.assertIn('error', self.c.set_backdrop({'name': 'town1'}))
+        self.c.set_backdrop({'name': ''}); self.assertIsNone(self.g.battle_scenery)
+        e.state.part = ENGINE.PART_BATTLE
+        for bad in (self.c.battle_here({'row': '3'}), self.c.minigame({'id': 'poker'}), self.c.open_book()): self.assertIn('error', bad)          # (not from a battle)
+
     def test_panel_commands_registered(self):
-        for k in ('goto_map', 'goto_world', 'story_step', 'flag', 'battle', 'give_item', 'gold'): self.assertIn(k, self.d.panel_commands)
+        for k in ('goto_map', 'goto_world', 'story_step', 'flag', 'battle', 'give_item', 'gold', 'battle_here', 'minigame', 'book', 'backdrop'): self.assertIn(k, self.d.panel_commands)
         self.assertIn('/api/catalog', self.d.panel_pages)
         self.assertEqual(set(self.c.info({'only': 'flags'})), {'map', 'flags'})
 

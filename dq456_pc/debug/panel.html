@@ -42,9 +42,18 @@ pre { background: #101216; padding: 8px; overflow: auto; max-height: 60vh; }
     <h4 id="h_map"></h4><div class="row"><select id="sc_map"></select><button id="sc_go"></button><button id="sc_world"></button><span class="dim" id="sc_cur"></span></div>
     <h4 id="h_step"></h4><div class="row"><select id="sc_step"></select><label><input type="checkbox" id="sc_step_go" checked> <span id="l_step_go"></span></label><button id="sc_apply"></button></div><p class="dim" id="sc_step_note"></p>
     <h4 id="h_fight"></h4><div class="row"><select id="sc_boss"></select><input id="sc_row" size="6"><button id="sc_fight"></button><span class="dim" id="sc_fight_note"></span></div>
+    <div class="row"><select id="sc_group"></select><button id="sc_here"></button></div>
+    <div class="row"><select id="sc_backdrop"></select><button id="sc_backdrop_go"></button></div>
+    <h4 id="h_mini"></h4><div class="row" id="sc_minigames"></div>
     <h4 id="h_items"></h4><div class="row"><input id="sc_item_find" size="16"><select id="sc_item"></select><input id="sc_count" value="1" size="3"><button id="sc_give"></button></div>
     <div class="row"><input id="sc_gold" value="1000" size="9"><button id="sc_gold_go"></button><span class="dim" id="sc_items_note"></span></div>
     <h4 id="h_sw"></h4><p class="dim" id="sc_sw_note"></p><div class="row"><select id="sc_set"></select><input id="sc_n" size="6"><button id="sc_on"></button><button id="sc_off"></button></div><div id="sc_flags" class="mono"></div>
+  </section>
+  <section id="t_party">
+    <h4 id="h_members"></h4><div id="pa_members"></div>
+    <div class="row"><select id="pa_char"></select><button id="pa_join"></button></div>
+    <h4 id="h_values"></h4><div id="pa_values" class="grid"></div>
+    <h4 id="h_allitems"></h4><div class="row"><button id="pa_items"></button><span class="dim" id="pa_items_note"></span></div>
   </section>
   <section id="t_packets"><div class="row"><label><input type="checkbox" id="pk_follow" checked> <span id="l_follow"></span></label>
     <input id="pk_filter" placeholder="types: 22 28 / !22 !28 !29" size="28"><span class="dim" id="pk_count"></span></div><pre id="packets"></pre></section>
@@ -66,6 +75,11 @@ const T = {
        step_note: 'Remet les interrupteurs globaux et l\'équipe de cette étape ; objets, niveaux et or ne changent pas. Le héros arrive par l\'entrée principale de la carte.',
        fight: 'Combat', start_fight: 'Lancer le combat', row: 'ligne (vide : celle de l\'endroit)', bosses: 'boss', switches: 'Interrupteurs', on: 'Allumer', off: 'Éteindre',
        items: 'Objets et or', give: 'Donner', find: 'chercher…', gold_add: 'Or (négatif : retirer)', items_note: 'Donnés comme un objet trouvé : au premier membre qui a de la place, sinon au sac.',
+       group: 'groupe', fight_here: 'Combattre ce groupe ici', backdrop_own: 'décor de chaque combat', backdrop_go: 'Décor des combats', mini: 'Mini-jeux et livre',
+       mg_poker: 'Poker', mg_slots: 'Machines à sous', mg_slime_race: 'Course de gluants', mg_slime_touch: 'Jeu des gluants (tactile)', mg_curling: 'Curling de gluants', book: 'Livre des monstres',
+       party: 'Équipe', members: 'Membres', level: 'Niveau', exp: 'Expérience', set: 'Mettre', remove: 'Retirer', join: 'Ajouter à l\'équipe', values: 'Argent et temps de jeu',
+       v_gold: 'Or', v_bank: 'Banque', v_coins: 'Jetons de casino', v_medals: 'Mini-médailles', v_play_time: 'Temps de jeu (h:mm:ss)', allitems: 'Objets', items_btn: 'Tous les objets × 99 dans le sac',
+       items_note: 'Tous les objets du jeu, y compris ceux que le jeu réserve au débogage.',
        sw_global: 'globaux', sw_area: 'de la zone', sw_local: 'de la carte', sw_note: 'Cliquer un numéro l\'éteint.', fight_note: 'Un boss se lance chez lui (sa carte d\'abord), avec son décor, depuis n\'importe où. Les autres combats : seulement là où le jeu permet les combats aléatoires à ce moment (jamais en ville, ni quand l\'histoire les coupe).'},
   en: {state: 'State', packets: 'Packets', menus: 'Menus', objects: 'Objects', memory: 'Memory', states: 'Savestates',
        pause: 'Pause (F3)', resume: 'Resume (F3)', report: 'Bug report (F8)', follow: 'follow', read: 'Read', write: 'Write', log: 'Engine log',
@@ -76,10 +90,15 @@ const T = {
        step_note: 'Puts back the global switches and the party of that step; items, levels and gold do not change. The hero arrives through the map\'s main entrance.',
        fight: 'Fight', start_fight: 'Start the fight', row: 'row (empty: the place\'s)', bosses: 'bosses', switches: 'Switches', on: 'On', off: 'Off',
        items: 'Items and gold', give: 'Give', find: 'search…', gold_add: 'Gold (negative: take)', items_note: 'Given as a found item: to the first member with room, otherwise the bag.',
+       group: 'group', fight_here: 'Fight this group here', backdrop_own: 'each fight\'s own backdrop', backdrop_go: 'Battle backdrop', mini: 'Mini-games and book',
+       mg_poker: 'Poker', mg_slots: 'Slot machines', mg_slime_race: 'Slime race', mg_slime_touch: 'Slime touch', mg_curling: 'Slime curling', book: 'Monster book',
+       party: 'Party', members: 'Members', level: 'Level', exp: 'Experience', set: 'Set', remove: 'Remove', join: 'Add to the party', values: 'Money and play time',
+       v_gold: 'Gold', v_bank: 'Bank', v_coins: 'Casino tokens', v_medals: 'Mini medals', v_play_time: 'Play time (h:mm:ss)', allitems: 'Items', items_btn: 'Every item × 99 in the bag',
+       items_note: 'Every item of the game, those the game keeps for debugging included.',
        sw_global: 'global', sw_area: 'area', sw_local: 'map', sw_note: 'Click a number to turn it off.', fight_note: 'A boss is fought at its own place (its map first), with its backdrop, from anywhere. Other fights: only where the game allows random encounters at that moment (never in a town, nor when the story switches them off).'}};
 let L = T.en, lang = null, tab = 't_state', last = null, pkSince = -1, pkRows = [];
 const $ = id => document.getElementById(id);
-const TABS = ['state', 'scenes', 'packets', 'menus', 'objects', 'memory', 'states'];
+const TABS = ['state', 'scenes', 'party', 'packets', 'menus', 'objects', 'memory', 'states'];
 const esc = s => String(s).replace(/[&<>]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;'}[c]));
 async function get(path) { const r = await fetch(path); return r.json(); }
 async function cmd(c) { const r = await fetch('/api/cmd', {method: 'POST', body: JSON.stringify(c)}); const j = await r.json(); if (j.error) $('msg').textContent = j.error; return j; }
@@ -87,6 +106,8 @@ function texts() {
   $('tabs').innerHTML = TABS.map(t => `<a data-t="t_${t}" class="${'t_' + t === tab ? 'sel' : ''}">${L[t]}</a>`).join('');
   for (const a of document.querySelectorAll('nav a')) a.onclick = () => { tab = a.dataset.t; texts(); show(); refresh(); };
   for (const [id, k] of [['h_map', 'maph'], ['sc_go', 'go'], ['sc_world', 'world'], ['h_step', 'step'], ['l_step_go', 'step_go'], ['sc_apply', 'apply'], ['sc_step_note', 'step_note'],
+    ['sc_here', 'fight_here'], ['sc_backdrop_go', 'backdrop_go'], ['h_mini', 'mini'],
+    ['h_members', 'members'], ['pa_join', 'join'], ['h_values', 'values'], ['h_allitems', 'allitems'], ['pa_items', 'items_btn'], ['pa_items_note', 'items_note'],
     ['h_items', 'items'], ['sc_give', 'give'], ['sc_gold_go', 'gold_add'], ['sc_items_note', 'items_note'],
     ['h_fight', 'fight'], ['sc_fight', 'start_fight'], ['sc_fight_note', 'fight_note'], ['h_sw', 'switches'], ['sc_sw_note', 'sw_note'], ['sc_on', 'on'], ['sc_off', 'off']]) $(id).textContent = L[k];
   $('sc_set').innerHTML = ['global', 'area', 'local'].map(k => `<option value="${k}">${L['sw_' + k]}</option>`).join(''); $('sc_row').placeholder = L.row; $('sc_item_find').placeholder = L.find;
@@ -149,6 +170,12 @@ async function loadCatalog() {
   $('sc_map').innerHTML = catalog.maps.map(m => `<option value="${m}">${m}${placeName[m] ? ' — ' + esc(placeName[m]) : ''}</option>`).join('');
   if (catalog.map && catalog.maps.includes(catalog.map)) $('sc_map').value = catalog.map;
   renderItems();
+  $('sc_group').innerHTML = (catalog.encounters || []).map(([row, mons]) => `<option value="${row}">${row} — ${esc(mons.join(', '))}</option>`).join('');
+  $('sc_backdrop').innerHTML = `<option value="">${L.backdrop_own}</option>` + (catalog.backdrops || []).map(n => `<option value="${n}">${n}</option>`).join('');
+  $('sc_backdrop').value = catalog.backdrop || '';
+  $('sc_minigames').innerHTML = (catalog.minigames || []).map(m => `<button data-mg="${m}">${L['mg_' + m] || m}</button>`).join('') + `<button id="sc_book">${L.book}</button>`;
+  for (const b of document.querySelectorAll('[data-mg]')) b.onclick = () => cmd({cmd: 'minigame', id: b.dataset.mg});
+  $('sc_book').onclick = () => cmd({cmd: 'book'});
   $('sc_step').innerHTML = catalog.steps.map(([n, name, map]) => `<option value="${n}">${n}${name ? ' — ' + esc(name) : ''}${map ? ' — ' + map : ''}</option>`).join('');
   $('sc_boss').innerHTML = `<option value="">${L.bosses}…</option>` + catalog.bosses.map(([row, mons, map]) => `<option value="${row}">${esc(mons.join(', '))} — ${row}${map ? ' — ' + map : ''}</option>`).join('');
   renderFlags(catalog);
@@ -167,6 +194,8 @@ function renderFlags(c) {
 async function refreshScenes() { if (!catalog) return loadCatalog(); renderFlags(await get('/api/catalog?only=flags')); }
 $('sc_go').onclick = () => cmd({cmd: 'goto_map', map: $('sc_map').value});
 $('sc_world').onclick = () => cmd({cmd: 'goto_world'});
+$('sc_here').onclick = () => cmd({cmd: 'battle_here', row: $('sc_group').value});
+$('sc_backdrop_go').onclick = () => cmd({cmd: 'backdrop', name: $('sc_backdrop').value});
 $('sc_item_find').oninput = renderItems;
 $('sc_give').onclick = () => cmd({cmd: 'give_item', item: +$('sc_item').value, count: +$('sc_count').value || 1});
 $('sc_gold_go').onclick = () => cmd({cmd: 'gold', amount: $('sc_gold').value.trim()});
@@ -175,7 +204,34 @@ $('sc_boss').onchange = () => { $('sc_row').value = $('sc_boss').value; };
 $('sc_fight').onclick = () => cmd({cmd: 'battle', row: $('sc_row').value.trim()});
 $('sc_on').onclick = () => cmd({cmd: 'flag', set: $('sc_set').value, n: +$('sc_n').value, on: true}).then(refreshScenes);
 $('sc_off').onclick = () => cmd({cmd: 'flag', set: $('sc_set').value, n: +$('sc_n').value, on: false}).then(refreshScenes);
-const PAGES = {t_scenes: refreshScenes, t_packets: refreshPackets, t_menus: refreshMenus, t_objects: refreshObjects, t_states: refreshStates};
+let party = null, partyKey = '';
+const STATS = {fr: {AdventureTime: 'Temps d\'aventure (chapitre)', BattleCount: 'Combats', VictoryCount: 'Victoires', WipeoutCount: 'Équipe anéantie', EscapeCount: 'Fuites',
+  MonsterCount: 'Monstres vaincus', TotalGold: 'Or gagné', MaxDamage: 'Dégâts maximum', HeroLevel: 'Niveau du héros', Title: 'Titre', RestMonsterCount: 'Monstres restants',
+  ChapterBattleCount: 'Combats du chapitre', ChapterWipeoutCount: 'Anéantissements du chapitre', ChapterEscapeCount: 'Fuites du chapitre'},
+  en: {AdventureTime: 'Adventure time (chapter)', BattleCount: 'Battles', VictoryCount: 'Victories', WipeoutCount: 'Wipeouts', EscapeCount: 'Escapes', MonsterCount: 'Monsters defeated',
+  TotalGold: 'Gold earned', MaxDamage: 'Highest damage', HeroLevel: 'Hero\'s level', Title: 'Title', RestMonsterCount: 'Monsters left', ChapterBattleCount: 'Battles this chapter',
+  ChapterWipeoutCount: 'Wipeouts this chapter', ChapterEscapeCount: 'Escapes this chapter'}};
+const valueLabel = k => k.startsWith('stat:') ? ((STATS[lang] || STATS.en)[k.slice(5)] || k.slice(5)) : (L['v_' + k] || k);
+const hms = t => { const s = Math.floor(t / 60); return `${Math.floor(s / 3600)}:${String(Math.floor(s / 60) % 60).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; };          // (play time: 1/60 s)
+const unhms = v => { const p = String(v).trim().split(':').map(Number); if (p.some(isNaN)) return NaN; let s = 0; for (const x of p) s = s * 60 + x; return Math.round(s * 60); };
+async function refreshParty(force) {
+  if (!force && document.activeElement && $('t_party').contains(document.activeElement) && document.activeElement.tagName === 'INPUT') return;          // (not while a field is being typed in)
+  const p = await get('/api/party'); const key = JSON.stringify(p); if (!force && key === partyKey) return; partyKey = key; party = p;
+  $('pa_members').innerHTML = `<table><tr><th></th><th>${L.level}</th><th></th><th>${L.exp}</th><th></th><th></th></tr>` + p.members.map(m =>
+    `<tr><td>${esc(m.name)} <span class="dim">#${m.id}</span></td><td><input size="3" id="pl_${m.id}" value="${m.level}"></td><td><button data-lv="${m.id}">${L.set}</button></td>` +
+    `<td><input size="9" id="px_${m.id}" value="${m.exp}"></td><td><button data-xp="${m.id}">${L.set}</button></td><td><button data-out="${m.id}">${L.remove}</button></td></tr>`).join('') + '</table>';
+  const inside = new Set(p.members.map(m => m.id));
+  $('pa_char').innerHTML = p.characters.filter(([n]) => !inside.has(n)).map(([n, name]) => `<option value="${n}">${esc(name)} — #${n}</option>`).join('');
+  $('pa_values').innerHTML = Object.entries(p.values).map(([k, v]) => `<span class="dim">${esc(valueLabel(k))}</span><span class="row" style="margin:0"><input size="11" id="pv_${k}" value="${k === 'play_time' || k === 'stat:AdventureTime' ? hms(v) : v}"><button data-val="${k}">${L.set}</button></span>`).join('');
+  const act = (sel, fn) => { for (const b of document.querySelectorAll(sel)) b.onclick = () => fn(b).then(() => refreshParty(true)); };
+  act('[data-lv]', b => cmd({cmd: 'party_level', id: +b.dataset.lv, level: +$('pl_' + b.dataset.lv).value}));
+  act('[data-xp]', b => cmd({cmd: 'party_exp', id: +b.dataset.xp, exp: +$('px_' + b.dataset.xp).value}));
+  act('[data-out]', b => cmd({cmd: 'party_quit', id: +b.dataset.out}));
+  act('[data-val]', b => { const k = b.dataset.val, v = $('pv_' + k).value; return cmd({cmd: 'value', key: k, value: k === 'play_time' || k === 'stat:AdventureTime' ? unhms(v) : +v}); });
+}
+$('pa_join').onclick = () => cmd({cmd: 'party_join', id: +$('pa_char').value}).then(() => setTimeout(() => refreshParty(true), 300));
+$('pa_items').onclick = () => cmd({cmd: 'items_max'});
+const PAGES = {t_party: refreshParty, t_scenes: refreshScenes, t_packets: refreshPackets, t_menus: refreshMenus, t_objects: refreshObjects, t_states: refreshStates};
 async function refresh() {
   try { const v = await get('/api/state'); if (v.error) throw new Error(v.error); last = v; renderState(v); $('msg').textContent = ''; } catch (e) { $('msg').textContent = String(e); }
   if (PAGES[tab] && (tab !== 't_states' || !refresh.statesShown)) { try { await PAGES[tab](); } catch (e) { $('msg').textContent = String(e); } }
